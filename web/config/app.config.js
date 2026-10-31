@@ -10,8 +10,12 @@ export default {
     //   Mock 故障注入入口：chat.options.fail = () => true（mock 适配器已支持，本次不接 URL 或界面）
   },
   // 启动时一次性 fetch 的 data/*.json，切页不再有请求。新增数据文件时在这里登记。
-  data: ['rungs', 'nodes', 'annotation-types', 'demo'],
+  data: ['rungs', 'nodes', 'annotation-types', 'demo', 'hsk', 'glosses'],
   defaults: { hsk: 3 },
   // debug: 暴露 globalThis.__peng 供浏览器控制台检查；公开部署前改为 false
-  flags: { demoMode: true, showApiBadge: true, debug: true },
+  flags: {
+    demoMode: true,
+    showApiBadge: typeof window !== 'undefined' ? new URL(window.location.href).hostname === 'localhost' : true,
+    debug: typeof window !== 'undefined' ? new URL(window.location.href).hostname === 'localhost' : true
+  },
 };

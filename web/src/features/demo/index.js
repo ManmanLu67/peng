@@ -5,9 +5,12 @@
 // 每一步等上一步的结果出来（status 离开 running）再延迟，避免画面与状态错位。
 // 离开 #/app（卸载）时自动退出并重置。
 import { h, bilingual } from '../../ui/index.js';
+import { readTimeMs } from '../../core/pacing.js';
 
-const STEP_GAP_MS = 2200;      // 每步停留，逻辑文档 5.8：约 2–3 s
-const START_GAP_MS = 600;
+// 停留时间按“这一页要读多少字”算（core/pacing.js），而不是固定值。
+const START_GAP_MS = 1500;       // 点开始后先让人看清空白页和输入
+const END_DWELL_MS = 6000;       // 看懂后停留，让人看清小灯和“读懂了”
+
 
 export default {
   id: 'demo',
@@ -21,6 +24,7 @@ export default {
     const start = h('button', { type: 'button', class: 'btn demo__start' }, bilingual('演示', 'Demo', { inline: true }));
     const banner = h('div', { class: 'demo__banner', role: 'status', 'aria-live': 'polite', hidden: true },
       h('span', null, bilingual('演示中', 'Demo', { inline: true })),
+      h('span', { class: 'demo__hint label' }),
       h('button', { type: 'button', class: 'btn demo__exit' }, bilingual('退出演示', 'Exit demo', { inline: true })));
     el.append(h('div', { class: 'demo' }, start, banner));
 
@@ -31,6 +35,13 @@ export default {
     const later = (ms, fn) => { cancels.push(ports.clock.after(ms, fn)); };
     const clearTimers = () => { cancels.forEach((off) => off()); cancels = []; unsub?.(); unsub = null; };
 
+    // 横幅里的倒计时提示：告诉观众“这一页还停留多久”，不会误以为卡住了
+    const hint = banner.querySelector('.demo__hint');
+    function caption(ms) {
+      const left = Math.ceil(ms / 1000);
+      hint.textContent = `下一步 ${left} 秒后 · Next in ${left}s`;
+    }
+
     function setUi(on) {
       running = on;
       start.hidden = on;
@@ -38,9 +49,16 @@ export default {
       commands.setDemo(on);
     }
 
-    /** 等当前请求结束后再继续：status 不再是 running 才推进 */
+    /** 当前对比区里能读到的全部文字（原文、改写、释义、英文、文化条） */
+    const pageText = () => document.querySelector('.cmp')?.textContent ?? '';
+
+    /** 等当前请求结束后再继续：status 不再是 running 才推进；停留时间取决于这一页的字数 */
     function afterSettled(next) {
-      const go = () => later(STEP_GAP_MS, next);
+      const go = () => {
+        const ms = readTimeMs(pageText());
+        caption(ms);
+        later(ms, next);
+      };
       if (store.get().status !== 'running') { go(); return; }
       unsub = store.subscribe((s) => s.status, (status) => {
         if (status === 'running') return;
@@ -66,7 +84,7 @@ export default {
 
       const finish = () => {
         commands.understood();
-        later(STEP_GAP_MS, () => { setUi(false); });   // 小灯亮着，演示标记收起；结果保留在页面上
+        later(END_DWELL_MS, () => { setUi(false); });   // 小灯亮着，演示标记收起；结果保留在页面上
       };
       const down = () => {
         const s = store.get();
@@ -79,6 +97,7 @@ export default {
         }
       };
 
+      caption(START_GAP_MS);
       later(START_GAP_MS, () => {
         commands.submit(sample.text, sample.context ?? '');
         afterSettled(down);

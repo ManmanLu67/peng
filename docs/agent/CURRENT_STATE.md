@@ -6,8 +6,36 @@
 ## 当前阶段
 
 范围已冻结。阶段 0（骨架）已提交；冻结后的收缩改动与 SCOPE / PLAN / TEST 已由用户提交。
-**T1、T2、纸张滤镜原型完成，均未提交。** 下一步：T3（工作台核心）与 T4（首页视觉）。
+**T1、T2、纸张滤镜原型、T3（工作台核心）完成，均未提交。** 下一步：T4（首页视觉，用滤镜 v2）、T5（团队页）。
 托管方式已定为 Vercel，**由用户负责配置和部署**（用户确认："我负责配置"）。我不做部署操作；部署前需把 `web/config/app.config.js` 的 `flags.debug` 改为 `false`，并删除或不发布 `web/proto/`。
+
+## T3 完成情况（工作台核心）
+
+做了：
+- `chat`（3a）：用户消息、解读卡、3 个示例（自带语境，点击即提交）、下划线输入、朱砂发送图标；空输入 / 运行中 / 演示中禁用；失败后把文字放回输入框。
+- `compare`（3b）+ `annotate`（3f）：原文 | 改写并排；标题行带延伸细线；第 8 级显示“原文（未改写）”；英文档主显；非末档英文折叠；`culture_note` 缺失即隐藏；`mock_placeholder` 显示“模拟数据”且不做标注；标注线型来自 `annotation-types.json`；注释卡（点击 / 回车打开，Esc 关闭）显示词 + 拼音 + 中文 + English；难词只取高于当前档的词（`minLevel`），有释义的词优先于超纲词，最多 3 个。
+- `ladder-bar`（3c）：8 级纵向条，当前档朱砂，只展示不可点击。
+- `bridge`（3d）：两块靛蓝撕纸（`tornPolygon`，固定 seed）、贯穿线、4 节点、5 种状态、喜鹊、小灯、“读懂了 · Understood”、“模拟回放”标注、读屏步骤列表；窄屏节点条内部横向滚动。
+- `actions`（3e）：只有“没看懂 · Didn't understand”，英文档禁用。
+- `demo`（3g）：经 `ports.clock` 调度，只调用 `commands`，从所选起点档一路降到英文再“看懂了”；演示中禁用输入和按钮；退出 / 离开页面自动重置。
+- 数据：`glosses.json`、`hsk.json`（演示子集，约 31 个词，释义由开发者撰写，**需队友核对**，词表来源与授权未核实）。
+- 核心改动：`flow` 增加 `demo` 标记和 `SET_DEMO`；`RESET` 保留 `reqSeq`（避免与被取消的旧请求撞号）；请求在途时 `traceSimulated=true`；`ladder.availability` 把演示中视为忙碌。
+
+验证了（本次会话实际运行，无头 Edge，经 `localhost`）：
+- `check-deps` 41 个文件通过；`node --test` 66 个全过。
+- 浏览器探测（`web/proto/probe-*.mjs`）：chat 19 项、layout 18 项、compare 32 项、bridge 36 项、demo 22 项，各自最后一次全过。
+- 演示：断网下从 HSK 3 跑到英文再“看懂了”，用时 18.8 s；档位依次 4→3→2→1；起点选 HSK 5 时依次 6→5→4→3→2→1；中途退出回到 idle 且 3.5 s 后无残留动作；演示中切走再回来已重置；断网期间没有任何新增网络请求。
+
+没验证：
+- 有头浏览器、Chrome；键盘操作与读屏的完整流程（只验证了注释卡的 Enter / Esc 和 `aria` 属性存在）。
+- 目标笔记本上的演示观感与帧率（用户只测过滤镜原型，约 59 fps）。
+- 演示按钮位置：已从 `position: fixed` 改为放进对比区网格右上角（避免压住鹊桥），改完后五组探测全过，截图人工看过；但没有在你的笔记本上看过实际观感。
+- `hsk.json` / `glosses.json` 的释义准确性。
+
+踩过的坑（后来的人要知道）：
+- `flags.debug` / `showApiBadge` 现在只在 `hostname === 'localhost'` 时为真（用户的 Vercel 提交）。探测脚本用 `127.0.0.1` 访问时 `__peng` 不存在，**必须用 `http://localhost:端口`**。
+- `replaceChildren(null)` 会插入文字 "null"，传子节点前要 `filter(Boolean)`（注释卡曾因此显示 null）。
+- 探测脚本偶发 `Runtime.evaluate` 超时（约 1/4，开和关都出现，无头 Edge 的问题，不是页面卡死）；重试即可。
 
 ## 纸张滤镜原型结论（`web/proto/paper.html`、`web/styles/paper.css`、`web/src/core/geometry.js`）
 
@@ -109,6 +137,6 @@
 
 ## 下一步（1–3 步）
 
-1. 用户在笔记本有头浏览器里打开 `proto/paper.html` 看 fps（见上文），反馈是否卡顿。
-2. T3 工作台核心：先 3a `chat`，同时删除 `app-placeholder`；按 3a→3g 顺序，每步浏览器验证。
-3. T4 首页视觉（搬滤镜 v2，沿用 48/50 坐标），与 T3 互不依赖；完成后删除 `web/proto/`。
+1. T4 首页视觉（独立任务，不碰工作台状态机）：搬滤镜 v2 与 48/50 坐标，鹊桥 12–16 只喜鹊、微场景、朱砂小灯 / 印章 / 入口、文字层；完成后删除 `web/proto/`。
+2. T5 团队页：`team-grid` + `data/team.json`（要在 `config.data` 里登记 `team`），空字段不渲染。
+3. 用户在笔记本有头浏览器里点一遍工作台 Demo，反馈观感（尤其是演示按钮位置和注释卡位置）。

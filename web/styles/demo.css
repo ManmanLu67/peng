@@ -1,0 +1,7 @@
+/* 演示模式控件放在对比区右上角（网格内，随布局走，不用 fixed 定位，避免压住鹊桥）。 */
+.demo { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); padding: var(--s2) var(--s4) 0 0; }
+.demo__start { background: var(--paper); }
+.demo__banner { display: flex; align-items: center; gap: var(--s3); padding: var(--s1) var(--s3); background: var(--paper); border: 1px solid var(--cinnabar); color: var(--cinnabar-text); font-size: var(--fs-small); }
+.demo__banner[hidden] { display: none; }
+.demo__exit { padding: var(--s1) var(--s3); }
+@media (max-width: 720px) { .demo { padding: var(--s2) var(--edge) 0; justify-content: flex-start; } }

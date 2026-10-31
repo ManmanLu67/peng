@@ -6,7 +6,11 @@
       "Read(//c/Program Files \\\\\\(x86\\\\\\)/Microsoft/Edge/Application/**)",
       "Bash(node scripts/check-deps.mjs)",
       "Bash(echo \"--- exit $?\")",
-      "Bash(node --test tests/)"
+      "Bash(node --test tests/)",
+      "Bash(sed -i \"s#^import apiBadge from './api-badge/index.js';#import apiBadge from './api-badge/index.js';\\\\nimport bridge from './bridge/index.js';#; s#const all = \\\\[apiBadge, chat,#const all = [apiBadge, bridge, chat,#\" src/features/registry.js)",
+      "Bash(sed -i \"s#    'chat',#    'chat',\\\\n    'bridge',#\" src/pages/app.js)",
+      "Bash(sed -i 's#<link rel=\"stylesheet\" href=\"./styles/compare.css\">#<link rel=\"stylesheet\" href=\"./styles/bridge.css\">\\\\n  <link rel=\"stylesheet\" href=\"./styles/compare.css\">#' index.html)",
+      "Bash(node --test)"
     ]
   }
 }

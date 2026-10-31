@@ -1,0 +1,191 @@
+{
+  "_note": "演示子集，只覆盖 demo.json 里出现的常用词；词表来源与授权未核实，需队友核对后替换。level = HSK 等级 1–6。",
+  "entries": {
+    "水": {
+      "level": 1,
+      "py": "shuǐ",
+      "zh": "水",
+      "en": "water"
+    },
+    "很": {
+      "level": 1,
+      "py": "hěn",
+      "zh": "非常",
+      "en": "very"
+    },
+    "有": {
+      "level": 1,
+      "py": "yǒu",
+      "zh": "拥有；存在",
+      "en": "to have; there is"
+    },
+    "这": {
+      "level": 1,
+      "py": "zhè",
+      "zh": "指近处的事物",
+      "en": "this"
+    },
+    "是": {
+      "level": 1,
+      "py": "shì",
+      "zh": "表示判断",
+      "en": "to be"
+    },
+    "他": {
+      "level": 1,
+      "py": "tā",
+      "zh": "男性第三人称",
+      "en": "he; him"
+    },
+    "说": {
+      "level": 1,
+      "py": "shuō",
+      "zh": "用话表达",
+      "en": "to say"
+    },
+    "在": {
+      "level": 1,
+      "py": "zài",
+      "zh": "正在；位于",
+      "en": "at; in the process of"
+    },
+    "里": {
+      "level": 1,
+      "py": "lǐ",
+      "zh": "里面",
+      "en": "inside"
+    },
+    "了": {
+      "level": 1,
+      "py": "le",
+      "zh": "表示完成或变化",
+      "en": "particle for completed action"
+    },
+    "太": {
+      "level": 1,
+      "py": "tài",
+      "zh": "过于；非常",
+      "en": "too; extremely"
+    },
+    "用": {
+      "level": 2,
+      "py": "yòng",
+      "zh": "使用",
+      "en": "to use"
+    },
+    "冒": {
+      "level": 5,
+      "py": "mào",
+      "zh": "向外升起",
+      "en": "to emit; to rise up"
+    },
+    "着": {
+      "level": 2,
+      "py": "zhe",
+      "zh": "表示持续",
+      "en": "particle for ongoing state"
+    },
+    "杯子": {
+      "level": 1,
+      "py": "bēi zi",
+      "zh": "喝水的器具",
+      "en": "cup"
+    },
+    "水杯": {
+      "level": 3,
+      "py": "shuǐ bēi",
+      "zh": "装水的杯子",
+      "en": "water cup"
+    },
+    "一句": {
+      "level": 1,
+      "py": "yí jù",
+      "zh": "一条话",
+      "en": "one sentence"
+    },
+    "意思": {
+      "level": 3,
+      "py": "yì si",
+      "zh": "含义",
+      "en": "meaning"
+    },
+    "升起": {
+      "level": 5,
+      "py": "shēng qǐ",
+      "zh": "向上升",
+      "en": "to rise"
+    },
+    "说明": {
+      "level": 3,
+      "py": "shuō míng",
+      "zh": "解释；表明",
+      "en": "to explain; to indicate"
+    },
+    "烫": {
+      "level": 5,
+      "py": "tàng",
+      "zh": "温度很高，碰了会痛",
+      "en": "scalding hot"
+    },
+    "水里": {
+      "level": 1,
+      "py": "shuǐ lǐ",
+      "zh": "水的里面",
+      "en": "in the water"
+    },
+    "我": {
+      "level": 1,
+      "py": "wǒ",
+      "zh": "第一人称",
+      "en": "I; me"
+    },
+    "的": {
+      "level": 1,
+      "py": "de",
+      "zh": "表示所属或修饰",
+      "en": "possessive / modifier particle"
+    },
+    "和": {
+      "level": 1,
+      "py": "hé",
+      "zh": "与；跟",
+      "en": "and"
+    },
+    "不": {
+      "level": 1,
+      "py": "bù",
+      "zh": "表示否定",
+      "en": "not"
+    },
+    "他的": {
+      "level": 1,
+      "py": "tā de",
+      "zh": "他所有的",
+      "en": "his"
+    },
+    "我的": {
+      "level": 1,
+      "py": "wǒ de",
+      "zh": "我所有的",
+      "en": "my; mine"
+    },
+    "一": {
+      "level": 1,
+      "py": "yī",
+      "zh": "数字一",
+      "en": "one"
+    },
+    "那": {
+      "level": 1,
+      "py": "nà",
+      "zh": "指远处的事物",
+      "en": "that"
+    },
+    "你": {
+      "level": 1,
+      "py": "nǐ",
+      "zh": "第二人称",
+      "en": "you"
+    }
+  }
+}

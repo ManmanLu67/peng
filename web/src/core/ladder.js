@@ -16,7 +16,7 @@ export function createLadder(rungs) {
    * 没看懂与更简单一样，到英文就不能再降。
    */
   function availability(state) {
-    const busy = state.status === 'running';
+    const busy = state.status === 'running' || !!state.demo;   // 演示中与运行中一样禁用输入和按钮
     const hasResult = state.rung != null && state.messages.length > 0;
     const idle = !busy && hasResult;
     return {

@@ -98,5 +98,6 @@ export function createCommands({ store, bus, flow, ports, dwellMs = [400, 800], 
     setHsk: (rung) => dispatch({ type: 'SET_HSK', rung }),
     select: (id) => dispatch({ type: 'SELECT_MESSAGE', id }),
     reset: () => dispatch({ type: 'RESET' }),
+    setDemo: (on) => dispatch({ type: 'SET_DEMO', on }),
   };
 }

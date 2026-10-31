@@ -1,0 +1,18 @@
+{
+  "_note": "预置短语/词释义，优先于 HSK 词表做最长匹配。type: allusion 典故 / classical 文言 / written 书面。level 7 = 超出 HSK 6。内容为演示子集，释义由开发者撰写，需队友核对。",
+  "entries": {
+    "日照香炉生紫烟": { "type": "allusion", "level": 7, "py": "rì zhào xiāng lú shēng zǐ yān", "zh": "李白《望庐山瀑布》的首句：阳光照着香炉峰，升起紫色的云烟。", "en": "First line of Li Bai's \"Viewing the Waterfall at Mount Lu\": sunlight on Incense Burner Peak raises violet mist." },
+    "香炉": { "type": "written", "level": 7, "py": "xiāng lú", "zh": "烧香用的炉子；这里指庐山的香炉峰。", "en": "incense burner; here, Incense Burner Peak" },
+    "紫烟": { "type": "written", "level": 7, "py": "zǐ yān", "zh": "紫色的烟雾，形容阳光下的云气。", "en": "violet mist" },
+    "日照": { "type": "written", "level": 7, "py": "rì zhào", "zh": "阳光照射。", "en": "sunlight shining on" },
+    "落霞与孤鹜齐飞": { "type": "allusion", "level": 7, "py": "luò xiá yǔ gū wù qí fēi", "zh": "王勃《滕王阁序》名句：晚霞和孤单的野鸭一起飞。", "en": "From Wang Bo's \"Preface to the Prince of Teng's Pavilion\": sunset clouds fly with a lone wild duck." },
+    "落霞": { "type": "written", "level": 7, "py": "luò xiá", "zh": "傍晚的红色云霞。", "en": "sunset glow" },
+    "孤鹜": { "type": "classical", "level": 7, "py": "gū wù", "zh": "孤单的野鸭。", "en": "a solitary wild duck" },
+    "秋水共长天一色": { "type": "allusion", "level": 7, "py": "qiū shuǐ gòng cháng tiān yí sè", "zh": "秋天的江水和辽阔的天空连成一色。", "en": "Autumn waters share one color with the endless sky." },
+    "朝辞白帝彩云间": { "type": "allusion", "level": 7, "py": "zhāo cí bái dì cǎi yún jiān", "zh": "李白《早发白帝城》首句：清晨告别彩云环绕的白帝城。", "en": "First line of Li Bai's \"Leaving Baidi City at Dawn\": at dawn I leave Baidi amid colored clouds." },
+    "古诗": { "type": "written", "level": 5, "py": "gǔ shī", "zh": "古代的诗。", "en": "classical poem" },
+    "热气": { "type": "written", "level": 5, "py": "rè qì", "zh": "热的水汽。", "en": "steam; hot vapor" },
+    "开玩笑": { "type": "written", "level": 4, "py": "kāi wán xiào", "zh": "说好玩的话，不是认真的。", "en": "to joke" },
+    "形容": { "type": "written", "level": 5, "py": "xíng róng", "zh": "把事物的样子说出来。", "en": "to describe" }
+  }
+}

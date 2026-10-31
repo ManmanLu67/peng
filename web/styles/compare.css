@@ -1,0 +1,63 @@
+/* 对比区与阶梯条。无阴影，分区靠细线；正文大号衬线，行距 1.9。 */
+.cmp { position: relative; padding: var(--s5) 120px var(--s5) var(--s5); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.cmp__cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); }
+.cmp__col { min-width: 0; }
+
+.cmp__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s4); }
+.cmp__h { margin: 0; font-family: var(--f-disp); font-style: italic; font-weight: 400; font-size: 20px; white-space: nowrap; }
+.cmp__rule { flex: 1; height: 1px; background: var(--line); }
+
+.cmp__text { font-family: var(--f-title); font-size: var(--fs-compare); line-height: var(--lh-compare); overflow-wrap: anywhere; margin-bottom: var(--s4); }
+.cmp__text--en { font-family: var(--f-disp); font-style: italic; font-size: 24px; line-height: 1.6; }
+
+.cmp mark { background: none; color: inherit; text-underline-offset: .22em; text-decoration-thickness: 2px; cursor: pointer; }
+.cmp mark:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
+.cmp mark.is-oov { text-decoration-thickness: 1px; }
+
+.cmp__gloss { list-style: none; margin: 0 0 var(--s4); padding: 0; font-family: var(--f-small); font-size: 13px; line-height: 1.8; color: var(--muted); }
+.cmp__gloss strong { color: var(--ink); font-family: var(--f-title); }
+
+.cmp__en { margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.cmp__more { background: none; border: 0; padding: var(--s1) 0; cursor: pointer; font-family: var(--f-disp); font-style: italic; font-size: 18px; color: var(--muted); }
+.cmp__more:hover { color: var(--ink); }
+
+.cmp__culture { margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--muted); line-height: 1.8; }
+.cmp__mock { margin-top: var(--s3); padding: var(--s1) var(--s2); display: inline-block; border: 1px dashed var(--ochre); font-size: var(--fs-small); color: var(--ochre); }
+
+.cmp__empty { color: var(--muted); font-size: var(--fs-body); }
+.cmp__skeleton { display: grid; gap: var(--s3); max-width: 640px; }
+.cmp__skeleton span { display: block; height: 22px; background: var(--line); opacity: .25; }
+.cmp__skeleton span:nth-child(2) { width: 80%; }
+.cmp__skeleton span:nth-child(3) { width: 55%; }
+
+/* 注释卡：直角细框 */
+.cmp__note { position: absolute; z-index: 5; padding: var(--s3); background: var(--paper); border: 1px solid var(--ink); }
+.cmp__note[hidden] { display: none; }
+.cmp__note p { margin: 0 0 var(--s2); }
+.cmp__note-word { font-family: var(--f-title); font-size: 20px; }
+.cmp__note-py { font-family: var(--f-small); font-size: 13px; color: var(--muted); }
+.cmp__note-zh { font-size: 14px; }
+.cmp__note-none { color: var(--muted); }
+.cmp__note-en { font-family: var(--f-small); font-size: 13px; color: var(--muted); }
+
+/* 阶梯条：右缘纵向，当前档朱砂粗竖条 */
+.lad { list-style: none; margin: 0; padding: var(--s4) var(--s3) 0 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.lad__item { display: flex; align-items: center; gap: var(--s2); height: 28px; }
+.lad__label { font-family: var(--f-small); font-size: var(--fs-label); letter-spacing: .08em; color: var(--muted); }
+.lad__bar { width: 3px; height: 100%; background: var(--line); opacity: .45; }
+.lad__item.is-on .lad__label { color: var(--ink); font-weight: 600; }
+.lad__item.is-on .lad__bar { width: 6px; background: var(--cinnabar); opacity: 1; }
+
+@media (max-width: 720px) {
+  .cmp { padding: var(--s4) var(--edge); }
+  .cmp__cols { grid-template-columns: 1fr; gap: var(--s4); }
+  .lad { flex-direction: row; padding: var(--s3) var(--edge); justify-content: flex-start; overflow-x: auto; }
+  .lad__item { flex-direction: column-reverse; height: auto; }
+  .lad__bar { width: 100%; min-width: 28px; height: 3px; }
+  .lad__item.is-on .lad__bar { height: 6px; width: 100%; }
+}
+
+/* 反馈按钮：右下，直角细框，朱砂框 + 朱砂字 */
+.act { padding: 0 var(--s4) var(--s4) 0; display: flex; justify-content: flex-end; }
+.act__btn { min-width: 180px; }
+@media (max-width: 720px) { .act { padding: var(--s3) var(--edge); } .act__btn { width: 100%; } }

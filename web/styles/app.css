@@ -75,22 +75,26 @@
 #root[data-page="/app"] {
   display: grid;
   grid-template-columns: minmax(320px, 25%) 1fr;
-  grid-template-rows: var(--topbar) auto 1fr;
+  grid-template-rows: var(--topbar) auto minmax(0, 1fr);
   grid-template-areas:
     "topbar     topbar"
     "chat       bridge"
     "chat       compare";
-  min-height: 100dvh;
+  /* 桌面端固定一屏高：左栏消息区自己滚动，输入框始终在视口内 */
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
+#root[data-page="/app"] > .feature { min-height: 0; }
+#root[data-page="/app"] > .feature--chat { overflow: hidden; }
+#root[data-page="/app"] > .feature--chat > .chat { height: 100%; }
 #root[data-page="/app"] > .feature--topbar      { grid-area: topbar; }
 #root[data-page="/app"] > .feature--chat        { grid-area: chat; border-right: 1px solid var(--line); }
 #root[data-page="/app"] > .feature--bridge      { grid-area: bridge; border-bottom: 1px solid var(--line); }
-#root[data-page="/app"] > .feature--compare     { grid-area: compare; }
-#root[data-page="/app"] > .feature--ladder-bar  { grid-area: compare; justify-self: end; }
-#root[data-page="/app"] > .feature--actions     { grid-area: compare; justify-self: end; align-self: end; }
-#root[data-page="/app"] > .feature--demo        { grid-area: compare; }
-/* 临时占位：T3 删除 */
-#root[data-page="/app"] > .feature--app-placeholder { grid-area: compare; }
+#root[data-page="/app"] > .feature--compare     { grid-area: compare; overflow-y: auto; }
+#root[data-page="/app"] > .feature--ladder-bar  { grid-area: compare; justify-self: end; align-self: start; pointer-events: none; }
+#root[data-page="/app"] > .feature--actions     { grid-area: compare; justify-self: end; align-self: end; position: relative; z-index: 2; }
+#root[data-page="/app"] > .feature--demo        { grid-area: compare; justify-self: end; align-self: start; position: relative; z-index: 3; margin-right: 112px; }
 
 /* ---------- 窄屏 ---------- */
 @media (max-width: 720px) {
@@ -112,6 +116,11 @@
     grid-template-columns: 1fr;
     grid-template-rows: var(--topbar) auto auto 1fr;   /* 多余高度给最后一行，空行不被拉伸 */
     grid-template-areas: "topbar" "chat" "bridge" "compare";
+    /* 窄屏纵向堆叠，整页自然滚动 */
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
+  #root[data-page="/app"] > .feature--chat > .chat { height: auto; }
   #root[data-page="/app"] > .feature--chat { border-right: 0; border-bottom: 1px solid var(--line); }
 }

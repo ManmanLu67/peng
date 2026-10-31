@@ -1,0 +1,47 @@
+/* 鹊桥节点条。靛蓝撕纸块 + 贯穿线 + 4 个节点。状态样式见逻辑文档 5.5：
+   未执行 空心 / 执行中 朱砂实心 + 光晕 / 完成 米白实心 / 跳过 虚线圆 / 出错 朱砂叉。
+   完成用米白而不是深色，因为深色点在靛蓝纸上看不清。动画只动 opacity / transform。 */
+.brg { padding: var(--s3) var(--s4) var(--s2); }
+.brg__scroll { overflow-x: auto; scroll-snap-type: x mandatory; }
+.brg__svg { display: block; width: 100%; min-width: 560px; height: auto; max-height: 220px; }
+
+.brg__paper { fill: var(--indigo); }
+.brg__line { stroke: var(--on-indigo); stroke-width: 1; opacity: .6; }
+.brg__node { color: var(--on-indigo); }
+
+.brg__dot { fill: none; stroke: var(--on-indigo); stroke-width: 1.5; opacity: .6; transition: opacity var(--dur-fast); }
+.brg__halo { fill: var(--cinnabar); opacity: 0; transform-box: fill-box; transform-origin: center; }
+.brg__cross { fill: none; stroke: var(--cinnabar); stroke-width: 2.5; stroke-linecap: round; opacity: 0; }
+.brg__bird { color: var(--on-indigo); opacity: .55; transition: opacity var(--dur-ink), transform var(--dur-ink); transform-box: fill-box; }
+.brg__no { fill: var(--on-indigo); font-family: var(--f-disp); font-size: 15px; opacity: .7; }
+.brg__label { fill: var(--on-indigo); font-family: var(--f-small); font-size: 11px; letter-spacing: .18em; }
+.brg__zh { fill: var(--on-indigo); font-family: var(--f-body); font-size: 11px; opacity: .7; }
+
+.brg__node[data-state="running"] .brg__dot { fill: var(--cinnabar); stroke: var(--cinnabar); opacity: 1; }
+.brg__node[data-state="running"] .brg__halo { opacity: .35; animation: brg-pulse 1.2s ease-in-out infinite; }
+.brg__node[data-state="running"] .brg__bird { opacity: 1; transform: translateY(-3px); }
+.brg__node[data-state="done"] .brg__dot { fill: var(--on-indigo); stroke: var(--on-indigo); opacity: 1; }
+.brg__node[data-state="done"] .brg__bird { opacity: 1; }
+.brg__node[data-state="skipped"] .brg__dot { stroke-dasharray: 3 3; opacity: .55; }
+.brg__node[data-state="skipped"] .brg__bird { opacity: .3; }
+.brg__node[data-state="error"] .brg__dot { fill: none; stroke: var(--cinnabar); opacity: 1; }
+.brg__node[data-state="error"] .brg__cross { opacity: 1; }
+
+@keyframes brg-pulse {
+  0%, 100% { opacity: .15; transform: scale(.85); }
+  50%      { opacity: .45; transform: scale(1.15); }
+}
+
+/* 小灯：朱砂，看懂后亮起 */
+.brg__lamp-core { fill: var(--on-indigo); opacity: .35; transition: opacity var(--dur-ink), fill var(--dur-ink); }
+.brg__lamp-glow { fill: var(--cinnabar); opacity: 0; transition: opacity var(--dur-ink); }
+.brg__lamp.is-lit .brg__lamp-core { fill: var(--cinnabar); opacity: 1; }
+.brg__lamp.is-lit .brg__lamp-glow { opacity: .4; }
+
+.brg__tag { min-height: 1.4em; margin: var(--s1) 0 0; text-transform: none; letter-spacing: .08em; }
+.brg__result { min-height: 1.4em; margin: 0; font-family: var(--f-small); font-size: var(--fs-small); color: var(--cinnabar-text); opacity: 0; transition: opacity var(--dur-ink); }
+.brg__result.is-on { opacity: 1; }
+
+@media (max-width: 720px) {
+  .brg { padding: var(--s3) var(--edge) var(--s2); }
+}

@@ -24,6 +24,7 @@ export function createFlow({ ladder, nodes }) {
       nodes: idleNodes(),
       traceSimulated: false,
       understood: false,
+      demo: false,              // 演示模式中：输入与按钮禁用（features 读它）
       reqSeq: 0,
       reqId: null,              // 当前有效请求；对不上的响应一律丢弃
       lastCall: null,           // { action, req } 供重试
@@ -49,6 +50,8 @@ export function createFlow({ ladder, nodes }) {
         error: null,
         understood: false,
         nodes: idleNodes(),
+        // 请求在途时还没有真实 trace，节点是按固定节奏模拟点亮的；响应回来后再按 trace 是否存在改写
+        traceSimulated: true,
       },
       effects: [{ type: 'CALL_CHAT', reqId, req, path: pathOf(action) }],
     };
@@ -174,8 +177,12 @@ export function createFlow({ ladder, nodes }) {
         };
       }
 
+      case 'SET_DEMO':
+        return { state: { ...s, demo: !!e.on }, effects: [] };
+
       case 'RESET':
-        return { state: initialState({ hskRung: s.hskStart }), effects: [{ type: 'CANCEL' }] };
+        // reqSeq 必须单调递增：重置后新请求的 reqId 不能与被取消的旧请求撞号
+        return { state: { ...initialState({ hskRung: s.hskStart }), reqSeq: s.reqSeq }, effects: [{ type: 'CANCEL' }] };
 
       default:
         return noop(s);

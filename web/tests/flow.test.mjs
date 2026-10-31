@@ -27,6 +27,19 @@ test('初始：idle，4 个节点全空，起点 HSK 3 = 第 4 级', () => {
   assert.deepEqual(Object.values(s.nodes), ['idle', 'idle', 'idle', 'idle']);
 });
 
+test('请求在途时 traceSimulated=true（节点是模拟点亮的），带真实 trace 的响应回来后改为 false', () => {
+  const { state: running, effects } = flow.reduce(init(), { type: 'SUBMIT', text: 'x' });
+  assert.equal(running.traceSimulated, true);
+  const { state: done } = flow.reduce(running, {
+    type: 'RESPONSE', reqId: effects[0].reqId,
+    resp: resp(4, { trace: [{ node: 'rewrite', status: 'done' }] }),
+  });
+  assert.equal(done.traceSimulated, false);
+  // 再发一次请求（没看懂），在途期间重新变回模拟
+  const again = flow.reduce(done, { type: 'NOT_UNDERSTOOD' });
+  assert.equal(again.state.traceSimulated, true);
+});
+
 test('SUBMIT：转 running，生成 CALL_CHAT，请求带所选档', () => {
   const { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: ' 日照香炉生紫烟 ', context: '水杯' });
   assert.equal(state.status, 'running');

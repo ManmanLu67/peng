@@ -2,7 +2,7 @@
 // 唯一允许同时看见 adapters、features、pages、shell 的地方。
 
 import config from '../config/app.config.js';
-import { adapterFactories } from './adapters/index.js';
+import { adapterFactories, applyLocalChat } from './adapters/index.js';
 import { featureRegistry } from './features/registry.js';
 import { pages } from './pages/index.js';
 import { mountRouter } from './shell/router.js';
@@ -61,10 +61,21 @@ function installGuards(bus) {
   bus.on('error:shown', ({ code }) => toast(`请求失败（${code}） · Request failed`));
 }
 
+/** 没有 config.local.js（或它被浏览器拦下）时继续用 mock。 */
+async function loadLocalConfig() {
+  try {
+    const mod = await import('../config/config.local.js');
+    return mod.default ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function boot() {
   const data = await loadData(config.data);
+  const local = await loadLocalConfig();
 
-  const ports = createPorts(config.adapters, { data });
+  const ports = createPorts(applyLocalChat(config.adapters, local), { data });
   const ladder = createLadder(data.rungs);
   const flow = createFlow({ ladder, nodes: data.nodes });
   const store = createStore(flow.initialState({ hskRung: ladder.hskToRung(config.defaults.hsk) }));

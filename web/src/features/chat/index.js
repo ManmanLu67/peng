@@ -110,7 +110,11 @@ export default {
     el.append(h('section', { class: 'chat', 'aria-label': '对话 · Chat' },
       messages,
       h('div', { class: 'chat__bottom' }, status, examples, form,
-        h('p', { class: 'chat__hint label' }, bilingual('文字将发送给模拟接口，不会离开本机', 'Text goes to the mock API and stays on this device', { inline: true })))));
+        h('p', { class: 'chat__hint label' }, bilingual(
+          ctx.ports.chat?.kind === 'live' ? '文字将发送到你配置的模型接口' : '文字将发送给模拟接口，不会离开本机',
+          ctx.ports.chat?.kind === 'live' ? 'Text is sent to the model API you configured' : 'Text goes to the mock API and stays on this device',
+          { inline: true },
+        )))));
 
     render(store.get());
     const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo }), () => render(store.get()));

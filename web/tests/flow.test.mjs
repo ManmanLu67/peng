@@ -48,7 +48,14 @@ test('SUBMIT：转 running，生成 CALL_CHAT，请求带所选档', () => {
   assert.equal(effects[0].req.action, 'submit');
   assert.equal(effects[0].req.message, '日照香炉生紫烟');
   assert.equal(effects[0].req.target_rung, 4);
+  assert.equal(effects[0].req.client, 'user');
   assert.deepEqual(effects[0].path, ['rewrite']);
+});
+
+test('演示中的请求标成 demo，平时是 user', () => {
+  const demoOn = flow.reduce(init(), { type: 'SET_DEMO', on: true }).state;
+  const sent = flow.reduce(demoOn, { type: 'SUBMIT', text: 'a' });
+  assert.equal(sent.effects[0].req.client, 'demo');
 });
 
 test('SUBMIT：空输入与运行中重复提交被忽略', () => {

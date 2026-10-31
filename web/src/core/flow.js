@@ -38,7 +38,9 @@ export function createFlow({ ladder, nodes }) {
   /** 发起一次请求：reqId 自增，节点全部复位，状态转 running。 */
   function startCall(s, action, req, messages = s.messages) {
     const reqId = s.reqSeq + 1;
-    const lastCall = { action, req };
+    // client 告诉 live 适配器：演示走 mock，用户提交才打模型
+    const stamped = { ...req, client: s.demo ? 'demo' : 'user' };
+    const lastCall = { action, req: stamped };
     return {
       state: {
         ...s,
@@ -53,7 +55,7 @@ export function createFlow({ ladder, nodes }) {
         // 请求在途时还没有真实 trace，节点是按固定节奏模拟点亮的；响应回来后再按 trace 是否存在改写
         traceSimulated: true,
       },
-      effects: [{ type: 'CALL_CHAT', reqId, req, path: pathOf(action) }],
+      effects: [{ type: 'CALL_CHAT', reqId, req: stamped, path: pathOf(action) }],
     };
   }
 

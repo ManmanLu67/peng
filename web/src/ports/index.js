@@ -11,7 +11,7 @@
 /**
  * @typedef {{ ok: boolean, intent: string, rung: number, input_rung?: number,
  *             output: { lang: 'zh'|'en', text: string }, reply_text: string,
- *             english?: string, culture_note?: { zh: string, en: string },
+ *             english?: string, context?: string, culture_note?: { zh: string, en: string },
  *             trace?: { node: string, status: string, ms?: number, detail?: string }[],
  *             error: string|null }} PengResponse
  */

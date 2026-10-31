@@ -50,6 +50,12 @@ test('parseModelContent：去掉代码围栏并读出字段', () => {
   assert.deepEqual(parsed.culture_note, { zh: '诗', en: 'poem' });
 });
 
+test('parseModelContent：语境有字才留下，空白当作没有', () => {
+  assert.equal(parseModelContent('{"text":"水很烫。","context":" 对着水杯说 "}').context, '对着水杯说');
+  assert.equal(parseModelContent('{"text":"水很烫。","context":"  "}').context, undefined);
+  assert.equal(parseModelContent('{"text":"水很烫。"}').context, undefined);
+});
+
 test('parseModelContent：缺 text 抛 bad_response', () => {
   assert.throws(() => parseModelContent('{"input_rung":8}'), (err) => err instanceof PengError && err.code === 'bad_response');
   assert.throws(() => parseModelContent('not json'), (err) => err instanceof PengError && err.code === 'bad_response');
@@ -104,6 +110,39 @@ test('submit 取更低档，请求打到 chat/completions', async () => {
   assert.equal(resp.english, 'Hot.');
   assert.deepEqual(resp.culture_note, { zh: '诗', en: 'poem' });
   assert.equal(resp.mock_placeholder, undefined);
+});
+
+test('submit：只收下原文里写明的语境，没有就不带', async () => {
+  let prompt = '';
+  const chat = create({
+    ...OPTS,
+    fetch: async (_u, o) => {
+      prompt = JSON.parse(o.body).messages.at(-1).content;
+      return model(JSON.stringify({ input_rung: 8, text: '水很烫。', context: '一个人对着水杯说' }));
+    },
+  });
+  const resp = await chat.send({
+    action: 'submit', message: '一个人对着水杯说：日照香炉生紫烟', target_rung: 4,
+  });
+  assert.match(prompt, /context/);
+  assert.match(prompt, /不要编造/);
+  assert.equal(resp.context, '一个人对着水杯说');
+
+  const echo = create({
+    ...OPTS,
+    fetch: async () => model(JSON.stringify({
+      input_rung: 8, text: '水很烫。', context: '日照香炉生紫烟',
+    })),
+  });
+  const same = await echo.send({ action: 'submit', message: '日照香炉生紫烟', target_rung: 4 });
+  assert.equal(same.context, undefined);
+
+  const none = create({
+    ...OPTS,
+    fetch: async () => model(JSON.stringify({ input_rung: 8, text: '水很烫。', context: '' })),
+  });
+  const empty = await none.send({ action: 'submit', message: '日照香炉生紫烟', target_rung: 4 });
+  assert.equal(empty.context, undefined);
 });
 
 test('submit：句子更简单时停在句子档', async () => {

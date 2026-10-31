@@ -77,6 +77,32 @@ test('RESPONSE：按返回的 rung 渲染；英文档转 english；无 trace 标
   assert.equal(resolved(1).status, 'english');
 });
 
+test('RESPONSE：模型认出的语境写到这句话下面；空白保持空；已有语境不覆盖', () => {
+  let { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: '一个人对着水杯说：日照香炉生紫烟' });
+  ({ state } = flow.reduce(state, {
+    type: 'RESPONSE', reqId: effects[0].reqId,
+    resp: resp(4, { context: ' 一个人对着水杯说 ' }),
+  }));
+  assert.equal(state.messages[0].context, '一个人对着水杯说');
+  assert.equal(state.messages[0].text, '一个人对着水杯说：日照香炉生紫烟');
+  const down = flow.reduce(state, { type: 'NOT_UNDERSTOOD' });
+  assert.equal(down.effects[0].req.context, '一个人对着水杯说');
+
+  const blank = flow.reduce(init(), { type: 'SUBMIT', text: '日照香炉生紫烟' });
+  const noScene = flow.reduce(blank.state, {
+    type: 'RESPONSE', reqId: blank.effects[0].reqId,
+    resp: resp(4, { context: '  ' }),
+  });
+  assert.equal(noScene.state.messages[0].context, '');
+
+  const kept = flow.reduce(init(), { type: 'SUBMIT', text: '日照香炉生紫烟', context: '一个人对着水杯说' });
+  const still = flow.reduce(kept.state, {
+    type: 'RESPONSE', reqId: kept.effects[0].reqId,
+    resp: resp(4, { context: '别的场景' }),
+  });
+  assert.equal(still.state.messages[0].context, '一个人对着水杯说');
+});
+
 test('RESPONSE：有 trace 时不是模拟回放', () => {
   let { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: 'x' });
   ({ state } = flow.reduce(state, {

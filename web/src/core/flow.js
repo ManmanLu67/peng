@@ -116,7 +116,13 @@ export function createFlow({ ladder, nodes }) {
         const resp = e.resp;
         const messages = s.messages.map((m) =>
           m.id === s.activeId
-            ? { ...m, resp, rung: resp.rung, inputRung: resp.input_rung ?? m.inputRung }
+            ? {
+                ...m,
+                context: m.context?.trim() ? m.context : (typeof resp.context === 'string' ? resp.context.trim() : m.context),
+                resp,
+                rung: resp.rung,
+                inputRung: resp.input_rung ?? m.inputRung,
+              }
             : m);
         return {
           state: {

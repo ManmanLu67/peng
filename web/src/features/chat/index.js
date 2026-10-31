@@ -26,7 +26,7 @@ export default {
     const send = h('button', { class: 'chat__send', type: 'submit', 'aria-label': '发送 · Send' }, sendIcon());
     const form = h('form', { class: 'chat__form', autocomplete: 'off' }, input, send);
 
-    // 示例自带语境，点击即提交；手动输入没有语境（语境输入框是 P1，不显示）
+    // 示例自带语境，点击即提交。手动输入先不带语境，模型若从原文里摘出场景，响应回来后再显示。
     for (const s of samples) {
       examples.append(h('button', {
         type: 'button', class: 'chat__example', title: s.context || null,

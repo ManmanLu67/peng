@@ -75,7 +75,17 @@ export function parseModelContent(raw) {
     text: data.text.trim(),
     english: typeof data.english === 'string' ? data.english.trim() : '',
     culture_note: culture && (culture.zh || culture.en) ? culture : undefined,
+    context: typeof data.context === 'string' && data.context.trim() ? data.context.trim() : undefined,
   };
+}
+
+/** 只收下原文里已经写明、且不是整句本身的那一段。 */
+function recognizedContext(message, raw) {
+  if (typeof raw !== 'string') return undefined;
+  const text = raw.trim();
+  const source = String(message ?? '').trim();
+  if (!text || text === source || !source.includes(text)) return undefined;
+  return text;
 }
 
 function endpoint(baseUrl) {
@@ -96,7 +106,8 @@ function promptFor(req) {
       '用中文把意思说清楚。难度必须是 T=min(L, input_rung)。不得高于学习者档，不得写成英文。',
       '若句子已经不高于 L，就按句子本身的档位用明白的话重说一遍，不要再压低，也不要拔高。',
       '保留原意。不要加称呼，不要解释步骤。',
-      '只输出 JSON：{"input_rung":8,"text":"降级后的中文","english":"简短英文释义","culture_note":{"zh":"可选","en":"optional"}}',
+      '若句子里另写了场景、说话人或听话人，把那一段原文摘到 context。必须是句子里的原句，不要编造，不要复述整句。没有就给空字符串。',
+      '只输出 JSON：{"input_rung":8,"text":"降级后的中文","english":"简短英文释义","context":"","culture_note":{"zh":"可选","en":"optional"}}',
       '没有文化背景就省略 culture_note。',
     ].join('\n');
   }
@@ -125,6 +136,8 @@ function toResponse(req, parsed) {
   if (req.action === 'submit') out.input_rung = sentenceRung(parsed.input_rung);
   if (parsed.english) out.english = parsed.english;
   if (parsed.culture_note) out.culture_note = parsed.culture_note;
+  const context = recognizedContext(req.message, parsed.context);
+  if (context) out.context = context;
   return out;
 }
 

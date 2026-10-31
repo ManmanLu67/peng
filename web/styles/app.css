@@ -1,0 +1,117 @@
+/* 页面网格与顶栏。功能自己的样式用各自前缀（.topbar / .hsk / .nav …），不写全局选择器。 */
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--s3);
+  height: var(--topbar);
+  padding: 0 var(--s4);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.topbar__slot { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.topbar__slot--left   { justify-content: flex-start; }
+.topbar__slot--center { justify-content: center; }
+.topbar__slot--right  { justify-content: flex-end; }
+
+/* 功能容器本身不参与布局，让槽位直接排列其内容 */
+.topbar__slot > .feature { display: contents; }
+
+.logo { display: inline-flex; align-items: center; gap: var(--s2); text-decoration: none; }
+.logo__stamp {
+  display: inline-grid; place-items: center;
+  width: 36px; height: 36px;
+  background: var(--cinnabar); color: var(--on-indigo);
+  font-family: var(--f-title); font-size: 22px; line-height: 1;
+}
+.logo__word { font-family: var(--f-disp); font-size: 26px; letter-spacing: .08em; font-weight: 300; }
+
+.nav { display: flex; gap: var(--s4); }
+.nav__link {
+  text-decoration: none;
+  padding: var(--s1) 0;
+  border-bottom: 1px solid transparent;
+}
+.nav__link:hover { border-bottom-color: var(--ink); }
+.nav__link[aria-current="page"] { border-bottom-color: var(--cinnabar); }
+
+/* HSK 选档：字距拉开的小字，当前档带朱砂短下划线 */
+.hsk { display: flex; gap: var(--s3); }
+.hsk__btn {
+  white-space: nowrap;
+  background: none; border: 0; padding: var(--s1) 0; cursor: pointer;
+  font-family: var(--f-small); font-size: var(--fs-small); letter-spacing: .16em;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+.hsk__btn:hover { color: var(--ink); }
+.hsk__btn.is-on { color: var(--ink); border-bottom-color: var(--cinnabar); }
+
+.icon-btn {
+  display: inline-grid; place-items: center;
+  width: 32px; height: 32px; padding: 0;
+  background: none; border: 1px solid var(--line); border-radius: 0;
+  color: var(--ink); cursor: pointer;
+}
+.icon-btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+.api-badge {
+  font-family: var(--f-small); font-size: var(--fs-label);
+  letter-spacing: .12em; color: var(--muted);
+}
+.api-badge--mock { color: var(--muted); }
+.api-badge--live { color: var(--dai); }
+
+/* ---------- 页面骨架 ----------
+   每个页面 = 顶栏 + 主体。路由把当前路径写在 #root[data-page]。 */
+#root[data-page] { display: flex; flex-direction: column; min-height: 100dvh; }
+#root > .feature { min-width: 0; }
+#root > .feature--topbar { flex: none; }
+
+/* 工作台主体：左栏对话，右栏上节点区、下对比区。
+   T3 的功能加入后，用 grid-area 把各自容器放进下面的区域（区域名与功能 id 对应）。 */
+#root[data-page="/app"] {
+  display: grid;
+  grid-template-columns: minmax(320px, 25%) 1fr;
+  grid-template-rows: var(--topbar) auto 1fr;
+  grid-template-areas:
+    "topbar     topbar"
+    "chat       bridge"
+    "chat       compare";
+  min-height: 100dvh;
+}
+#root[data-page="/app"] > .feature--topbar      { grid-area: topbar; }
+#root[data-page="/app"] > .feature--chat        { grid-area: chat; border-right: 1px solid var(--line); }
+#root[data-page="/app"] > .feature--bridge      { grid-area: bridge; border-bottom: 1px solid var(--line); }
+#root[data-page="/app"] > .feature--compare     { grid-area: compare; }
+#root[data-page="/app"] > .feature--ladder-bar  { grid-area: compare; justify-self: end; }
+#root[data-page="/app"] > .feature--actions     { grid-area: compare; justify-self: end; align-self: end; }
+#root[data-page="/app"] > .feature--demo        { grid-area: compare; }
+/* 临时占位：T3 删除 */
+#root[data-page="/app"] > .feature--app-placeholder { grid-area: compare; }
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 720px) {
+  .topbar { padding: 0 var(--edge); gap: var(--s2); grid-template-columns: auto 1fr auto; }
+  /* 窄屏只留数字，按钮的 aria-label 仍是完整的 "HSK n"。
+     顶栏四块（Logo、选档、标记、主题）要在 400px 内放下，所以收紧间距 */
+  .topbar { gap: var(--s2); padding: 0 var(--s3); }
+  .topbar__slot { gap: var(--s2); }
+  .hsk { gap: var(--s1); }
+  .hsk__prefix { display: none; }
+  .hsk__btn { min-width: 24px; letter-spacing: 0; text-align: center; padding: var(--s2) 0; }
+  .api-badge { letter-spacing: .06em; }
+  .logo__stamp { width: 32px; height: 32px; font-size: 20px; }
+  .nav { gap: var(--s3); }
+  .nav__link .bi__en { display: none; }     /* 窄屏只留中文，避免顶栏溢出 */
+  .logo__word { display: none; }
+
+  #root[data-page="/app"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--topbar) auto auto 1fr;   /* 多余高度给最后一行，空行不被拉伸 */
+    grid-template-areas: "topbar" "chat" "bridge" "compare";
+  }
+  #root[data-page="/app"] > .feature--chat { border-right: 0; border-bottom: 1px solid var(--line); }
+}

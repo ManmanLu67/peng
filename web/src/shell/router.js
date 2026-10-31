@@ -41,6 +41,7 @@ export function mountRouter(pages, registry, ctx, { root, live = null }) {
 
     current?.unmount?.();
     root.replaceChildren();
+    root.dataset.page = path;     // 页面网格（styles/app.css）按它分页布局
     const seq = ++renderSeq;
 
     const unmount = mountEntries(root, page.features, ctx, registry);

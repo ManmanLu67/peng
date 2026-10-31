@@ -15,7 +15,7 @@
 
 ## 现在有什么
 
-全局：`#/`、`#/app`、`#/team`。顶栏槽位、切页后工作台状态保留、设计令牌、窄屏。主题按钮只显示，`aria-disabled`，点击不改 `data-theme`。`flags.debug` 与 `showApiBadge` 仅在 `hostname === 'localhost'` 时为真；`127.0.0.1` 下没有 `__peng`，顶栏也不显示 API 标记。
+全局：`#/`、`#/app`、`#/team`。顶栏槽位、切页后工作台状态保留、设计令牌、窄屏。主题按钮会切换 `data-theme`，选择记在 `localStorage` 的 `peng-theme`，没有记录时跟随系统。三页共用。`flags.debug` 与 `showApiBadge` 仅在 `hostname === 'localhost'` 时为真；`127.0.0.1` 下没有 `__peng`，顶栏也不显示 API 标记。
 
 首页（`features/home-hero/`、`styles/paper.css`）：5 块纸、固定 seed 的撕纸边、滤镜 v2、14 只喜鹊、微场景、朱砂小灯和「开始」印章。标题「难懂的话，走成一座桥。」，英文副标 `Meet the language halfway.`。竖排「鹊桥 · Queqiao」和页脚「黑客松 · 7 小时 · 4 人」已去掉。墨渍入场只留注释，元素静态全显。
 
@@ -32,7 +32,7 @@
 
 数据：`rungs`、`nodes`、`annotation-types`、`demo`、`hsk`、`glosses`、`team`。语法标注不在 `annotation-types.json` 里。
 
-P1 只留入口，没有界面对应功能：深浅色切换、语音、手动升档和还原、「看懂了」按钮、语法标注、双栏连线、节点详情、错误详情与重试、团队外链、墨渍动画。P2（学习记录、扣子后端、自由聊天）没有建。
+P1 只留入口，没有界面对应功能：语音、手动升档和还原、「看懂了」按钮、语法标注、双栏连线、节点详情、错误详情与重试、团队外链、墨渍动画。深浅色切换已经接上。P2（学习记录、扣子后端、自由聊天）没有建。
 
 ## 本次核对（2026-11-01）
 

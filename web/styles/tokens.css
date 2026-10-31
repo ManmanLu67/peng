@@ -1,4 +1,4 @@
-/* 设计令牌：颜色、字体、间距、时长。P0 固定浅色；[data-theme="dark"] 保留变量结构，P1 接入切换。 */
+/* 设计令牌：颜色、字体、间距、时长。data-theme="dark" 时覆盖颜色。 */
 :root {
   color-scheme: light;
 
@@ -61,6 +61,7 @@
   --indigo:     #0E1830;
   --teal:       #223F4A;
   --bridge-line: #D2A068;
+  --on-indigo:  #EDE6D6;
   --muted:          #A39D90;
   --cinnabar-text:  #E0664F;
 }

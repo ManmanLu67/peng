@@ -31,8 +31,7 @@
 /** @typedef {{ words(text: string): string[] }} SegmenterPort */
 
 /**
- * P1，本次只留契约（深浅色实际切换）。P0 页面固定浅色，tokens.css 保留 dark 变量结构。
- * 接入时：新建 adapters/theme/*.js 读写偏好并设置 document.documentElement.dataset.theme。
+ * 深浅色。实现在 adapters/theme/pref.js：手动偏好写入 localStorage，否则跟随系统。
  * @typedef {{ get(): 'light'|'dark', set(t: 'light'|'dark'): void }} ThemePort
  */
 

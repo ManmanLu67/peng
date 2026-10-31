@@ -1,0 +1,13 @@
+{
+  "name": "peng-web",
+  "private": true,
+  "type": "module",
+  "description": "朋 / Peng 网页原型。零依赖，只需要 Node 18+。",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node scripts/check-deps.mjs",
+    "test": "node --test",
+    "verify": "node scripts/check-deps.mjs && node --test"
+  }
+}

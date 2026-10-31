@@ -1,0 +1,6 @@
+[
+  { "id": "allusion",  "label": { "zh": "典故", "en": "Allusion" }, "color": "--cinnabar", "line": "solid"  },
+  { "id": "classical", "label": { "zh": "文言", "en": "Classical" }, "color": "--dai",      "line": "double" },
+  { "id": "written",   "label": { "zh": "书面", "en": "Written"  }, "color": "--ochre",    "line": "wavy"   },
+  { "id": "grammar",   "label": { "zh": "语法", "en": "Grammar"  }, "color": "--ink",      "line": "dashed" }
+]

@@ -1,0 +1,28 @@
+{
+  "samples": [
+    { "text": "日照香炉生紫烟", "context": "一个人对着水杯说" },
+    { "text": "落霞与孤鹜齐飞，秋水共长天一色。", "context": "" },
+    { "text": "朝辞白帝彩云间", "context": "" }
+  ],
+  "entries": [
+    {
+      "match": "日照香炉生紫烟",
+      "input_rung": 8,
+      "english": "The water is so hot it's steaming.",
+      "culture_note": {
+        "zh": "“日照香炉生紫烟”出自李白《望庐山瀑布》，原句写阳光照在香炉峰上，升起紫色的云烟。这里借诗开玩笑，说水很烫。",
+        "en": "A line from Li Bai's \"Viewing the Waterfall at Mount Lu\", about sunlight turning mist violet above Incense Burner Peak. Here it is a joke about steaming hot water."
+      },
+      "rungs": {
+        "8": "日照香炉生紫烟",
+        "7": "这是在用一句诗形容：水杯里升起了热气，说明水很烫。",
+        "6": "他用一句古诗开玩笑：杯子里冒着热气，水太烫了。",
+        "5": "他说的是一句古诗。意思是：杯子里在冒热气，水很烫。",
+        "4": "这是一句古诗。他的意思是：水很烫，有热气。",
+        "3": "水很烫。水里有热气。",
+        "2": "水很烫。",
+        "1": "The water is so hot it's steaming — he jokes with a line of classical poetry."
+      }
+    }
+  ]
+}

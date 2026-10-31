@@ -1,0 +1,10 @@
+[
+  { "n": 1, "id": "en",   "label": { "zh": "英文",  "en": "English"  }, "lang": "en" },
+  { "n": 2, "id": "hsk1", "label": { "zh": "HSK 1", "en": "HSK 1"    }, "hsk": 1 },
+  { "n": 3, "id": "hsk2", "label": { "zh": "HSK 2", "en": "HSK 2"    }, "hsk": 2 },
+  { "n": 4, "id": "hsk3", "label": { "zh": "HSK 3", "en": "HSK 3"    }, "hsk": 3 },
+  { "n": 5, "id": "hsk4", "label": { "zh": "HSK 4", "en": "HSK 4"    }, "hsk": 4 },
+  { "n": 6, "id": "hsk5", "label": { "zh": "HSK 5", "en": "HSK 5"    }, "hsk": 5 },
+  { "n": 7, "id": "hsk6", "label": { "zh": "HSK 6", "en": "HSK 6"    }, "hsk": 6 },
+  { "n": 8, "id": "org",  "label": { "zh": "原文",  "en": "Original" }, "original": true }
+]

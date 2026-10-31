@@ -1,0 +1,6 @@
+# 令牌等私密配置（技术文档第 9 节）
+web/config/config.local.js
+
+node_modules/
+*.log
+.DS_Store

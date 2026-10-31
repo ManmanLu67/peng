@@ -41,11 +41,12 @@ test('safeHttps：只放行 https://', () => {
   }
 });
 
-test('team.json：4 位成员，序号 01–04，职责中英齐全，姓名待填', () => {
+test('team.json：4 位成员，序号 01–04，职责中英齐全，姓名已填且印章取首字', () => {
   const team = JSON.parse(readFileSync(new URL('../data/team.json', import.meta.url), 'utf8'));
   assert.equal(team.members.length, 4);
   const ds = team.members.map(describeMember);
   assert.deepEqual(ds.map((d) => d.no), ['01', '02', '03', '04']);
   assert.ok(ds.every((d) => d.roleZh && d.roleEn));
-  assert.ok(ds.every((d) => d.name === null && d.stamp === '朋'));
+  assert.ok(ds.every((d) => typeof d.name === 'string' && d.name.length > 0));
+  assert.ok(ds.every((d) => d.stamp === [...d.name][0]));
 });

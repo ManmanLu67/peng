@@ -56,7 +56,7 @@ await session(9460, async ({ ev, send, check, view, go, shot, sleep }) => {
   check('每一页真实停留都在 5–10 s（允许 ±0.4 s 轮询误差）', dwells.length === 3 && dwells.every((x) => x >= 4.6 && x <= 10.4), dwells.join(','));
   check('C2 档位依次 4→3→2→1（HSK3→HSK2→HSK1→英文）', JSON.stringify(rungs) === '[4,3,2,1]', JSON.stringify(rungs));
   check(`C2 全程跑完（用时 ${secs}s，目标约 30–70 s）`, finished && Number(secs) > 28 && Number(secs) < 70, `${secs}s finished=${finished}`);
-  check('C2 结束：小灯亮、读懂了', (await ev(`${q('.brg__lamp')}.classList.contains('is-lit')`)) === true && (await ev(`${q('.brg__result')}.textContent`)) === '读懂了 · Understood');
+  check('C2 结束：末节点完成、读懂了', (await ev(`${qa('.brg__node')}.at(-1).dataset.state`)) === 'done' && (await ev(`${q('.brg__result')}.textContent`)) === '读懂了 · Understood');
   check('C2 结束：节点 02 03 04 状态 done,done,skipped,done', (await ev(states())) === 'done,done,skipped,done', await ev(states()));
   check('C2 结束：演示标记收起，输入恢复可用', (await ev(st('demo'))) === false && (await ev(`${q('.chat__input')}.readOnly`)) === false);
   check('C2 结束：对比区停在英文档，英文主显', (await ev(`${q('.cmp__text--en')}.textContent`)).startsWith('The water is so hot'));
@@ -71,7 +71,7 @@ await session(9460, async ({ ev, send, check, view, go, shot, sleep }) => {
   await ev(`${q('.demo__exit')}.click()`);
   await sleep(300);
   check('C4 退出后回到 idle，消息清空', (await ev(st('status'))) === 'idle' && (await ev(st('messages.length'))) === 0);
-  check('C4 退出后节点全空、小灯熄灭', (await ev(states())) === 'idle,idle,idle,idle' && (await ev(`${q('.brg__lamp')}.classList.contains('is-lit')`)) === false);
+  check('C4 退出后节点全空，没有小灯', (await ev(states())) === 'idle,idle,idle,idle' && (await ev(`${q('.brg__lamp')}`)) === null);
   check('C4 退出后输入恢复、横幅隐藏、演示按钮回来', (await ev(`${q('.chat__input')}.readOnly`)) === false && (await ev(`${q('.demo__banner')}.hidden && !${q('.demo__start')}.hidden`)) === true);
   await sleep(3500);
   check('C4 退出后不再有残留动作（3.5 s 后仍是 idle）', (await ev(st('status'))) === 'idle' && (await ev(st('messages.length'))) === 0);

@@ -15,12 +15,14 @@ await session(9430, async ({ ev, check, view, go, shot, sleep }) => {
   check('4 个节点，序号 01–04', (await ev(`${qa('.brg__no')}.map(e=>e.textContent).join(',')`)) === '01,02,03,04');
   check('英文标签 REWRITE / NOT CLEAR / STEP DOWN / BRIDGE', (await ev(`${qa('.brg__label')}.map(e=>e.textContent).join(',')`)) === 'REWRITE,NOT CLEAR,STEP DOWN,BRIDGE');
   check('初始 4 个节点全为 idle', (await ev(states())) === 'idle,idle,idle,idle');
-  check('两块靛蓝纸', (await ev(`${qa(".brg__paper")}.length`)) === 2);
-  check('喜鹊 symbol 已注入，4 只喜鹊都引用得到它', (await ev(`!!document.getElementById('magpie')`)) === true
-    && (await ev(`${qa('.brg__bird use')}.every(u => document.querySelector(u.getAttribute('href')))`)) === true);
-  check('每只喜鹊实际有渲染尺寸（不是空白）', (await ev(`${qa('.brg__bird use')}.every(u => { const b = u.getBBox(); return b.width > 10 && b.height > 5 })`)) === true);
-  check('第 4 只喜鹊镜像仰头（带 transform）', (await ev(`!!${qa('.brg__bird')}[3].querySelector('g[transform]')`)) === true);
-  check('小灯初始未亮', (await ev(`${q('.brg__lamp')}.classList.contains('is-lit')`)) === false);
+  check('一条弧线，没有靛蓝纸，没有小灯', (await ev(`${qa('.brg__arc')}.length`)) === 1
+    && (await ev(`${qa('.brg__paper,.brg__lamp')}.length`)) === 0);
+  check('4 个月相由缺到圆', (await ev(`${qa('.brg__node')}.map(g=>g.dataset.f).join(',')`)) === '0.2,0.46,0.72,1');
+  check('恰好 4 只共用喜鹊，没有月间鸟群', (await ev(`${qa('.brg__bird use')}.length`)) === 4
+    && (await ev(`${qa('.brg__bird use')}.every(u => u.getAttribute('href') === '#magpie')`)) === true
+    && (await ev(`${qa('.brg__flock')}.length`)) === 0
+    && (await ev(`!!document.getElementById('magpie')`)) === true);
+  check('第 4 只喜鹊镜像仰头', (await ev(`!!${qa('.brg__bird')}[3].querySelector('g[transform]')`)) === true);
   check('反馈按钮：只有“没看懂”一个，且初始禁用', (await ev(`${qa('.act__btn')}.length`)) === 1 && (await ev(`${q('.act__btn')}.disabled`)) === true);
   check('反馈按钮文字', (await ev(`${q('.act__btn')}.textContent`)) === "没看懂 · Didn't understand");
   check('没有“看懂了/更简单/还原”按钮（P1 不展示）', !(await ev('document.body.innerText')).match(/看懂了|更简单|Simpler|Closer to original/));
@@ -62,7 +64,7 @@ await session(9430, async ({ ev, check, view, go, shot, sleep }) => {
   await ev('__peng.commands.understood()');
   await sleep(1800);
   check('B14 看懂后 03 虚线（skipped）、04 亮、02 亮', (await ev(states())) === 'done,done,skipped,done', await ev(states()));
-  check('B14 小灯亮起', (await ev(`${q('.brg__lamp')}.classList.contains('is-lit')`)) === true);
+  check('B14 末节点完成，没有小灯', (await ev(`${qa('.brg__node')}.at(-1).dataset.state`)) === 'done' && (await ev(`${q('.brg__lamp')}`)) === null);
   check('B14 显示“读懂了 · Understood”', (await ev(`${q('.brg__result')}.textContent`)) === '读懂了 · Understood');
   check('B14 读屏列表同步', (await ev(`${qa('.sr-only li')}.map(l=>l.textContent).join('|')`)).includes('步骤 3：降档，已跳过'));
   await shot(`${SHOTS}/bridge-done.png`);
@@ -70,7 +72,7 @@ await session(9430, async ({ ev, check, view, go, shot, sleep }) => {
   // 重新提交后复位
   await ev(submit('随便一句话'));
   await sleep(250);
-  check('重新提交后小灯熄灭、节点复位', (await ev(`${q('.brg__lamp')}.classList.contains('is-lit')`)) === false && (await ev(states())) === 'running,idle,idle,idle');
+  check('重新提交后节点复位，没有小灯', (await ev(`${q('.brg__lamp')}`)) === null && (await ev(states())) === 'running,idle,idle,idle');
   await settle(ev);
 
   // 出错态

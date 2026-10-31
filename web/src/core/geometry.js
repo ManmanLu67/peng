@@ -68,15 +68,52 @@ export function scalePoints(pct, w, h) {
  * 首页的鹊桥用它排 12–16 只喜鹊：曲线下垂，两端喜鹊略微俯仰，中间水平。
  * @returns {{ x: number, y: number, angle: number }[]}
  */
+export function quadCurveAt(p0, c, p1, t) {
+  if (!(t >= 0 && t <= 1)) throw new Error('quadCurveAt: t 在 0–1');
+  const u = 1 - t;
+  const x = u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0];
+  const y = u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1];
+  const dx = 2 * u * (c[0] - p0[0]) + 2 * t * (p1[0] - c[0]);
+  const dy = 2 * u * (c[1] - p0[1]) + 2 * t * (p1[1] - c[1]);
+  return { x, y, angle: (Math.atan2(dy, dx) * 180) / Math.PI };
+}
+
 export function quadCurvePoints(p0, c, p1, n) {
   if (!Number.isInteger(n) || n < 2) throw new Error('quadCurvePoints: n 至少为 2');
+  return Array.from({ length: n }, (_, i) => quadCurveAt(p0, c, p1, i / (n - 1)));
+}
+
+/**
+ * n 个落在 (0,1) 的参数，向 0.5 聚密，关于 0.5 对称。
+ * power 越大，中间越密。
+ */
+export function clusteredParams(n, power = 2) {
+  if (!Number.isInteger(n) || n < 1) throw new Error('clusteredParams: n 至少为 1');
+  if (!(power > 0)) throw new Error('clusteredParams: power 须为正');
   return Array.from({ length: n }, (_, i) => {
-    const t = i / (n - 1);
-    const u = 1 - t;
-    const x = u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0];
-    const y = u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1];
-    const dx = 2 * u * (c[0] - p0[0]) + 2 * t * (p1[0] - c[0]);
-    const dy = 2 * u * (c[1] - p0[1]) + 2 * t * (p1[1] - c[1]);
-    return { x, y, angle: (Math.atan2(dy, dx) * 180) / Math.PI };
+    const s = (i + 0.5) / n;
+    const d = (s - 0.5) * 2;
+    const shaped = Math.sign(d) * Math.abs(d) ** power;
+    return 0.5 + shaped / 2;
   });
+}
+
+function fmt(n) {
+  const v = Math.abs(n) < 1e-9 ? 0 : n;
+  return String(Math.round(v * 1000) / 1000);
+}
+
+/**
+ * 月相亮面，圆心在原点，半径 r。f 为照亮比例：0 新月、0.5 上弦、1 满月。
+ * 亮面在右侧（蛾眉 → 上弦 → 凸月 → 满月），形状只由 f 决定。
+ * @returns {string} SVG path d
+ */
+export function moonPhasePath(r, f) {
+  if (!(r > 0) || !(f >= 0 && f <= 1)) throw new Error('moonPhasePath: r>0 且 f 在 0–1');
+  if (f === 0) return '';
+  const rx = r * Math.cos(Math.PI * f);
+  const sweep = rx >= 0 ? 0 : 1;
+  const R = fmt(r);
+  // 右缘：上 → 下；明暗界：下 → 上。f≤0.5 界线留在右侧（蛾眉/上弦），f>0.5 界线绕到左侧（凸月/满月）。
+  return `M0 ${fmt(-r)} A${R} ${R} 0 0 1 0 ${R} A${fmt(Math.abs(rx))} ${R} 0 0 ${sweep} 0 ${fmt(-r)}Z`;
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mulberry32, tornPolygon, tornEdge, toClipPath, toPathD, scalePoints, quadCurvePoints } from '../src/core/geometry.js';
+import { mulberry32, tornPolygon, tornEdge, toClipPath, toPathD, scalePoints, quadCurvePoints, quadCurveAt, clusteredParams, moonPhasePath } from '../src/core/geometry.js';
 
 test('mulberry32：同 seed 同序列，不同 seed 不同', () => {
   const a = mulberry32(7); const b = mulberry32(7); const c = mulberry32(8);
@@ -67,4 +67,47 @@ test('quadCurvePoints：相邻点间距均匀到足以让喜鹊首尾相接（�
 
 test('quadCurvePoints：n 太小报错', () => {
   assert.throws(() => quadCurvePoints([0, 0], [1, 1], [2, 0], 1), /至少为 2/);
+});
+
+test('quadCurveAt：端点、中点与 quadCurvePoints 同一条曲线', () => {
+  const p0 = [0, 100]; const c = [500, 250]; const p1 = [1000, 100];
+  const start = quadCurveAt(p0, c, p1, 0);
+  const mid = quadCurveAt(p0, c, p1, 0.5);
+  const end = quadCurveAt(p0, c, p1, 1);
+  assert.deepEqual([start.x, start.y], [0, 100]);
+  assert.deepEqual([end.x, end.y], [1000, 100]);
+  const sampled = quadCurvePoints(p0, c, p1, 3);
+  assert.ok(Math.abs(mid.x - sampled[1].x) < 1e-9 && Math.abs(mid.y - sampled[1].y) < 1e-9);
+  assert.ok(Math.abs(mid.angle) < 1e-6, '正中水平');
+  assert.ok(start.angle > 5 && end.angle < -5);
+  assert.throws(() => quadCurveAt(p0, c, p1, 1.1), /0–1/);
+});
+
+test('clusteredParams：落在 (0,1)，向 0.5 聚密，左右对称', () => {
+  const ts = clusteredParams(6);
+  assert.equal(ts.length, 6);
+  assert.ok(ts.every((t, i) => t > 0 && t < 1 && (i === 0 || t > ts[i - 1])));
+  assert.ok(ts.every((t, i) => Math.abs(t + ts[ts.length - 1 - i] - 1) < 1e-9), '关于 0.5 对称');
+  const gaps = ts.slice(1).map((t, i) => t - ts[i]);
+  assert.ok(gaps[2] < gaps[0] && gaps[2] < gaps[4], `中间间距应更小：${gaps.join(',')}`);
+  assert.throws(() => clusteredParams(0), /至少为 1/);
+});
+
+test('moonPhasePath：同参同路径；满月闭合整圆，上弦是半圆，蛾眉比凸月窄', () => {
+  assert.equal(moonPhasePath(20, 1), moonPhasePath(20, 1));
+  const full = moonPhasePath(20, 1);
+  assert.match(full, /^M/);
+  assert.match(full, /Z$/);
+  assert.ok(full.includes('-20') && full.includes('20'), '满月盖住左右两端');
+  const quarter = moonPhasePath(20, 0.5);
+  assert.match(quarter, /A0 /, '上弦的明暗分界是直线');
+  const crescent = moonPhasePath(20, 0.2);
+  const gibbous = moonPhasePath(20, 0.72);
+  const terminator = (d) => [...d.matchAll(/A([\d.]+) 20 0 0 (\d)/g)].at(-1);
+  const c = terminator(crescent);
+  const g = terminator(gibbous);
+  assert.ok(Number(c[1]) > Number(g[1]), '蛾眉的分界更靠外，亮面更窄');
+  assert.notEqual(c[2], g[2], '蛾眉与凸月的扫掠方向不同');
+  assert.throws(() => moonPhasePath(0, 0.5), /r>0/);
+  assert.throws(() => moonPhasePath(10, 1.2), /0–1/);
 });

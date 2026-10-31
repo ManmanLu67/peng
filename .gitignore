@@ -7,3 +7,5 @@ node_modules/
 docs/brainstorm/
 reference/
 .claude/settings.local.json
+cloudbaserc.json
+vercel.json

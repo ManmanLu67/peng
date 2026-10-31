@@ -41,8 +41,6 @@ export const TEXT = {
 export const COPY = {
   title: ['难懂的话，', '走成一座桥。'],
   subtitle: 'Meet the language halfway.',
-  side: '鹊桥 · Queqiao',
   start: { zh: '开始', en: 'Start' },
-  footer: '黑客松 · 7 小时 · 4 人',
   labels: ['改写', '没看懂', '降档', '结束'],
 };

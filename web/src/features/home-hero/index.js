@@ -93,11 +93,9 @@ export default {
       h('h1', { id: 'home-title', class: 'hero__title' }, ...COPY.title.flatMap((line, i) => (i ? [h('br'), line] : [line]))),
       h('p', { class: 'hero__sub', lang: 'en' }, COPY.subtitle));
 
-    const side = h('p', { class: 'hero__side', 'aria-hidden': 'true' }, COPY.side);
     const entry = h('div', { class: 'hero__entry' }, start, h('span', { class: 'hero__entry-rule', 'aria-hidden': 'true' }));
-    const foot = h('p', { class: 'hero__foot' }, COPY.footer);
 
-    el.append(h('section', { class: 'hero', 'aria-labelledby': 'home-title' }, art, text, side, entry, foot));
+    el.append(h('section', { class: 'hero', 'aria-labelledby': 'home-title' }, art, text, entry));
     return () => el.replaceChildren();
   },
 };

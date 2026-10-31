@@ -24,13 +24,8 @@ export default {
         d.bio ? h('p', { class: 'team__bio' }, d.bio) : null);
     };
 
-    const intro = team.intro?.zh || team.intro?.en
-      ? h('p', { class: 'team__intro' }, text(team.intro.zh), team.intro.zh && team.intro.en ? h('br') : null, team.intro.en ? h('span', { lang: 'en' }, text(team.intro.en)) : null)
-      : null;
-
     el.append(h('section', { class: 'team', 'aria-labelledby': 'team-title' },
       h('h1', { id: 'team-title', class: 'team__title' }, h('span', null, '参与人员'), h('span', { class: 'team__title-en', lang: 'en' }, 'The team')),
-      intro,
       h('ol', { class: 'team__grid' }, ...members.map(card)),
       text(team.thanks) ? h('p', { class: 'team__thanks label' }, text(team.thanks)) : null));
     return () => el.replaceChildren();

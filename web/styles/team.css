@@ -1,8 +1,7 @@
 /* 参与人员：编辑式错位版面，不做整齐四等分。朱砂只用在印章和序号下的短线，面积 < 3%。 */
 .team { padding: var(--s6) var(--s5) var(--s5); max-width: 1180px; margin: 0 auto; }
-.team__title { margin: 0; display: flex; align-items: baseline; gap: var(--s3); font-family: var(--f-title); font-weight: 400; font-size: clamp(30px, 4vw, 56px); }
+.team__title { margin: 0 0 var(--s6); display: flex; align-items: baseline; gap: var(--s3); font-family: var(--f-title); font-weight: 400; font-size: clamp(30px, 4vw, 56px); }
 .team__title-en { font-family: var(--f-disp); font-style: italic; font-size: .5em; color: var(--muted); }
-.team__intro { margin: var(--s3) 0 var(--s6); font-size: 15px; color: var(--muted); line-height: 1.8; }
 
 .team__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--s5) var(--s4); }
 /* 第 n 张卡垂直错开：偶数张下移 56px。CSS 的 calc() 没有取模运算（% 不是取模），所以用 nth-child。 */

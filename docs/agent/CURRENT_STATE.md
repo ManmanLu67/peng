@@ -5,8 +5,34 @@
 
 ## 当前阶段
 
-范围已冻结，阶段 0（骨架）完成并已提交（a59ec45）。冻结后的收缩改动和三份执行材料**尚未提交**。
-下一步是 PLAN.md 的 T1（外壳与公共层）。界面还一行都没写，`app.js` 只往 `#root` 写一行字。
+范围已冻结。阶段 0（骨架）已提交；冻结后的收缩改动与 SCOPE / PLAN / TEST 已由用户提交。
+**T1（外壳与公共层）完成，未提交。** 下一步是 T2（页面与 Feature 骨架）。
+托管方式已定为 Vercel；**还没部署**，部署是对外发布且需要登录账号，T2 完成并本地验证后再单独确认。
+
+## T1 完成情况
+
+做了：
+- `styles/tokens.css`（颜色含 dark 变量结构、字体回退链、字号、间距、时长；另加 `--muted`、`--cinnabar-text` 两个文字用色，因为 `--line` 与 `--cinnabar` 在宣纸上对比度不足 4.5:1）、`styles/base.css`（reset、细线、直角按钮、焦点环、`.sr-only`、`.feature-error`、`.toast`、`prefers-reduced-motion` 全局归零块）。
+- `ui/`：`h()` / `svg()`（禁止 innerHTML 与 `javascript:` 链接）、`bilingual()`、喜鹊 symbol（`ensureSymbols()` / `magpie()`）。
+- `shell/mount.js`：条目 `'id'` 或 `{id, options, slots}`；启动先整张清单校验（未知功能、缺端口）；单个功能 mount 抛错只在其容器显示错误，其余照常。
+- `shell/router.js`：hash 路由、未知路由 `replaceState` 回首页、卸载只拆 DOM、更新 title、`aria-live` 播报、焦点回 `#root`、发 `route:changed` 事件。
+- `pages/{home,app,team,index}.js`、`features/registry.js`，三个临时占位功能（`home-hero`、`team-grid`、`app-placeholder`）。
+- `app.js` 接入路由；`error` / `unhandledrejection` 只弹一行 toast，不拆页面；启动失败整页显示错误。
+- `check-deps.mjs`：放行 `registry.js` 单向 import 各功能，功能反向 import registry 仍报错；新增 `tests/check-deps.test.mjs`，8 条反向用例（兑现了之前"没有反向测试"的欠账）。
+
+验证了（本次会话实际运行）：
+- `check-deps` 28 个文件通过；`node --test` 45 个全过。
+- 无头 Edge：三页渲染与标题、aria-live、焦点回 `#root`、刷新停留、后退、未知路由回首页且不污染历史、切页后 store 保留（`hskStart`）、卸载无残留、控制台无错误。
+- 临时副本里：一个功能 mount 抛错只在其容器显示"功能 boom 加载失败"，另一个功能照常；清单含未注册 id 时整页显示"启动失败：页面 /app：未知功能：nope"。
+
+没验证：
+- A5–A7、A9：顶栏还没做（T2）。
+- 有头浏览器、Chrome；键盘操作。
+- `magpie()` / `bilingual()` 目前没有使用者，渲染效果未看。
+
+与 PLAN 的偏差（需知悉）：
+- PLAN 的 T1 写"页面先放占位"，我为让三页可验证加了三个临时占位功能；`app-placeholder` 在 T3 第一个工作台功能加入后删除，`home-hero` / `team-grid` 在 T4 / T5 替换。
+- 页面清单里的 topbar 条目在 T1 未加入（它属于 T2），已在各页面文件顶部注释里写明 T2 要加的内容。
 
 ## 范围冻结（用户确认）
 
@@ -41,7 +67,7 @@
 
 ## 待用户决定
 
-1. **部署目标**：PLAN / TEST 里有"公开 URL"。此前约定路演在这台笔记本上本地跑，公开部署是对外发布，未经同意我不会部署。需要定托管方式（GitHub Pages / Netlify / Vercel / 其他）和谁来操作。
+1. **Vercel 部署的具体操作**：托管方式已定，但部署会对外公开并需要账号授权。到 T2 完成后我再来确认：用哪个 Vercel 项目 / 团队、根目录设为 `web/`、是否用 CLI 还是 Git 集成。
 2. `docs/brainstorm/` 被 `.gitignore` 排除，文档里的冻结说明不会进仓库。是否需要把设计与技术文档重新纳入版本管理，请定。
 3. `.claude/settings.local.json` 有未提交改动，不是我改的，未处理。
 
@@ -52,6 +78,6 @@
 
 ## 下一步（1–3 步）
 
-1. 你确认"部署目标"后，开始 T1；T1 完成后立刻做首次预览部署前的本地冒烟。
+1. 做 T2：topbar 三槽位、logo、nav、theme-toggle（只有 UI）、hsk-select、api-badge，页面清单加入 topbar，`app.css` 工作台网格。
 2. T2 之后先做 15 分钟的纸张滤镜原型，实测性能，再进入 T3 / T4。
-3. 每个任务结束按 PLAN.md 末尾三步更新本文件与 TEST.md 的结果记录。
+3. T2 本地验证通过后，向用户确认 Vercel 部署（需要登录与授权，不擅自执行）。

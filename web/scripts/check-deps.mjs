@@ -94,7 +94,9 @@ async function main() {
       const tFeature = tLayer === 'features' && tParts.length > 2 ? tParts[1] : null;
 
       if (tLayer === layer) {
-        if (layer === 'features' && feature !== tFeature) {
+        // features/registry.js 不属于任何功能，只做 id → feature 的登记，允许 import 各功能
+        const isRegistry = layer === 'features' && feature === null;
+        if (layer === 'features' && !isRegistry && feature !== tFeature) {
           problems.push(`${rel}:${lineOf(m.index)} 功能 "${feature}" 不得 import 功能 "${tFeature ?? 'registry'}"`);
         }
         continue;

@@ -1,5 +1,4 @@
 {
-  "_note": "预置短语/词释义，优先于 HSK 词表做最长匹配。type: allusion 典故 / classical 文言 / written 书面。level 7 = 超出 HSK 6。内容为演示子集，释义由开发者撰写，需队友核对。",
   "entries": {
     "日照香炉生紫烟": { "type": "allusion", "level": 7, "py": "rì zhào xiāng lú shēng zǐ yān", "zh": "李白《望庐山瀑布》的首句：阳光照着香炉峰，升起紫色的云烟。", "en": "First line of Li Bai's \"Viewing the Waterfall at Mount Lu\": sunlight on Incense Burner Peak raises violet mist." },
     "香炉": { "type": "written", "level": 7, "py": "xiāng lú", "zh": "烧香用的炉子；这里指庐山的香炉峰。", "en": "incense burner; here, Incense Burner Peak" },
@@ -10,6 +9,11 @@
     "孤鹜": { "type": "classical", "level": 7, "py": "gū wù", "zh": "孤单的野鸭。", "en": "a solitary wild duck" },
     "秋水共长天一色": { "type": "allusion", "level": 7, "py": "qiū shuǐ gòng cháng tiān yí sè", "zh": "秋天的江水和辽阔的天空连成一色。", "en": "Autumn waters share one color with the endless sky." },
     "朝辞白帝彩云间": { "type": "allusion", "level": 7, "py": "zhāo cí bái dì cǎi yún jiān", "zh": "李白《早发白帝城》首句：清晨告别彩云环绕的白帝城。", "en": "First line of Li Bai's \"Leaving Baidi City at Dawn\": at dawn I leave Baidi amid colored clouds." },
+    "白帝城": { "type": "written", "level": 7, "py": "bái dì chéng", "zh": "古代城名，在今重庆奉节，长江边上。", "en": "Baidi City, an ancient town beside the Yangtze" },
+    "彩云": { "type": "written", "level": 7, "py": "cǎi yún", "zh": "多种颜色的云。", "en": "colored clouds" },
+    "野鸭": { "type": "written", "level": 7, "py": "yě yā", "zh": "野生的鸭子。", "en": "wild duck" },
+    "红霞": { "type": "written", "level": 7, "py": "hóng xiá", "zh": "红色的晚霞。", "en": "red sunset clouds" },
+    "江水": { "type": "written", "level": 7, "py": "jiāng shuǐ", "zh": "江里的水。", "en": "river water" },
     "古诗": { "type": "written", "level": 5, "py": "gǔ shī", "zh": "古代的诗。", "en": "classical poem" },
     "热气": { "type": "written", "level": 5, "py": "rè qì", "zh": "热的水汽。", "en": "steam; hot vapor" },
     "开玩笑": { "type": "written", "level": 4, "py": "kāi wán xiào", "zh": "说好玩的话，不是认真的。", "en": "to joke" },

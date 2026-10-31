@@ -2,8 +2,8 @@
 import { h } from '../../ui/index.js';
 
 const TEXT = {
-  mock: { badge: 'API: MOCK', hint: '当前使用模拟数据 · Using mock data' },
-  live: { badge: 'API: LIVE', hint: '当前连接真实接口 · Connected to the live API' },
+  mock: { badge: '本机', hint: '示例句会简化，其他内容保持原文' },
+  live: { badge: '已连接', hint: '文字会发送到你配置的模型' },
 };
 
 export default {

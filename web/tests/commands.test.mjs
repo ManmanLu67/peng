@@ -105,13 +105,16 @@ test('error:shown 事件在失败时发出', async () => {
   assert.deepEqual(events, ['network']);
 });
 
-test('非示例句：返回占位，并带 mock_placeholder 标记', async () => {
+test('非示例句：原样返回原文，不附加说明', async () => {
   const { commands, store, clock } = setup();
   commands.submit('随便一句话');
   await settle(clock);
   const resp = store.get().messages[0].resp;
-  assert.equal(resp.mock_placeholder, true);
-  assert.match(resp.output.text, /模拟数据/);
+  assert.equal(resp.output.text, '随便一句话');
+  assert.equal(resp.rung, 8);
+  assert.equal(resp.output.lang, 'zh');
+  assert.equal(resp.mock_placeholder, undefined);
+  assert.equal(resp.english, undefined);
 });
 
 test('防乱序：慢的旧响应不会覆盖新状态', async () => {

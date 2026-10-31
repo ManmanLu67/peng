@@ -49,8 +49,8 @@ export default {
       // 注意：replaceChildren 会把 null 当成文字 "null" 插入，所以先过滤再传
       note.replaceChildren(...[
         h('p', { class: 'cmp__note-word' }, hit.word, hit.py ? h('span', { class: 'cmp__note-py' }, ` ${hit.py}`) : null),
-        h('p', { class: 'label' }, hit.oov ? bilingual('超纲词', 'Beyond HSK 6', { inline: true }) : (t ? bilingual(t.zh, t.en, { inline: true }) : '')),
-        hit.zh ? h('p', { class: 'cmp__note-zh' }, hit.zh) : h('p', { class: 'cmp__note-zh cmp__note-none' }, '暂无释义 · No gloss available'),
+        t ? h('p', { class: 'label' }, bilingual(t.zh, t.en, { inline: true })) : null,
+        hit.zh ? h('p', { class: 'cmp__note-zh' }, hit.zh) : null,
         hit.en ? h('p', { class: 'cmp__note-en', lang: 'en' }, hit.en) : null,
       ].filter(Boolean));
       note.hidden = false;
@@ -73,9 +73,10 @@ export default {
 
     function renderSpans(text, minLevel) {
       const { spans, words } = annotate(text, { segmenter: ports.segmenter, hsk, glosses, minLevel });
+      const noted = words.filter((w) => !w.oov);
       const p = h('p', { class: 'cmp__text', lang: 'zh' });
       for (const s of spans) {
-        if (!s.hit) { p.append(s.text); continue; }
+        if (!s.hit || s.hit.oov) { p.append(s.text); continue; }
         const mark = h('mark', {
           'data-t': s.hit.type, class: s.hit.oov ? 'is-oov' : null,
           tabindex: 0, role: 'button', 'aria-expanded': 'false',
@@ -85,14 +86,14 @@ export default {
         mark.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNote(mark, s.hit); } });
         p.append(mark);
       }
-      return { p, words };
+      return { p, words: noted };
     }
 
     function glossList(words) {
       if (!words.length) return null;
       return h('ul', { class: 'cmp__gloss' }, ...words.map((w) => h('li', null,
         h('strong', null, w.word),
-        w.oov ? ': 超纲词 · beyond HSK 6' : ` (${w.py}): ${w.en}`)));
+        ` (${w.py}): ${w.en}`)));
     }
 
     function heading(zh, en) {
@@ -139,10 +140,7 @@ export default {
       } else if (ladder.isEnglish(rung)) {
         colR.append(heading('英文', 'English'), h('p', { class: 'cmp__text cmp__text--en', lang: 'en' }, resp.output.text));
       } else {
-        // 占位响应的文字不是真实改写，标注它只会产生噪音，直接显示纯文本
-        const right = resp.mock_placeholder
-          ? { p: h('p', { class: 'cmp__text', lang: 'zh' }, resp.output.text), words: [] }
-          : renderSpans(resp.output.text, minLevel);
+        const right = renderSpans(resp.output.text, minLevel);
         colR.append(heading('简化', `${label.en} Rewrite`), right.p, glossList(right.words));
         if (resp.english) {
           const btn = h('button', { type: 'button', class: 'cmp__more', 'aria-expanded': String(showEnglish), onclick: () => { showEnglish = !showEnglish; render(); } },
@@ -153,10 +151,6 @@ export default {
             btn));
         }
       }
-      if (resp.mock_placeholder) {
-        colR.append(h('p', { class: 'cmp__mock', role: 'note' }, bilingual('模拟数据：非示例句，内容仅为占位', 'Mock data: not a sample sentence, placeholder only', { inline: true })));
-      }
-
       body.append(h('div', { class: 'cmp__cols' }, colL, colR));
       if (resp.culture_note?.zh || resp.culture_note?.en) {
         body.append(h('p', { class: 'cmp__culture' }, resp.culture_note.zh ?? '', resp.culture_note.zh && resp.culture_note.en ? h('br') : null, resp.culture_note.en ? h('span', { lang: 'en' }, resp.culture_note.en) : null));

@@ -1,5 +1,5 @@
 // 左栏对话：用户消息、解读卡、示例按钮、下划线输入框、发送。
-// 写状态只经 ctx.commands；示例与占位文案来自 data/demo.json，不写进组件。
+// 写状态只经 ctx.commands；示例句来自 data/demo.json，不写进组件。
 import { h, svg, bilingual } from '../../ui/index.js';
 
 const MAX_LEN = 200;
@@ -111,8 +111,8 @@ export default {
       messages,
       h('div', { class: 'chat__bottom' }, status, examples, form,
         h('p', { class: 'chat__hint label' }, bilingual(
-          ctx.ports.chat?.kind === 'live' ? '文字将发送到你配置的模型接口' : '文字将发送给模拟接口，不会离开本机',
-          ctx.ports.chat?.kind === 'live' ? 'Text is sent to the model API you configured' : 'Text goes to the mock API and stays on this device',
+          ctx.ports.chat?.kind === 'live' ? '文字将发送到你配置的模型接口' : '示例句会按等级简化。其他内容保持原文，不会离开本机。',
+          ctx.ports.chat?.kind === 'live' ? 'Text is sent to the model API you configured' : 'Sample lines are simplified by level. Anything else stays as written and never leaves this device.',
           { inline: true },
         )))));
 

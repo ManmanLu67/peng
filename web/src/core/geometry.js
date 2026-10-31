@@ -39,20 +39,6 @@ export function tornPolygon(vertices, { step = 18, amp = 6, seed = 1 } = {}) {
   return pts;
 }
 
-/** 矩形撕纸边，返回 CSS clip-path: polygon(...) 字符串（百分比，随容器缩放）。 */
-export function tornEdge(w, h, o = {}) {
-  const pts = tornPolygon([[0, 0], [w, 0], [w, h], [0, h]], o);
-  return toClipPath(pts, w, h);
-}
-
-/** 点列 → clip-path: polygon(...)，坐标换算成相对 w×h 的百分比。 */
-export function toClipPath(points, w, h) {
-  const body = points
-    .map(([x, y]) => `${(x / w * 100).toFixed(2)}% ${(y / h * 100).toFixed(2)}%`)
-    .join(',');
-  return `polygon(${body})`;
-}
-
 /** 点列 → SVG path 的 d（闭合）。 */
 export function toPathD(points) {
   return `M${points.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join('L')}Z`;
@@ -81,21 +67,6 @@ export function quadCurveAt(p0, c, p1, t) {
 export function quadCurvePoints(p0, c, p1, n) {
   if (!Number.isInteger(n) || n < 2) throw new Error('quadCurvePoints: n 至少为 2');
   return Array.from({ length: n }, (_, i) => quadCurveAt(p0, c, p1, i / (n - 1)));
-}
-
-/**
- * n 个落在 (0,1) 的参数，向 0.5 聚密，关于 0.5 对称。
- * power 越大，中间越密。
- */
-export function clusteredParams(n, power = 2) {
-  if (!Number.isInteger(n) || n < 1) throw new Error('clusteredParams: n 至少为 1');
-  if (!(power > 0)) throw new Error('clusteredParams: power 须为正');
-  return Array.from({ length: n }, (_, i) => {
-    const s = (i + 0.5) / n;
-    const d = (s - 0.5) * 2;
-    const shaped = Math.sign(d) * Math.abs(d) ** power;
-    return 0.5 + shaped / 2;
-  });
 }
 
 function fmt(n) {

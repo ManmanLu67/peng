@@ -7,9 +7,7 @@ export default {
     clock:     { use: 'real' },
     theme:     { use: 'pref' },
     // 真实聊天不写在这里。有 config/config.local.js 且含 apiKey、baseUrl 时，app.js 改用 chat.live。
-    // P1 接入位置（本次不实现，见 src/ports/index.js）：
-    //   speech
-    //   Mock 故障注入入口：chat.options.fail = () => true（mock 适配器已支持，本次不接 URL 或界面）
+    // Mock 故障注入：chat.options.fail = () => true（只在测试里用，不接界面）
   },
   // 启动时一次性 fetch 的 data/*.json，切页不再有请求。新增数据文件时在这里登记。
   data: ['rungs', 'nodes', 'annotation-types', 'demo', 'hsk', 'glosses', 'team'],

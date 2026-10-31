@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mulberry32, tornPolygon, tornEdge, toClipPath, toPathD, scalePoints, quadCurvePoints, quadCurveAt, clusteredParams, moonPhasePath } from '../src/core/geometry.js';
+import { mulberry32, tornPolygon, toPathD, scalePoints, quadCurvePoints, quadCurveAt, moonPhasePath } from '../src/core/geometry.js';
 
 test('mulberry32：同 seed 同序列，不同 seed 不同', () => {
   const a = mulberry32(7); const b = mulberry32(7); const c = mulberry32(8);
@@ -10,20 +10,11 @@ test('mulberry32：同 seed 同序列，不同 seed 不同', () => {
   assert.ok(sa.every((x) => x >= 0 && x < 1));
 });
 
-test('tornEdge：同 seed 同输出（刷新构图不变）', () => {
-  assert.equal(tornEdge(400, 300, { seed: 3 }), tornEdge(400, 300, { seed: 3 }));
-  assert.notEqual(tornEdge(400, 300, { seed: 3 }), tornEdge(400, 300, { seed: 4 }));
-});
-
-test('tornEdge：是 polygon(...)，点数随边长增加，坐标在合理范围', () => {
-  const css = tornEdge(400, 300, { step: 20, amp: 6, seed: 1 });
-  assert.match(css, /^polygon\(.+\)$/);
-  const nums = [...css.matchAll(/(-?\d+(?:\.\d+)?)%/g)].map((m) => Number(m[1]));
-  assert.ok(nums.length / 2 >= 4 * 2, '每条边至少 2 个点');
-  // 扰动幅度 6px 相对 300px 高 = 2%，允许少量出界
-  assert.ok(nums.every((n) => n > -5 && n < 105), '坐标应在 0–100% 附近');
-  const bigger = tornEdge(800, 600, { step: 20, amp: 6, seed: 1 });
-  assert.ok(bigger.split(',').length > css.split(',').length);
+test('tornPolygon：同 seed 同输出（刷新构图不变）', () => {
+  const box = [[0, 0], [400, 0], [400, 300], [0, 300]];
+  const a = tornPolygon(box, { seed: 3 });
+  assert.deepEqual(a, tornPolygon(box, { seed: 3 }));
+  assert.notDeepEqual(a, tornPolygon(box, { seed: 4 }));
 });
 
 test('tornPolygon：顶点不足时报错；输出为 [x,y] 点列', () => {
@@ -33,8 +24,7 @@ test('tornPolygon：顶点不足时报错；输出为 [x,y] 点列', () => {
   assert.ok(pts.every((p) => p.length === 2 && p.every(Number.isFinite)));
 });
 
-test('toClipPath / toPathD', () => {
-  assert.equal(toClipPath([[0, 0], [50, 100]], 100, 100), 'polygon(0.00% 0.00%,50.00% 100.00%)');
+test('toPathD', () => {
   assert.equal(toPathD([[0, 0], [10.55, 5]]), 'M0.0 0.0L10.6 5.0Z');
 });
 
@@ -81,16 +71,6 @@ test('quadCurveAt：端点、中点与 quadCurvePoints 同一条曲线', () => {
   assert.ok(Math.abs(mid.angle) < 1e-6, '正中水平');
   assert.ok(start.angle > 5 && end.angle < -5);
   assert.throws(() => quadCurveAt(p0, c, p1, 1.1), /0–1/);
-});
-
-test('clusteredParams：落在 (0,1)，向 0.5 聚密，左右对称', () => {
-  const ts = clusteredParams(6);
-  assert.equal(ts.length, 6);
-  assert.ok(ts.every((t, i) => t > 0 && t < 1 && (i === 0 || t > ts[i - 1])));
-  assert.ok(ts.every((t, i) => Math.abs(t + ts[ts.length - 1 - i] - 1) < 1e-9), '关于 0.5 对称');
-  const gaps = ts.slice(1).map((t, i) => t - ts[i]);
-  assert.ok(gaps[2] < gaps[0] && gaps[2] < gaps[4], `中间间距应更小：${gaps.join(',')}`);
-  assert.throws(() => clusteredParams(0), /至少为 1/);
 });
 
 test('moonPhasePath：同参同路径；满月闭合整圆，上弦是半圆，蛾眉比凸月窄', () => {

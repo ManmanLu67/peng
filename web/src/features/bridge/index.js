@@ -99,8 +99,7 @@ export default {
         else grp.removeAttribute('aria-current');
         sr.children[i].textContent = `步骤 ${i + 1}：${node.label.zh}，${STATE_TEXT[st] ?? st}`;
       });
-      const showTag = s.status !== 'idle' && s.traceSimulated !== false && s.messages.length > 0;
-      tag.textContent = showTag ? '模拟回放 · Simulated replay' : '';
+      tag.textContent = '';
       text.textContent = done ? '读懂了 · Understood' : '';
       text.classList.toggle('is-on', done);
     }

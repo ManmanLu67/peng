@@ -67,21 +67,14 @@ export function create(options = {}, env = {}) {
       };
     }
 
-    // 不是示例句：通用占位，页面据 mock_placeholder 标注“模拟数据”
-    const text = lang === 'en'
-      ? `(Mock data) English paraphrase of: ${req.message}`
-      : n === 8
-        ? req.message
-        : `（模拟数据）这是第 ${n} 级的占位改写：${req.message}`;
+    // 没有准备好的句子：原样返回，当作原文，不另写说明
+    const text = req.message;
     return {
       ok: true,
       intent: INTENT[req.action] ?? 'other',
-      rung: n,
-      input_rung: 8,
-      output: { lang, text },
+      rung: 8,
+      output: { lang: 'zh', text },
       reply_text: text,
-      english: `(Mock data) ${req.message}`,
-      mock_placeholder: true,
       error: null,
     };
   }

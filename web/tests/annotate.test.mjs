@@ -98,8 +98,8 @@ test('分词器是被注入的：换一个分词器结果随之改变', () => {
 });
 
 test('演示数据里所有档位的文本都能标注且不丢字', () => {
-  const demo = readData('demo').entries[0].rungs;
-  for (const [n, text] of Object.entries(demo)) {
+  const demo = readData('demo').entries.flatMap((e) => Object.entries(e.rungs));
+  for (const [n, text] of demo) {
     if (n === '1') continue;   // 英文档不标注
     const r = run(text);
     assert.equal(r.spans.map((s) => s.text).join(''), text, `rung ${n}`);

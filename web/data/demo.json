@@ -23,6 +23,44 @@
         "2": "水很烫。",
         "1": "The water is so hot it's steaming — he jokes with a line of classical poetry."
       }
+    },
+    {
+      "match": "落霞与孤鹜齐飞，秋水共长天一色。",
+      "input_rung": 8,
+      "english": "Sunset clouds fly with a lone duck, and the autumn water is the same color as the sky.",
+      "culture_note": {
+        "zh": "出自王勃《滕王阁序》。写的是傍晚：红霞和一只孤单的野鸭一起飞，秋天的江水和远天连成同一个颜色。",
+        "en": "From Wang Bo's \"Preface to the Prince of Teng's Pavilion\". At dusk, red clouds and a lone duck fly together, and the autumn river matches the far sky."
+      },
+      "rungs": {
+        "8": "落霞与孤鹜齐飞，秋水共长天一色。",
+        "7": "这句写傍晚：红霞和一只孤单的野鸭一起飞，秋天的江水和天是同一个颜色。",
+        "6": "傍晚天上有红云，一只野鸭在飞。江水和天的颜色一样。",
+        "5": "这是一句古诗，写晚上的天。天是红的，有一只鸟。水和天的颜色一样。",
+        "4": "晚上天是红的。一只鸟在飞。水和天一样。",
+        "3": "天是红的。鸟在飞。水也是这样。",
+        "2": "天是红的。鸟在飞。",
+        "1": "The sky is red, a bird is flying, and the water looks the same."
+      }
+    },
+    {
+      "match": "朝辞白帝彩云间",
+      "input_rung": 8,
+      "english": "At dawn he leaves Baidi City among the colored clouds.",
+      "culture_note": {
+        "zh": "出自李白《早发白帝城》。清晨，诗人告别云彩环绕的白帝城，乘船东下。",
+        "en": "From Li Bai's \"Leaving Baidi City at Dawn\". At daybreak the poet leaves Baidi, ringed by clouds, and sails east."
+      },
+      "rungs": {
+        "8": "朝辞白帝彩云间",
+        "7": "这句诗说：清晨他告别了彩云围绕的白帝城。",
+        "6": "早上他离开白帝城。那里有很多彩云。",
+        "5": "这是一句古诗。早上他离开一座城，天上有好看的云。",
+        "4": "早上他离开一座城。天上有云。",
+        "3": "早上他走了。天上有云。",
+        "2": "早上他走了。",
+        "1": "In the morning he leaves. There are clouds in the sky."
+      }
     }
   ]
 }

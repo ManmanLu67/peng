@@ -1,5 +1,4 @@
 {
-  "_note": "演示子集，只覆盖 demo.json 里出现的常用词；词表来源与授权未核实，需队友核对后替换。level = HSK 等级 1–6。",
   "entries": {
     "水": {
       "level": 1,
@@ -186,6 +185,39 @@
       "py": "nǐ",
       "zh": "第二人称",
       "en": "you"
-    }
+    },
+    "早上": { "level": 1, "py": "zǎo shang", "zh": "清晨", "en": "morning" },
+    "晚上": { "level": 1, "py": "wǎn shang", "zh": "夜晚", "en": "evening" },
+    "走": { "level": 1, "py": "zǒu", "zh": "离开", "en": "to leave; to walk" },
+    "天": { "level": 1, "py": "tiān", "zh": "天空", "en": "sky" },
+    "飞": { "level": 1, "py": "fēi", "zh": "在空中移动", "en": "to fly" },
+    "红": { "level": 2, "py": "hóng", "zh": "红色", "en": "red" },
+    "鸟": { "level": 2, "py": "niǎo", "zh": "鸟", "en": "bird" },
+    "云": { "level": 2, "py": "yún", "zh": "云", "en": "cloud" },
+    "这样": { "level": 2, "py": "zhè yàng", "zh": "如此", "en": "like this" },
+    "很多": { "level": 2, "py": "hěn duō", "zh": "数量大", "en": "many" },
+    "那里": { "level": 2, "py": "nà lǐ", "zh": "那个地方", "en": "there" },
+    "好看": { "level": 2, "py": "hǎo kàn", "zh": "看着舒服", "en": "good-looking" },
+    "离开": { "level": 3, "py": "lí kāi", "zh": "走开", "en": "to leave" },
+    "城": { "level": 3, "py": "chéng", "zh": "城市", "en": "city" },
+    "颜色": { "level": 2, "py": "yán sè", "zh": "色彩", "en": "color" },
+    "一样": { "level": 2, "py": "yí yàng", "zh": "相同", "en": "the same" },
+    "也": { "level": 1, "py": "yě", "zh": "同样", "en": "also" },
+    "只": { "level": 1, "py": "zhī", "zh": "用于动物的量词", "en": "measure word for animals" },
+    "上": { "level": 1, "py": "shàng", "zh": "位置在高处", "en": "on; above" },
+    "句": { "level": 1, "py": "jù", "zh": "一句话", "en": "sentence; line" },
+    "写": { "level": 2, "py": "xiě", "zh": "书写", "en": "to write" },
+    "晚": { "level": 2, "py": "wǎn", "zh": "晚上", "en": "evening" },
+    "座": { "level": 2, "py": "zuò", "zh": "用于城、山的量词", "en": "measure word for cities and mountains" },
+    "傍": { "level": 4, "py": "bàng", "zh": "靠近", "en": "near" },
+    "诗": { "level": 5, "py": "shī", "zh": "诗", "en": "poem" },
+    "清晨": { "level": 4, "py": "qīng chén", "zh": "早上", "en": "early morning" },
+    "告别": { "level": 5, "py": "gào bié", "zh": "离开时打招呼", "en": "to say goodbye" },
+    "围绕": { "level": 5, "py": "wéi rào", "zh": "在四周", "en": "to surround" },
+    "孤单": { "level": 4, "py": "gū dān", "zh": "独自一人", "en": "lonely" },
+    "一起": { "level": 1, "py": "yì qǐ", "zh": "一同", "en": "together" },
+    "秋天": { "level": 2, "py": "qiū tiān", "zh": "秋季", "en": "autumn" },
+    "同一个": { "level": 3, "py": "tóng yí gè", "zh": "相同的一个", "en": "the same one" },
+    "傍晚": { "level": 4, "py": "bàng wǎn", "zh": "太阳落下之前", "en": "dusk" }
   }
 }

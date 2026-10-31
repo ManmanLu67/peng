@@ -1,100 +1,57 @@
 # CURRENT_STATE
 
-更新：本次为"项目盘点 + P0 范围划定"，未写任何代码。
+读取顺序：先看本文，再看 `SCOPE.md`（范围，已冻结）、`PLAN.md`（任务）、`TEST.md`（验收）。
+`docs/brainstorm/` 里的设计与技术文档是背景资料，已被 `.gitignore` 排除，冲突以 SCOPE 为准。
 
-## 现状（已核实）
+## 当前阶段
 
-- 仓库只有 `docs/`（6 份文档）、`reference/主页面.png`、`.claude/settings.local.json`。没有 `web/`、没有 `package.json`、没有 `.gitignore`。
-- 技术栈（文档定）：原生 HTML / CSS / ES Modules，零构建，零依赖。
-- 环境：Node v24.18.0（文档要求 18+）。`python` 是 2.7.18，`py` 启动器是 3.13.2，所以文档"python 没有 http.server"只对 `python` 成立，`py -m http.server` 可用。
-- 文档里的启动/检查命令全部指向尚不存在的文件：`node scripts/serve.mjs`、`node scripts/check-deps.mjs`、`node --test tests/`。
-- `Intl.Segmenter('zh')` 在 Node 24（ICU 78.3）实测："日照香炉生紫烟" → 日照 | 香炉 | 生 | 紫 | 烟。"紫烟"被拆开，预置短语（glosses.json）仍然必要。Chrome 里未验证。
+范围已冻结，阶段 0（骨架）完成并已提交（a59ec45）。冻结后的收缩改动和三份执行材料**尚未提交**。
+下一步是 PLAN.md 的 T1（外壳与公共层）。界面还一行都没写，`app.js` 只往 `#root` 写一行字。
 
-## 文档内部矛盾（开工前要定）
+## 范围冻结（用户确认）
 
-1. 技术文档 1 节写"双击即开 / `file://` 可用"，同节注意事项又说 ES Modules 在 `file://` 被拦。结论：必须走本地服务，hash 路由本身与此无关。
-2. `clock` 端口在 14.3 定义，但 `adapters/` 目录和 `app.config.js` 都没有 clock；`demo` 和 trace 回放依赖它。
-3. 页面清单里有 `home-hero`、`team-grid`，但 `features/` 目录没有这两个。
-4. `topbar` 要容纳 `hsk-select`、`theme-toggle`、`api-badge`，而 features 之间禁止互相 import。需要定：拆成独立功能并在页面里排槽位，或 topbar 只是容器。
-5. 各页顶栏内容不同（页 2 是 HSK 选档，其余是导航），但配置里功能 id 是纯字符串，无法传页面参数。需要支持 `{ id, options }`。
-6. `api-badge` 要显示"模拟/真实"，但 `ChatPort` 没有 `kind` 字段可读。
-7. 多个功能要共用的 DOM 小工具（建节点、双语标签、喜鹊 SVG symbol）没有归属层。建议加 `src/ui/`，允许 features import，并写进 check-deps。
-8. 第 12 节各步骤合计 8.25 h，已超过 7 h，还没算调参。
-9. 参考图与文档的文案差异：图里节点 02 是 CLARITY、按钮是"不懂"；文档是 NOT CLEAR、"没看懂"。按文档为准。
+- P0：首页完整视觉（含 `feTurbulence` 纸张滤镜）、工作台核心演示、团队页、HSK 难词标注与短语匹配。
+- P1：只留接入位置，不展示 UI，不建空壳。
+- P2：不做。
+- 反馈按钮：工作台只显示"没看懂"，不显示"看懂了"（用户明确选择）。`commands.understood` 保留，Demo 调用它点亮小灯。
+- 时间：4 小时版本，见 PLAN.md。
 
-## P0 / P1 / 暂舍
+## 本次按冻结范围做的代码改动
 
-P0（主流程：水杯例句 HSK3 → 连点没看懂 → 英文 → 看懂了，且三页可跳转）
-- 路由：`#/`、`#/app`、`#/team`，未知回首页。
-- core：contract(validate、PengError)、ladder、flow、store、commands（含 reqId 防乱序）、annotate。
-- adapters：chat/mock、segmenter/intl、clock/real。
-- features：topbar(含 hsk-select、api-badge)、chat(消息、解读卡、3 个示例、输入、发送)、bridge(4 节点、5 种状态、模拟回放)、compare(原文/改写并排、难词标注、注释卡、英文档主显)、ladder-bar、actions(更简单/还原/没看懂/看懂了)、home-hero(静态色块 + 桥 + 入口)、team-grid。
-- data：rungs、nodes、annotation-types、demo、team、glosses(覆盖演示例句)、hsk(小子集)。
-- 错误态 + 重试 + 输入保留；空输入禁发送；档位两端禁用。
-- 校验：`serve.mjs`、`check-deps.mjs`、`node --test`（flow、ladder、annotate）。
-- 工程：`.gitignore`（含 `config/config.local.js`）。
-- 真实后端：coze-agent 适配器在 mock 流程跑通后接入，也算 P0 末尾。
+- 删除 `adapters/storage/*`、`adapters/speech/null.js`（P0 没有使用者）。`ports/index.js` 里 SpeechPort、ThemePort 只留 JSDoc 契约。
+- `index.html` 去掉主题检测脚本，固定 `data-theme="light"`，头部注释标出 P1 接入位置。
+- `config/app.config.js` 精简为 chat(mock) / segmenter / clock；去掉 `?mock=fail` 的 URL 入口（`app.js` 同步），mock 适配器的 `fail` 选项保留作故障注入入口。
+- `data/annotation-types.json` 去掉 `grammar`（语法标注是 P1）。
+- 新增 `tests/config.test.mjs`：config 里的适配器和 data 文件必须存在。
+- 技术文档顶部加了冻结说明，第 12 节标为废弃。
 
-P1（P0 完成后按序做）
-1. 演示模式（demo）
-2. 播报（playback，speechSynthesis 本地可用）
-3. 语音输入（voice，Chrome 依赖联网，国内网络下可能不可用，必须可隐藏）
-4. 深浅色切换与持久化（storage/local）
-5. 纸质感：feTurbulence 滤镜、tornEdge 生成、墨渍动画、reduced-motion
-6. 语法标注、对应连线、文化语境条、非末档的"View in English"折叠
-7. 手动语境输入框、节点详情卡、适配器契约测试
+## 验证（本次会话实际运行）
 
-暂舍
-- relay 适配器、simple 分词器、jieba wasm、扣子独立语音、html2canvas / WebP 预渲染。
-- 窄屏（<720 px）排版（演示环境已定为 Chrome/Edge 笔记本）。
-- 对话里说"我没懂"的意图识别（需要 Coze 返回 intent，按钮已覆盖）。
-- 语速调节与自动播报 UI、流式回复、自动重试、历史持久化、账号、CSP、隐私提示（部署前再做）。
+- `node scripts/check-deps.mjs`：14 个文件通过。
+- `node --test`：37 个测试全过。
+- 阶段 0 时在无头 Edge 里跑通过水杯主流程（HSK 3 → 三次没看懂 → 英文 → 看懂了，节点 `done,done,skipped,done`）。**这次收缩改动后没有在浏览器里复测。**
 
-## 未验证
+## 没验证
 
-- 从未运行过任何代码；本文所有"可用"结论仅限 Node 与 Intl.Segmenter 的实测。
-- 扣子接口字段、HSK 词表来源与授权、纸块滤镜性能，文档已标未核实，仍未核实。
+- 所有界面：尚不存在。
+- 删除 storage / 主题脚本、去掉 URL 故障入口之后，浏览器里的启动是否仍正常。
+- `Intl.Segmenter` 在 Edge / Chrome 里的切分结果；Edge 以外的浏览器。
+- `check-deps.mjs` 没有反向测试（造违规文件确认会报错）。
+- HSK 词表来源与授权未核实；`hsk.json` 只会是演示子集。
 
-## 已定决定（已写入技术文档 1、3.3、2、12、14.3、14.4、14.10b）
+## 待用户决定
 
-- 路演在本机笔记本，统一 `node scripts/serve.mjs`；不再宣称"双击即开"或 `file://` 可用。
-- 中文标题字体接受系统宋体回退；英文字体拉丁子集自托管。
-- 演示模式升到 P0；真实扣子适配器、语音、播报、`feTurbulence` 滤镜降到 P1。
-- 矛盾 2–7 采用推荐方案：补 clock 适配器、补 `home-hero` / `team-grid`、topbar 槽位、功能条目支持 `{id, options, slots}`、`ChatPort.kind`、新增 `ui/` 层。矛盾 1 靠启动时 `fetch` 全部 JSON。
-- 工时重排为约 7 h，见 `docs/agent/PLAN.md`。
-- 文档已改，代码一行未写。
+1. **部署目标**：PLAN / TEST 里有"公开 URL"。此前约定路演在这台笔记本上本地跑，公开部署是对外发布，未经同意我不会部署。需要定托管方式（GitHub Pages / Netlify / Vercel / 其他）和谁来操作。
+2. `docs/brainstorm/` 被 `.gitignore` 排除，文档里的冻结说明不会进仓库。是否需要把设计与技术文档重新纳入版本管理，请定。
+3. `.claude/settings.local.json` 有未提交改动，不是我改的，未处理。
 
-## 阶段 0 完成（骨架）
+## 注意
 
-代码在 `web/`，工作目录里，**尚未提交**。
+- git 里有你暂存的改动（`M `/`A `/`D `）和我之后的未暂存改动（` M`/`??`）混在一起。我没有暂存、提交或推送任何内容。
+- 无头浏览器验证用过临时 Edge 进程与目录，已按命令行特征清理，未碰你自己的 Edge。
 
-做了：
-- `core/`：store、bus、contract、ladder、flow（纯 reducer）、commands（reqId 防乱序、节点定时器、abort）。
-- `adapters/`：chat/mock、clock/{real,fake}、segmenter/intl、storage/{local,memory}、speech/null，登记在 `adapters/index.js`。
-- `app.js` 组装根：启动时 `Promise.all` 读 `data/*.json`，创建 ports，`globalThis.__peng`（debug 标志下）暴露 ctx。
-- `scripts/serve.mjs`（127.0.0.1，拦路径穿越与点开头文件）、`scripts/check-deps.mjs`。
-- `data/`：rungs、nodes（含 `skip` 字段）、annotation-types、demo（水杯 8 级 + 3 个示例）。
-- 与文档不同的点：`flow` 里"看懂了"把 03 标为跳过的规则放进了 `nodes.json` 的 `skip.understood`，不写死在代码里；`package.json` 的 test 用 `node --test`（不带目录，Windows 上带 `tests/` 会被当成模块路径）。技术文档里写的 `node --test tests/` 需要同步改。
+## 下一步（1–3 步）
 
-验证了（本次会话实际运行）：
-- `node scripts/check-deps.mjs`：17 个文件通过。
-- `node --test`：34 个测试全过（flow、ladder、commands 链路含失败重试、乱序、无残留定时器）。
-- `serve.mjs`：`/`、JS、JSON 返回 200 和正确 MIME；`../` 穿越与 `.git` 返回 403。
-- 无头 Edge 经 DevTools 协议在真实浏览器里跑了水杯主流程：HSK 3 → 3 次没看懂到英文 → 看懂了，节点状态 `done,done,skipped,done`，控制台无错误（除 favicon 404，已加内联 favicon，未复测）。
-
-没验证：
-- `?mock=fail` 在浏览器里的表现（逻辑层测试已覆盖，浏览器未跑）。
-- 页面渲染（还没有任何界面，只有一行文字）。
-- Edge 以外的浏览器；`Intl.Segmenter` 在 Chrome/Edge 里的切分结果。
-- `check-deps.mjs` 对动态 `import()` 无能为力，只验证了常见违规能被发现这一点的代码路径，没有专门造违规文件做反向测试。
-
-注意：
-- `.claude/settings.local.json` 有未提交改动，不是我改的，未处理。
-- 无头浏览器验证时我曾留下 12 个 Edge 子进程和临时目录，已只按命令行特征清理，未碰其他 Edge 进程。
-
-## 下一步
-
-1. 阶段 1：路由与外壳（`shell/router.js`、`mount.js`、tokens.css、base.css、topbar 槽位、nav、logo、theme-toggle、hsk-select、api-badge），三页能互跳。
-2. 给 `check-deps.mjs` 补一个反向测试（故意造违规文件，确认能报错）。
-3. （已完成）技术文档里的 `node --test tests/` 已改成 `node --test`。
-4. 阶段 2 起按 `docs/agent/PLAN.md` 推进，每阶段结束更新本文件。
+1. 你确认"部署目标"后，开始 T1；T1 完成后立刻做首次预览部署前的本地冒烟。
+2. T2 之后先做 15 分钟的纸张滤镜原型，实测性能，再进入 T3 / T4。
+3. 每个任务结束按 PLAN.md 末尾三步更新本文件与 TEST.md 的结果记录。

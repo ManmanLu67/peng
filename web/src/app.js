@@ -36,14 +36,7 @@ function showFatal(err) {
 export async function boot() {
   const data = await loadData(config.data);
 
-  // ?mock=fail 让 mock 聊天抛错，现场演示 error 状态。URL 只在这里读，适配器不碰全局。
-  const params = new URLSearchParams(location.search);
-  const adapters = structuredClone(config.adapters);
-  if (adapters.chat.use === 'mock') {
-    adapters.chat.options = { ...adapters.chat.options, fail: () => params.get('mock') === 'fail' };
-  }
-
-  const ports = createPorts(adapters, { data });
+  const ports = createPorts(config.adapters, { data });
   const ladder = createLadder(data.rungs);
   const flow = createFlow({ ladder, nodes: data.nodes });
   const store = createStore(flow.initialState({ hskRung: ladder.hskToRung(config.defaults.hsk) }));

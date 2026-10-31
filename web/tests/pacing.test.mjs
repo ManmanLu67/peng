@@ -1,44 +1,51 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { readTimeMs, PACING } from '../src/core/pacing.js';
+import { readTimeMs, rawReadMs, PACING } from '../src/core/pacing.js';
 
-test('空内容取下限', () => assert.equal(readTimeMs(''), PACING.minMs));
-
-test('字少的页面取下限，不会一闪而过', () => {
-  assert.equal(readTimeMs('水很烫。'), PACING.minMs);
+test('上下限是 5 s 和 10 s', () => {
+  assert.equal(PACING.minMs, 5000);
+  assert.equal(PACING.maxMs, 10000);
 });
 
-test('字多的页面停得更久，且单调不减', () => {
-  const a = readTimeMs('一'.repeat(40));
-  const b = readTimeMs('一'.repeat(80));
-  assert.ok(b > a);
-  assert.ok(a >= PACING.minMs);
+test('rawReadMs：汉字 6 字/秒，英文 4 词/秒，互不干扰', () => {
+  assert.equal(rawReadMs('一'.repeat(12)), 2000);
+  assert.equal(rawReadMs(Array(8).fill('word').join(' ')), 2000);
+  assert.equal(rawReadMs('一'.repeat(6) + ' ' + Array(4).fill('word').join(' ')), 2000);
+  assert.equal(rawReadMs(''), 0);
 });
 
-test('超长内容封顶，不会卡住演示', () => {
-  assert.equal(readTimeMs('一'.repeat(2000)), PACING.maxMs);
-});
-
-test('汉字与英文分别计量：40 汉字 = 10 s + 缓冲；30 英文词 = 10 s + 缓冲', () => {
-  assert.equal(readTimeMs('一'.repeat(40)), 10000 + PACING.bufferMs);
-  assert.equal(readTimeMs(Array(30).fill('word').join(' ')), 10000 + PACING.bufferMs);
-});
-
-test('中英混排时两部分相加', () => {
-  const mixed = '一'.repeat(40) + ' ' + Array(30).fill('word').join(' ');
-  assert.equal(readTimeMs(mixed), 10000 + 10000 + PACING.bufferMs);
-});
-
-test('演示数据：每一档加上文化条的停留都在上下限内，总时长约 0.5–2 分钟', () => {
-  const demo = JSON.parse(readFileSync(new URL('../data/demo.json', import.meta.url), 'utf8')).entries[0];
-  const note = demo.culture_note.zh + ' ' + demo.culture_note.en;
-  let total = 0;
-  for (const n of [4, 3, 2, 1]) {
-    const page = demo.rungs['8'] + ' ' + demo.rungs[n] + ' ' + (n === 1 ? '' : demo.english) + ' ' + note;
-    const ms = readTimeMs(page);
-    assert.ok(ms >= PACING.minMs && ms <= PACING.maxMs, `rung ${n}: ${ms}`);
-    total += ms;
+test('任何输入的停留时间都在 5–10 s 之内', () => {
+  for (const text of ['', '水', '水很烫。', '一'.repeat(30), '一'.repeat(300), 'word '.repeat(500)]) {
+    for (const o of [{}, { firstVisit: '一'.repeat(100) }]) {
+      const ms = readTimeMs(text, o);
+      assert.ok(ms >= 5000 && ms <= 10000, `${text.slice(0, 6)} → ${ms}`);
+    }
   }
-  assert.ok(total >= 30000 && total <= 120000, `总时长 ${total} ms`);
+});
+
+test('字多的一页比字少的一页停得久（在上下限之内单调不减）', () => {
+  const short = readTimeMs('水很烫。');
+  const long = readTimeMs('一'.repeat(24));
+  assert.ok(long > short, `${short} -> ${long}`);
+});
+
+test('超长内容封顶 10 s，不会卡住演示', () => {
+  assert.equal(readTimeMs('一'.repeat(2000)), 10000);
+});
+
+test('第一页（带首次内容）不短于同样内容的后续页', () => {
+  const fresh = '一'.repeat(8);
+  assert.ok(readTimeMs(fresh, { firstVisit: '一'.repeat(40) }) >= readTimeMs(fresh));
+});
+
+test('演示数据：四页停留都在 5–10 s，总时长约 25–40 秒', () => {
+  const demo = JSON.parse(readFileSync(new URL('../data/demo.json', import.meta.url), 'utf8')).entries[0];
+  const times = [4, 3, 2, 1].map((n, i) => {
+    const first = i === 0 ? `${demo.rungs['8']} ${demo.english} ${demo.culture_note.zh} ${demo.culture_note.en}` : '';
+    return readTimeMs(demo.rungs[n], { firstVisit: first });
+  });
+  for (const ms of times) assert.ok(ms >= 5000 && ms <= 10000, String(ms));
+  const total = times.reduce((a, b) => a + b, 0);
+  assert.ok(total >= 20000 && total <= 40000, `总时长 ${total} ms，各页 ${times}`);
 });

@@ -1,7 +1,12 @@
-/* 演示模式控件放在对比区右上角（网格内，随布局走，不用 fixed 定位，避免压住鹊桥）。 */
-.demo { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3); padding: var(--s2) var(--s4) 0 0; }
-.demo__start { background: var(--paper); }
-.demo__banner { display: flex; align-items: center; gap: var(--s3); padding: var(--s1) var(--s3); background: var(--paper); border: 1px solid var(--cinnabar); color: var(--cinnabar-text); font-size: var(--fs-small); }
+/* 演示控件放在顶栏 left 槽（Logo 右侧），随顶栏走，不遮挡页面内容。
+   顶栏左右槽按内容撑开，所以横幅再宽也不会压到中间的 HSK 选档；
+   空间不够时按优先级收缩：先去英文，再去倒计时，最后只留“退出”。 */
+.demo { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.demo__start { padding: var(--s1) var(--s3); background: transparent; white-space: nowrap; }
+.demo__banner { display: flex; align-items: center; gap: var(--s3); padding: var(--s1) var(--s3); border: 1px solid var(--cinnabar); color: var(--cinnabar-text); font-size: var(--fs-small); white-space: nowrap; }
 .demo__banner[hidden] { display: none; }
-.demo__exit { padding: var(--s1) var(--s3); }
-@media (max-width: 720px) { .demo { padding: var(--s2) var(--edge) 0; justify-content: flex-start; } }
+.demo__hint { text-transform: none; letter-spacing: .04em; color: var(--muted); }
+.demo__exit { padding: 2px var(--s2); font-size: var(--fs-small); white-space: nowrap; }
+@media (max-width: 1300px) { .demo__banner .bi__en, .demo__start .bi__en { display: none; } .demo__hint { letter-spacing: 0; } }
+@media (max-width: 1100px) { .demo__hint { display: none; } }
+@media (max-width: 720px)  { .demo__start { display: none; } .demo__banner { padding: 2px var(--s2); gap: var(--s2); } }

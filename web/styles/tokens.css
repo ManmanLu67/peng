@@ -11,6 +11,7 @@
   --indigo:     #1C2B4A;  /* 大色域靛蓝 */
   --teal:       #3E6A78;  /* 次色域青蓝 */
   --on-indigo:  #F5F0E6;  /* 靛蓝块上的字 */
+  --bridge-line: #A9763D; /* 鹊桥流程线：赭石，同时在靛蓝纸和中间的缝（宣纸色）上都看得清 */
 
   /* 文字用色：--line 与 --cinnabar 在宣纸上对比度不足 4.5:1，小字改用下面两个 */
   --muted:          #6B665D;
@@ -59,6 +60,7 @@
   --line:       #6F6A60;
   --indigo:     #0E1830;
   --teal:       #223F4A;
+  --bridge-line: #D2A068;
   --muted:          #A39D90;
   --cinnabar-text:  #E0664F;
 }

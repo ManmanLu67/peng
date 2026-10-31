@@ -1,9 +1,9 @@
 /* 对比区与阶梯条。无阴影，分区靠细线；正文大号衬线，行距 1.9。 */
-.cmp { position: relative; padding: var(--s5) 120px var(--s5) var(--s5); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.cmp { position: relative; padding: var(--s4) 120px var(--s4) var(--s5); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .cmp__cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); }
 .cmp__col { min-width: 0; }
 
-.cmp__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s4); }
+.cmp__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
 .cmp__h { margin: 0; font-family: var(--f-disp); font-style: italic; font-weight: 400; font-size: 20px; white-space: nowrap; }
 .cmp__rule { flex: 1; height: 1px; background: var(--line); }
 
@@ -17,11 +17,11 @@
 .cmp__gloss { list-style: none; margin: 0 0 var(--s4); padding: 0; font-family: var(--f-small); font-size: 13px; line-height: 1.8; color: var(--muted); }
 .cmp__gloss strong { color: var(--ink); font-family: var(--f-title); }
 
-.cmp__en { margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.cmp__en { margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--line); }
 .cmp__more { background: none; border: 0; padding: var(--s1) 0; cursor: pointer; font-family: var(--f-disp); font-style: italic; font-size: 18px; color: var(--muted); }
 .cmp__more:hover { color: var(--ink); }
 
-.cmp__culture { margin-top: var(--s5); padding-top: var(--s3); border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--muted); line-height: 1.8; }
+.cmp__culture { margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--muted); line-height: 1.8; }
 .cmp__mock { margin-top: var(--s3); padding: var(--s1) var(--s2); display: inline-block; border: 1px dashed var(--ochre); font-size: var(--fs-small); color: var(--ochre); }
 
 .cmp__empty { color: var(--muted); font-size: var(--fs-body); }
@@ -58,6 +58,6 @@
 }
 
 /* 反馈按钮：右下，直角细框，朱砂框 + 朱砂字 */
-.act { padding: 0 var(--s4) var(--s4) 0; display: flex; justify-content: flex-end; }
+.act { padding: var(--s3) var(--s4); display: flex; justify-content: flex-end; }
 .act__btn { min-width: 180px; }
 @media (max-width: 720px) { .act { padding: var(--s3) var(--edge); } .act__btn { width: 100%; } }

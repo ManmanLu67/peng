@@ -48,7 +48,7 @@ T3 和 T4 在人手允许时并行；一个人做就严格按顺序，**先 T3 �
   - `topbar`：left / center / right 三个槽位容器；`logo`（印章"朋" + peng，点击回 `#/`）；`nav`（按 options 生成链接）；`theme-toggle`（只有按钮 UI，点击无效果，`aria-disabled`，留 P1 注释）；`hsk-select`（分段控件 6→1，写 `commands.setHsk`，当前档朱砂短下划线）；`api-badge`（读 `ports.chat.kind`，显示 `API: MOCK`）。
   - 页面清单（`pages/*.js` 只导出 `{ title, features }`）：
     - `/`：topbar（right: nav→/team、theme-toggle）+ `home-hero`（先占位）
-    - `/app`：topbar（center: hsk-select；right: api-badge、theme-toggle）+ chat、bridge、compare、ladder-bar、actions、demo（先占位）
+    - `/app`：topbar（left: logo、demo；center: hsk-select；right: api-badge、theme-toggle）+ chat、bridge、compare、ladder-bar、actions。demo 放在顶栏 Logo 右侧，显示倒计时时不遮挡主体文字。
     - `/team`：topbar（center: nav→/、/app；right: theme-toggle）+ `team-grid`（先占位）
   - `app.css`：工作台网格区域名与功能 id 对应（`grid-area: bridge` 等），左栏 25%（≥320 px）。
 - 验收：三页顶栏各自正确；HSK 选档能改 `store.hskStart`（控制台 `__peng.store.get().hskStart`）；从 `/app` 清单删掉任意功能，页面仍启动。

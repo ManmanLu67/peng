@@ -9,8 +9,7 @@ import { tornPolygon, toPathD } from '../../core/geometry.js';
 const W = 1000;          // viewBox 宽
 const H = 200;           // viewBox 高
 const GAP = 10;          // 两块纸之间的窄缝
-const LEFT_EDGE = 490;   // 左纸右缘 x
-const RIGHT_EDGE = 490 + GAP;   // 右纸左缘 x
+const LINE_PAD = 28;     // 贯穿线两头伸出首尾节点的长度
 
 // 两块纸的大轮廓（手写顶点，再沿边加扰动；固定 seed，刷新不变）
 const LEFT = [[20, 40], [120, 14], [470, 22], [490, 36], [486, 168], [440, 186], [110, 176], [20, 150]];
@@ -63,20 +62,14 @@ export default {
     const lamp = svg('g', { class: 'brg__lamp', transform: `translate(${W / 2} ${LINE_Y - 44})`, 'aria-hidden': 'true' },
       svg('circle', { class: 'brg__lamp-glow', r: 16 }), svg('circle', { class: 'brg__lamp-core', r: 5 }));
 
-    // 流程线：节点之间各一段，随两端节点状态变化（走过的亮、没走的暗）。
-    // 两块纸之间的缝里线色会和页面底色相同而消失，所以在缝处另画一小段朱砂桥板。
-    const segs = [];
-    for (let i = 0; i < n - 1; i += 1) {
-      const seg = svg('line', { class: 'brg__seg', x1: xs[i], y1: LINE_Y, x2: xs[i + 1], y2: LINE_Y, 'data-from': nodes[i].id, 'data-to': nodes[i + 1].id });
-      segs.push({ seg, from: nodes[i].id, to: nodes[i + 1].id });
-    }
-    const plank = svg('line', { class: 'brg__plank', x1: LEFT_EDGE - 6, y1: LINE_Y, x2: RIGHT_EDGE + 6, y2: LINE_Y });
-    const lines = svg('g', { class: 'brg__lines' }, ...segs.map((x) => x.seg), plank);
+    // 流程线：整条一种颜色（--bridge-line），贯穿两块纸和中间的缝。
+    // 两头各伸出节点外 LINE_PAD，像桥搭进纸块。进度只靠节点和喜鹊表达，线本身保持静态。
+    const line = svg('line', { class: 'brg__line', x1: xs[0] - LINE_PAD, y1: LINE_Y, x2: xs[n - 1] + LINE_PAD, y2: LINE_Y });
 
     const board = svg('svg', { class: 'brg__svg', viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet', role: 'img',
       'aria-label': '鹊桥：改写、没看懂、降档、结束四个步骤 · Magpie bridge: four workflow steps' },
     paper(LEFT, 11), paper(RIGHT, 12),
-    lines, g, lamp);
+    line, g, lamp);
 
     // 读屏友好的步骤列表（视觉隐藏）：“步骤 2：没看懂，执行中”
     const sr = h('ol', { class: 'sr-only', 'aria-label': '处理步骤 · Steps' },
@@ -96,16 +89,6 @@ export default {
         const li = sr.children[i];
         li.textContent = `步骤 ${i + 1}：${node.label.zh}，${STATE_TEXT[st] ?? st}`;
       });
-      // 线段：两端都已完成 = 走过（亮）；前一端完成、后一端执行中 = 正在走（朱砂）；否则暗
-      segs.forEach(({ seg, from, to }) => {
-        const a = s.nodes[from]; const b = s.nodes[to];
-        let st = 'idle';
-        if (a === 'done' && (b === 'done' || b === 'skipped')) st = 'done';
-        else if (a === 'done' && b === 'running') st = 'running';
-        else if (a === 'error' || b === 'error') st = 'error';
-        seg.dataset.state = st;
-      });
-      plank.dataset.state = s.nodes[nodes[1]?.id] === 'idle' ? 'idle' : 'on';
       lamp.classList.toggle('is-lit', done);
       // 模拟回放：没有真实 trace 时标注（SCOPE：清楚区分模拟与真实）
       const showTag = s.status !== 'idle' && s.traceSimulated !== false && s.messages.length > 0;

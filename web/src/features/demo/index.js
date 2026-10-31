@@ -49,13 +49,21 @@ export default {
       commands.setDemo(on);
     }
 
-    /** 当前对比区里能读到的全部文字（原文、改写、释义、英文、文化条） */
-    const pageText = () => document.querySelector('.cmp')?.textContent ?? '';
+    // 这一页“新出现”的文字 = 右栏（改写 + 它的释义 / 英文意译）。
+    // 左栏原文和文化条每页都一样，只在第一页完整计入（firstVisit），后面只加“扫一眼”。
+    const col = (i) => document.querySelectorAll('.cmp__col')[i]?.textContent ?? '';
+    let visited = false;
+    const dwellMs = () => {
+      const fresh = col(1);
+      const firstVisit = visited ? '' : `${col(0)} ${document.querySelector('.cmp__culture')?.textContent ?? ''}`;
+      visited = true;
+      return readTimeMs(fresh, { firstVisit });
+    };
 
     /** 等当前请求结束后再继续：status 不再是 running 才推进；停留时间取决于这一页的字数 */
     function afterSettled(next) {
       const go = () => {
-        const ms = readTimeMs(pageText());
+        const ms = dwellMs();
         caption(ms);
         later(ms, next);
       };
@@ -76,6 +84,7 @@ export default {
 
     function run() {
       if (running) return;
+      visited = false;
       commands.reset();
       setUi(true);
 

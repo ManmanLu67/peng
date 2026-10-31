@@ -57,3 +57,26 @@ export function toClipPath(points, w, h) {
 export function toPathD(points) {
   return `M${points.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join('L')}Z`;
 }
+
+/** 百分比顶点 → viewBox 坐标。pct 的每个点是 [x%, y%]。 */
+export function scalePoints(pct, w, h) {
+  return pct.map(([x, y]) => [(x * w) / 100, (y * h) / 100]);
+}
+
+/**
+ * 沿二次贝塞尔曲线 p0 → p1（控制点 c）取 n 个等参数点，并给出每点切线方向的角度（度）。
+ * 首页的鹊桥用它排 12–16 只喜鹊：曲线下垂，两端喜鹊略微俯仰，中间水平。
+ * @returns {{ x: number, y: number, angle: number }[]}
+ */
+export function quadCurvePoints(p0, c, p1, n) {
+  if (!Number.isInteger(n) || n < 2) throw new Error('quadCurvePoints: n 至少为 2');
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    const u = 1 - t;
+    const x = u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0];
+    const y = u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1];
+    const dx = 2 * u * (c[0] - p0[0]) + 2 * t * (p1[0] - c[0]);
+    const dy = 2 * u * (c[1] - p0[1]) + 2 * t * (p1[1] - c[1]);
+    return { x, y, angle: (Math.atan2(dy, dx) * 180) / Math.PI };
+  });
+}

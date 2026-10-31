@@ -1,0 +1,27 @@
+/* 参与人员：编辑式错位版面，不做整齐四等分。朱砂只用在印章和序号下的短线，面积 < 3%。 */
+.team { padding: var(--s6) var(--s5) var(--s5); max-width: 1180px; margin: 0 auto; }
+.team__title { margin: 0; display: flex; align-items: baseline; gap: var(--s3); font-family: var(--f-title); font-weight: 400; font-size: clamp(30px, 4vw, 56px); }
+.team__title-en { font-family: var(--f-disp); font-style: italic; font-size: .5em; color: var(--muted); }
+.team__intro { margin: var(--s3) 0 var(--s6); font-size: 15px; color: var(--muted); line-height: 1.8; }
+
+.team__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--s5) var(--s4); }
+/* 第 n 张卡垂直错开：偶数张下移 56px。CSS 的 calc() 没有取模运算（% 不是取模），所以用 nth-child。 */
+.team__card { padding-top: var(--s3); border-top: 1px solid var(--line); }
+.team__card:nth-child(even) { margin-top: 56px; }
+.team__top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); }
+.team__no { font-family: var(--f-disp); font-weight: 300; font-size: clamp(48px, 5vw, 72px); line-height: 1; color: var(--ink); }
+.team__stamp { display: inline-grid; place-items: center; width: 52px; height: 52px; background: var(--cinnabar); color: var(--on-indigo); font-family: var(--f-title); font-size: 28px; line-height: 1; }
+.team__tick { display: block; width: 28px; height: 2px; margin: var(--s2) 0 var(--s3); background: var(--cinnabar); }
+.team__name { margin: 0 0 var(--s2); font-family: var(--f-title); font-weight: 400; font-size: 24px; }
+.team__name--tbd { color: var(--muted); font-size: 18px; }
+.team__role { margin: 0 0 var(--s2); font-size: 14px; }
+.team__role-en { display: block; font-family: var(--f-small); font-size: 12px; color: var(--muted); }
+.team__bio { margin: 0; font-size: 14px; line-height: 1.8; color: var(--ink); }
+.team__thanks { margin: var(--s6) 0 0; text-transform: none; letter-spacing: .08em; }
+
+@media (max-width: 720px) {
+  .team { padding: var(--s5) var(--edge); }
+  .team__grid { grid-template-columns: 1fr; gap: var(--s4); }
+  /* 窄屏单列，保留错位的左右偏移，缩小到 ≤ 24px */
+  .team__card:nth-child(even) { margin-top: 0; margin-left: 24px; }
+}

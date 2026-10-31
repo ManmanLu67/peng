@@ -1,0 +1,13 @@
+{
+  "intro": {
+    "zh": "4 人 · 7 小时 · 一座让中文变简单的桥",
+    "en": "4 people · 7 hours · a bridge that makes Chinese simpler"
+  },
+  "thanks": "致谢 · Thanks：扣子 Coze、小智 Xiaozhi",
+  "members": [
+    { "id": 1, "name": "", "role_zh": "扣子工作流与提示词", "role_en": "Coze workflow & prompts", "bio": "", "link": "" },
+    { "id": 2, "name": "", "role_zh": "网页前端",           "role_en": "Web front end",           "bio": "", "link": "" },
+    { "id": 3, "name": "", "role_zh": "小智硬件与服务端接入", "role_en": "Xiaozhi hardware & server", "bio": "", "link": "" },
+    { "id": 4, "name": "", "role_zh": "产品与演示",         "role_en": "Product & demo",          "bio": "", "link": "" }
+  ]
+}

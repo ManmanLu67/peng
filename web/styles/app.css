@@ -15,7 +15,7 @@
 .topbar__slot { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
 .topbar__slot--left { flex-wrap: nowrap; }
 .topbar__slot--left   { justify-content: flex-start; }
-.topbar__slot--center { justify-content: center; overflow: hidden; }
+.topbar__slot--center { justify-content: center; }
 .topbar__slot--right  { justify-content: flex-end; }
 
 /* 功能容器本身不参与布局，让槽位直接排列其内容 */
@@ -40,7 +40,7 @@
 .nav__link[aria-current="page"] { border-bottom-color: var(--cinnabar); }
 
 /* HSK 选档：字距拉开的小字，当前档带朱砂短下划线 */
-.hsk { display: flex; gap: var(--s3); container-type: inline-size; }
+.hsk { display: flex; gap: var(--s3); flex: none; }
 .hsk__btn {
   white-space: nowrap;
   background: none; border: 0; padding: var(--s1) 0; cursor: pointer;
@@ -99,11 +99,13 @@
 #root[data-page="/app"] > .feature--actions     { grid-area: actions; justify-self: end; border-top: 1px solid var(--line); width: 100%; }
 
 /* ---------- 窄屏 ---------- */
+/* 顶栏放不下时的收缩顺序：英文副标 → 倒计时 → API 标记 → Logo 文字。HSK 选档永远完整显示。 */
+@media (max-width: 1180px) { .topbar__slot--right .api-badge { display: none; } }
+@media (max-width: 900px)  { .logo__word { display: none; } }
+
 @media (max-width: 720px) {
-  .topbar { padding: 0 var(--edge); gap: var(--s2); grid-template-columns: auto 1fr auto; }
-  /* 窄屏只留数字，按钮的 aria-label 仍是完整的 "HSK n"。
-     顶栏四块（Logo、选档、标记、主题）要在 400px 内放下，所以收紧间距 */
-  .topbar { gap: var(--s2); padding: 0 var(--s3); }
+  /* 窄屏只留数字，按钮的 aria-label 仍是完整的 "HSK n"；顶栏四块要在窄屏内放下，所以收紧间距 */
+  .topbar { padding: 0 var(--s3); gap: var(--s2); grid-template-columns: auto 1fr auto; }
   .topbar__slot { gap: var(--s2); }
   .hsk { gap: var(--s1); }
   .hsk__prefix { display: none; }
@@ -114,15 +116,23 @@
   .nav__link .bi__en { display: none; }     /* 窄屏只留中文，避免顶栏溢出 */
   .logo__word { display: none; }
 
+  /* 工作台窄屏纵向堆叠，整页自然滚动 */
   #root[data-page="/app"] {
     grid-template-columns: 1fr;
     grid-template-rows: var(--topbar) auto auto auto 1fr;   /* 多余高度给最后一行，空行不被拉伸 */
     grid-template-areas: "topbar" "chat" "bridge" "compare" "actions";
-    /* 窄屏纵向堆叠，整页自然滚动 */
     height: auto;
     min-height: 100dvh;
     overflow: visible;
   }
   #root[data-page="/app"] > .feature--chat > .chat { height: auto; }
   #root[data-page="/app"] > .feature--chat { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+@media (max-width: 400px) {
+  .topbar { padding: 0 var(--s2); }
+  .hsk { gap: 0; }
+  .hsk__btn { min-width: 20px; }
+  .logo__stamp { width: 28px; height: 28px; font-size: 18px; }
+  .icon-btn { width: 28px; height: 28px; }
 }

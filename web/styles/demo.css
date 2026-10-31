@@ -7,6 +7,6 @@
 .demo__banner[hidden] { display: none; }
 .demo__hint { text-transform: none; letter-spacing: .04em; color: var(--muted); }
 .demo__exit { padding: 2px var(--s2); font-size: var(--fs-small); white-space: nowrap; }
-@media (max-width: 1300px) { .demo__banner .bi__en, .demo__start .bi__en { display: none; } .demo__hint { letter-spacing: 0; } }
+@media (max-width: 1300px) { .demo__banner .bi__en, .demo__start .bi__en, .demo__banner .bi__sep, .demo__start .bi__sep { display: none; } .demo__hint { letter-spacing: 0; } }
 @media (max-width: 1100px) { .demo__hint { display: none; } }
-@media (max-width: 720px)  { .demo__start { display: none; } .demo__banner { padding: 2px var(--s2); gap: var(--s2); } }
+@media (max-width: 720px)  { .demo__start { display: none; } .demo__banner { padding: 0; border: 0; gap: 0; } .demo__banner > span:first-child { display: none; } .demo__exit { border-color: var(--cinnabar); color: var(--cinnabar-text); } }

@@ -21,6 +21,13 @@ await session(9410, async ({ ev, check, view, go, shot, sleep }) => {
     check(`${w}×${h} 滚到最新一条（最后一张卡在消息区内）`, await ev(`(()=>{const m=${q('.chat__messages')}.getBoundingClientRect(); const l=${q('.chat__messages')}.lastElementChild.getBoundingClientRect(); return l.bottom<=m.bottom+1 && l.top>=m.top-1})()`));
     if (w === 1440) await shot(`${SHOTS}/layout.png`);
   }
+  // 401–720：必须纵向堆叠（上一次改窄屏样式时曾把这段规则误包进 max-width:400px）
+  for (const w of [720, 560, 420]) {
+    await view(w, 800);
+    await go(`${BASE}/#/app`);
+    check(`${w} 宽 工作台纵向堆叠（401–720 区间）`, (await ev(`getComputedStyle(document.getElementById('root')).gridTemplateColumns.split(' ').length`)) === 1);
+    check(`${w} 宽 横向不溢出`, await ev('document.documentElement.scrollWidth <= document.documentElement.clientWidth'));
+  }
   await view(400, 800);
   await go(`${BASE}/#/app`);
   check('400 宽 横向不溢出', await ev('document.documentElement.scrollWidth <= document.documentElement.clientWidth'));

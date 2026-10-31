@@ -19,14 +19,22 @@
 /** @typedef {{ kind: 'mock'|'live',
  *              send(req: PengRequest, o?: { signal?: AbortSignal }): Promise<PengResponse> }} ChatPort */
 
-/** @typedef {{ canListen: boolean, canSpeak: boolean,
+/**
+ * P1，本次只留契约，不实现、不展示（语音输入 / 播报）。
+ * 接入时：新建 adapters/speech/*.js，在 adapters/index.js 登记，功能里声明 needs: ['speech']。
+ * @typedef {{ canListen: boolean, canSpeak: boolean,
  *              listen(h: { onText: Function, onEnd: Function, onError: Function }): () => void,
  *              speak(text: string, lang: 'zh'|'en', rate?: number): void,
- *              cancel(): void }} SpeechPort */
+ *              cancel(): void }} SpeechPort
+ */
 
 /** @typedef {{ words(text: string): string[] }} SegmenterPort */
 
-/** @typedef {{ get(k: string): string|null, set(k: string, v: string): void }} StoragePort */
+/**
+ * P1，本次只留契约（深浅色实际切换）。P0 页面固定浅色，tokens.css 保留 dark 变量结构。
+ * 接入时：新建 adapters/theme/*.js 读写偏好并设置 document.documentElement.dataset.theme。
+ * @typedef {{ get(): 'light'|'dark', set(t: 'light'|'dark'): void }} ThemePort
+ */
 
 /** @typedef {{ now(): number, after(ms: number, fn: Function): () => void }} ClockPort */
 

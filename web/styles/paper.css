@@ -1,0 +1,38 @@
+/* 纸块：哑光、无投影、撕纸边。
+   纹理 = SVG feTurbulence 滤镜（低频浓淡 + 高频横向纤维），由 #paper-fiber 提供（home-hero 注入）。
+   性能预案：若实测明显卡顿，把纸块预渲染为 WebP 并去掉 filter（SCOPE 禁止项 8，需先记录实测）。 */
+
+.paper {
+  position: absolute;
+  background: var(--tone, var(--indigo));
+  clip-path: var(--edge, none);
+  /* 不用 multiply：深色纸块互叠会变成近黑，窄缝也会被叠成黑条。
+     层叠关系靠 z-index 与错位表达（逻辑文档 4.2）；需要透叠时单块设 --blend。 */
+  mix-blend-mode: var(--blend, normal);
+}
+
+/* 只有带 .paper--textured 的纸块吃滤镜；小块（压角、纸条）不加，省成本 */
+.paper--textured { filter: url(#paper-fiber); }
+
+/* 撕开后的浅色纤维白边：同一 clip-path 外扩 3–6px，叠在纸块下面一层 */
+.paper__fringe {
+  position: absolute;
+  inset: -5px;
+  background: var(--fringe, rgba(245, 240, 230, .55));
+  clip-path: var(--edge-outer, none);
+  pointer-events: none;
+}
+
+/* 压痕：1–2px 内侧低透明度线，不用投影 */
+.paper--pressed { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
+
+/* 基础噪点：不依赖滤镜，作为滤镜之外的底纹和降级时的纹理 */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .4  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+}

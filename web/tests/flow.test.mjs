@@ -20,11 +20,11 @@ function resolved(rung = 4) {
   return state;
 }
 
-test('初始：idle，4 个节点全空，起点 HSK 3 = 第 4 级', () => {
+test('初始：idle，3 个节点全空，起点 HSK 3 = 第 4 级', () => {
   const s = init();
   assert.equal(s.status, 'idle');
   assert.equal(s.hskStart, 4);
-  assert.deepEqual(Object.values(s.nodes), ['idle', 'idle', 'idle', 'idle']);
+  assert.deepEqual(Object.values(s.nodes), ['idle', 'idle', 'idle']);
 });
 
 test('请求在途时 traceSimulated=true（节点是模拟点亮的），带真实 trace 的响应回来后改为 false', () => {
@@ -147,29 +147,19 @@ test('英文档不能再降', () => {
   assert.equal(flow.reduce(en, { type: 'NOT_UNDERSTOOD' }).state, en);
 });
 
-test('没有结果时降档、看懂了都无效', () => {
+test('没有结果时降档无效', () => {
   const s = init();
   assert.equal(flow.reduce(s, { type: 'NOT_UNDERSTOOD' }).state, s);
-  assert.equal(flow.reduce(s, { type: 'UNDERSTOOD' }).state, s);
 });
 
-test('看懂了：不调接口，只播 02、04，03 标记跳过', () => {
-  const s = resolved(2);
-  const { state, effects } = flow.reduce(s, { type: 'UNDERSTOOD' });
-  assert.equal(state.understood, true);
-  assert.equal(effects.length, 1);
-  assert.equal(effects[0].type, 'PLAY_PATH');
-  assert.deepEqual(effects[0].path, ['notclear', 'bridge']);
-  assert.equal(state.nodes.stepdown, 'skipped');
-  // 再点一次无效
-  assert.equal(flow.reduce(state, { type: 'UNDERSTOOD' }).state, state);
-});
-
-test('「更简单」已替换：STEP_DOWN 事件不再改变状态', () => {
+test('已删除的事件不再改变状态：看懂了、更简单、还原', () => {
   const s = resolved(4);
-  const r = flow.reduce(s, { type: 'STEP_DOWN' });
-  assert.equal(r.state, s);
-  assert.equal(r.effects.length, 0);
+  for (const type of ['UNDERSTOOD', 'STEP_DOWN', 'STEP_UP']) {
+    const r = flow.reduce(s, { type });
+    assert.equal(r.state, s, type);
+    assert.equal(r.effects.length, 0, type);
+  }
+  assert.equal('understood' in s, false);
 });
 
 test('FAIL：转 error，正在执行的节点画叉，保留消息便于重试', () => {

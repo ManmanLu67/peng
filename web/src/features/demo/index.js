@@ -1,7 +1,7 @@
 // 演示模式：一键自动播放水杯示例全流程，不调用真实接口，断网可跑。
 // 只调用 ctx.commands，定时全部经 ctx.ports.clock；不直接碰别的功能的 DOM。
 // 脚本（data/demo.json 的 demoScript 之外，步骤本身是固定的主线）：
-//   输入“日照香炉生紫烟” → 提交 → 没看懂 ×3（HSK 3→2→1→英文）→ 看懂了 → 小灯亮
+//   输入“日照香炉生紫烟” → 提交 → 没看懂 ×3（HSK 3→2→1→英文）→ 停留后收起
 // 每一步等上一步的结果出来（status 离开 running）再延迟，避免画面与状态错位。
 // 离开 #/app（卸载）时自动退出并重置。
 import { h, bilingual } from '../../ui/index.js';
@@ -9,7 +9,7 @@ import { readTimeMs } from '../../core/pacing.js';
 
 // 停留时间按“这一页要读多少字”算（core/pacing.js），而不是固定值。
 const START_GAP_MS = 1500;       // 点开始后先让人看清空白页和输入
-const END_DWELL_MS = 6000;       // 看懂后停留，让人看清小灯和“读懂了”
+const END_DWELL_MS = 6000;       // 降到英文后停留，让人看清最后一页
 
 
 export default {
@@ -92,8 +92,7 @@ export default {
       let remaining = stepsToEnglish;
 
       const finish = () => {
-        commands.understood();
-        later(END_DWELL_MS, () => { setUi(false); });   // 小灯亮着，演示标记收起；结果保留在页面上
+        later(END_DWELL_MS, () => { setUi(false); });   // 停在英文档让人看清；演示标记收起，结果保留在页面上
       };
       const down = () => {
         const s = store.get();

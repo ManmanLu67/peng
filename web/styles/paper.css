@@ -1,11 +1,28 @@
-/* 首页纸张与构图。哑光、无投影、撕纸边。
-   纸张质感 = SVG feTurbulence 滤镜（#paper-fiber，由 home-hero 注入）。
-   性能预案：若在目标笔记本上明显卡顿，把纸块预渲染为 WebP 并去掉 filter（SCOPE 禁止项 8，需先记录实测）；
-   用户笔记本实测滤镜开 / 关均约 59 fps，目前不触发。 */
+/* 首页纸张与构图（v2）。哑光、无投影、撕纸边。主参考 reference/主视觉.jpg。
+   纸张质感 = SVG feTurbulence 滤镜（#paper-fiber 纸块、#paper-base 底纸，由 home-hero 注入）。
+   性能预案：若在目标笔记本上明显卡顿，把纸块预渲染为 WebP 并去掉 filter（SCOPE 禁止项 8，需先记录实测）。
+   v1（鹊桥）已封存：docs/archive/home-v1/styles/paper.css，git tag home-v1。 */
 
-.hero { position: relative; flex: 1; min-height: calc(100dvh - var(--topbar)); overflow: hidden; background: var(--paper); }
+/* 插画补色：首页 token 里没有，只在 .hero 内声明，不污染全局。取值按 主视觉.jpg 采样后微调。
+   采样 → 本文件：赭红 #A05F42 → --rust；炭灰 #4E4744 → --charcoal；前景坡 #262524 → --soot；
+   沙色 #D3B08F~#D8BEA0 → --sand；石墨 #8D8C86 → --graphite；石板蓝 #71777A → --slate。
+   纯黑 --bird 只给鸟、头发、裤子。 */
+.hero {
+  --charcoal: #4B4543; --soot: #2E2D2F; --soot-deep: #252426;
+  --graphite: #8A8983; --sand: #D6B896; --tan: #C4A478; --rust: #A8603F; --slate: #747B80;
+  --bird: #17161A; --star: #6B6672;
+  --coat: #9AA6B0; --skin: #E0BD98; --pack: #8A6A46;
 
-.hero__art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  /* 这是一幅印刷感的插画，深浅色主题下都保持纸本原貌：黑鸟只有落在浅纸上才看得见，
+     所以在 .hero 内局部固定纸色、墨色和小字色，覆盖主题 token。顶栏仍跟随主题。 */
+  --paper: #F5F0E6; --ink: #1B1B1B; --muted: #6B665D; --ochre: #A9763D; --indigo: #1C2B4A; --teal: #3E6A78;
+  --on-indigo: #F5F0E6; --cinnabar: #C8412B;
+
+  position: relative; flex: 1; min-height: calc(100dvh - var(--topbar)); overflow: hidden; background: var(--paper); color: var(--ink);
+}
+
+.hero__art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.hero__base { fill: var(--paper); }
 
 /* 纸块。不使用 mix-blend-mode / 阴影：深色互叠会变成近黑，窄缝也会被叠成黑条。 */
 /* 纤维白边：很淡的一圈，只在纸边露一点毛边，不压过纸块本身 */
@@ -13,63 +30,55 @@
 .hero__paper.is-textured { filter: url(#paper-fiber); }
 /* 米白穿插块比底纸略深半度，才看得出是一块压上去的纸 */
 .hero__paper.is-bright { stroke: rgba(27, 27, 27, .06); stroke-width: 1.5; }
-.hero__stone { fill: var(--indigo); opacity: .85; }
-.hero__person, .hero__person path, .hero__person ellipse, .hero__cup { fill: var(--indigo); }
-.hero__person { color: var(--indigo); }
-.hero__cup { fill: var(--teal); }
-.hero__scene-bird { color: var(--indigo); }
+/* 水彩洇色：被纸块裁住的低透明度色斑 */
+.hero__wash { pointer-events: none; }
 
-/* 鹊桥与小灯 */
-.hero__bird { color: var(--paper); stroke: var(--indigo); stroke-width: 1.6; paint-order: stroke; stroke-linejoin: round; transform-box: fill-box; }
-.hero__lamp-glow { fill: var(--cinnabar); opacity: .28; }
-.hero__lamp-core { fill: var(--cinnabar); }
-.hero__lead { stroke: var(--on-indigo); stroke-width: 1; opacity: .55; }
-.hero__no { fill: var(--on-indigo); font-family: var(--f-disp); font-size: 34px; font-weight: 300; }
-.hero__nolabel { fill: var(--on-indigo); font-family: var(--f-body); font-size: 15px; opacity: .8; letter-spacing: .12em; }
+.hero__birds, .hero__speck { fill: var(--bird); }
 
-/* 点击桥进入工作台：桥自己就是 SVG 链接（热区随画面一起缩放 / 裁切，不会和桥错位）。
-   画布整体不接收鼠标，只有桥接收；键盘入口只保留“开始”按钮。 */
-.hero__art { pointer-events: none; }
-.hero__bridge-a { pointer-events: all; cursor: pointer; }
-.hero__bridge-hit { fill: transparent; }
+.hero__star { fill: none; stroke: var(--star); stroke-width: 2; stroke-linecap: round; animation: hero-twinkle 4s ease-in-out infinite alternate; }
+@keyframes hero-twinkle { from { opacity: .25; } to { opacity: .85; } }
+@media (prefers-reduced-motion: reduce) { .hero__star { animation: none; } }
 
-/* ---- 文字层 ---- */
-.hero__text { position: absolute; left: 5%; top: 9%; max-width: 40%; color: var(--on-indigo); }
-.hero__title { margin: 0; font-family: var(--f-title); font-weight: 400; font-size: clamp(30px, 4.6vw, 72px); line-height: 1.28; letter-spacing: .04em; }
-.hero__sub { margin: var(--s3) 0 0; font-family: var(--f-disp); font-style: italic; font-size: clamp(16px, 1.7vw, 26px); opacity: .92; }
+/* 行人 */
+.hero__shadow { fill: var(--soot-deep); opacity: .5; }
+.hero__trousers, .hero__hair { fill: var(--bird); }
+.hero__boots { fill: var(--soot); }
+.hero__coat { fill: var(--coat); }
+.hero__coat-light { fill: var(--paper); opacity: .28; }
+.hero__arm { fill: var(--coat); opacity: .85; }
+.hero__pack { fill: var(--pack); }
+.hero__strap { fill: none; stroke: var(--ink); stroke-width: 3; opacity: .6; }
+.hero__skin { fill: var(--skin); }
 
+/* ---- 文字层：拱下右下空白（设计说明 5：首选标题、副标题、主 CTA）。
+   画面 slice 铺满，空白区的位置随视口宽高比变化，所以按百分比放，并让它避开人物与鸟群核心区。 */
+/* 横版：位置和字号来自 JS 算出的 --tx / --ty / --ts（画面缩放），文字框跟着画面里的那块空白走。
+   JS 没跑时的兜底值只保证文字可见。 */
+.hero__text { position: absolute; left: var(--tx, 56%); bottom: var(--tb, 3%); width: calc(var(--ts, 1) * 400px); color: var(--ink); text-align: left; }
+.hero__title { margin: 0; font-family: var(--f-title); font-weight: 400; font-size: max(22px, calc(var(--ts, 1) * 46px)); line-height: 1.3; letter-spacing: .04em; }
+.hero__sub { margin: calc(var(--ts, 1) * 8px) 0 calc(var(--ts, 1) * 16px); font-family: var(--f-disp); font-style: italic; font-size: max(14px, calc(var(--ts, 1) * 22px)); color: var(--muted); }
 
-.hero__entry { position: absolute; right: 6%; bottom: 8%; display: flex; align-items: center; gap: var(--s3); }
-.hero__entry-rule { width: 64px; height: 1px; background: var(--ink); opacity: .5; }
 .hero__start {
-  display: inline-flex; align-items: baseline; gap: var(--s2); padding: var(--s3) var(--s5);
+  display: inline-flex; align-items: baseline; gap: var(--s2);
+  padding: max(10px, calc(var(--ts, 1) * 16px)) max(24px, calc(var(--ts, 1) * 40px));
   background: var(--cinnabar); color: var(--on-indigo); text-decoration: none;
-  font-family: var(--f-title); font-size: clamp(18px, 1.8vw, 26px); letter-spacing: .3em;
+  font-family: var(--f-title); font-size: max(17px, calc(var(--ts, 1) * 26px)); letter-spacing: .3em;
   border: 0; border-radius: 0; transition: transform var(--dur-fast);
 }
 .hero__start:hover { transform: translateY(-2px); }
 .hero__start:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
 .hero__start-en { font-family: var(--f-small); font-size: .55em; letter-spacing: .2em; opacity: .9; }
 
+/* 竖版（JS 在 .hero 上写 data-fit="narrow"：竖屏、≤720px、4:3 平板等放不下横版文字框的视口）：
+   构图改取左侧（行人 + 拱的左半），底对齐；上方是纸，标题放在那里。 */
+.hero[data-fit="narrow"] .hero__text { left: var(--edge); right: var(--edge); top: 6%; bottom: auto; width: auto; }
+.hero[data-fit="narrow"] .hero__title { font-size: clamp(26px, 6vw, 44px); }
+.hero[data-fit="narrow"] .hero__sub { font-size: 14px; margin: var(--s2) 0 var(--s3); }
+.hero[data-fit="narrow"] .hero__start { padding: 12px 28px; font-size: 18px; }
 
-/* 悬停“开始”：小灯变亮，桥上喜鹊轻微位移一次（不循环） */
-.hero:has(.hero__start:hover) .hero__lamp-glow { opacity: .5; transition: opacity var(--dur-ink); }
-.hero:has(.hero__start:hover) .hero__bridge { transform: translateY(-3px); transition: transform var(--dur-ink); }
-
-/* 窄屏：色块改纵向堆叠的构图在 SVG 里不好表达，改用 slice 裁切 + 缩小文字，入口固定右下 */
-@media (max-width: 720px) {
-  .hero { min-height: calc(100dvh - var(--topbar)); }
-  /* 缝在画面中线略偏左；文字盒的右缘必须留在缝的左边，浅色字才不会落到米白缝上 */
-  .hero__text { left: var(--edge); top: 5%; max-width: calc(46% - var(--edge)); }
-  .hero__title { font-size: clamp(24px, 7.4vw, 40px); }
-  .hero__sub { font-size: 14px; }
-  .hero__entry { right: var(--edge); bottom: calc(var(--edge) + env(safe-area-inset-bottom, 0px)); position: fixed; }
-  .hero__entry-rule { display: none; }
-}
-
-/* 视口很矮（信息流缩略图尺寸，约 400×250）：只留大形，去掉会糊成一团的小字和序号 */
+/* 视口很矮（信息流缩略图尺寸，约 400×250）：只留大形，去掉副标 */
 @media (max-height: 360px) {
-  .hero__sub, .hero__numbers { display: none; }
+  .hero__sub { display: none; }
   .hero__title { font-size: clamp(20px, 6vw, 30px); }
   .hero__start { padding: var(--s2) var(--s4); font-size: 16px; }
 }

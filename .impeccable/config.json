@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-11-01T07:44:14.267Z",
         "reason": "assistant decision, not user confirmed: cream ground is taken from the user's reference image 主视觉.jpg and the project --paper token (宣纸 #F5F0E6) in web/styles/tokens.css"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "reference/主视觉.html"
+        ],
+        "createdAt": "2026-11-01T14:28:37.756Z",
+        "reason": "Cream paper base is specified by reference/主视觉设计说明 (sections 2, 6) and sampled from reference/主视觉.jpg; decided by the project design doc, not by user confirmation in this session"
       }
     ]
   }

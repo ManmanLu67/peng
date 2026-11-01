@@ -26,24 +26,12 @@ test('水杯例句：HSK 3 提交 → 连点“没看懂”降到英文', async 
   s = store.get();
   assert.equal(s.status, 'english');
   assert.equal(ladder.availability(s).notUnderstood, false);
-  assert.equal(ladder.availability(s).gotIt, true);
 
   // 没看懂 = 01→02→03 全部点亮
   assert.deepEqual([s.nodes.rewrite, s.nodes.notclear, s.nodes.stepdown], ['done', 'done', 'done']);
-
-  // 看懂了：不调接口，02、04 依次点亮，03 标记跳过，只能点一次
-  commands.understood();
-  await settle(clock);
-  s = store.get();
-  assert.equal(s.understood, true);
-  assert.equal(s.rung, 1);
-  assert.equal(s.nodes.notclear, 'done');
-  assert.equal(s.nodes.bridge, 'done');
-  assert.equal(s.nodes.stepdown, 'skipped');
-  assert.equal(ladder.availability(s).gotIt, false);
 });
 
-test('看懂了不发请求；没看懂会经过 02、03', async () => {
+test('没看懂会经过 02、03，且每次都重新发请求', async () => {
   let sends = 0;
   const { commands, store, clock, chat } = setup();
   const send = chat.send.bind(chat);
@@ -52,20 +40,23 @@ test('看懂了不发请求；没看懂会经过 02、03', async () => {
   commands.submit(SAMPLE);
   await settle(clock);
   assert.equal(sends, 1);
+  assert.equal(store.get().nodes.notclear, 'idle');
 
-  commands.understood();
-  await settle(clock);
-  assert.equal(sends, 1, '看懂了不应该再调接口');
-  assert.equal(store.get().rung, 4);
-  assert.equal(store.get().nodes.notclear, 'done');
-
-  // 再请求一次（没看懂）时复位：understood 回到 false，节点重新走
   commands.notUnderstood();
-  assert.equal(store.get().understood, false);
   await settle(clock);
   assert.equal(sends, 2);
+  assert.equal(store.get().rung, 3);
   assert.equal(store.get().nodes.notclear, 'done');
   assert.equal(store.get().nodes.stepdown, 'done');
+});
+
+test('「看懂了」已删除：commands 不再提供，状态里也没有对应字段', async () => {
+  const { commands, store, clock } = setup();
+  commands.submit(SAMPLE);
+  await settle(clock);
+  assert.equal(commands.understood, undefined);
+  assert.equal('understood' in store.get(), false);
+  assert.equal('bridge' in store.get().nodes, false);
 });
 
 test('节点逐个点亮，不是一次全亮', async () => {

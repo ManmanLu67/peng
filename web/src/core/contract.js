@@ -18,7 +18,6 @@ export const NODE_STATUS = Object.freeze({
   IDLE: 'idle',
   RUNNING: 'running',
   DONE: 'done',
-  SKIPPED: 'skipped',
   ERROR: 'error',
 });
 

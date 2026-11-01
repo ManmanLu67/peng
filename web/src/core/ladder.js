@@ -11,8 +11,8 @@ export function createLadder(rungs) {
   const canStepDown = (n) => Number.isInteger(n) && n > min;
 
   /**
-   * 按钮可用性。state 需要有 status / rung / messages / understood。
-   * 没看懂到英文就不能再降；看懂了点过一次就不再亮，换句或再请求后复位。
+   * 按钮可用性。state 需要有 status / rung / messages。
+   * 没看懂到英文就不能再降。
    */
   function availability(state) {
     const busy = state.status === 'running' || !!state.demo;   // 演示中与运行中一样禁用输入和按钮
@@ -25,7 +25,6 @@ export function createLadder(rungs) {
       send: !busy,
       retry: !state.demo && state.status === 'error' && !!state.lastCall,
       notUnderstood: idle && canStepDown(state.rung),
-      gotIt: idle && !state.understood,
     };
   }
 

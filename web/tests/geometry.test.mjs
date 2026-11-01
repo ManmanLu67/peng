@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mulberry32, tornPolygon, toPathD, scalePoints, quadCurvePoints, quadCurveAt, moonPhasePath } from '../src/core/geometry.js';
+import { mulberry32, tornPolygon, toPathD, scalePoints, quadCurvePoints, quadCurveAt, moonPhasePath, catmullRom, resample, ribbon } from '../src/core/geometry.js';
 
 test('mulberry32：同 seed 同序列，不同 seed 不同', () => {
   const a = mulberry32(7); const b = mulberry32(7); const c = mulberry32(8);
@@ -90,4 +90,55 @@ test('moonPhasePath：同参同路径；满月闭合整圆，上弦是半圆，�
   assert.notEqual(c[2], g[2], '蛾眉与凸月的扫掠方向不同');
   assert.throws(() => moonPhasePath(0, 0.5), /r>0/);
   assert.throws(() => moonPhasePath(10, 1.2), /0–1/);
+});
+
+const ARC = [[0, 400], [200, 200], [400, 120], [600, 200], [800, 400]];
+
+test('catmullRom：经过每个控制点；控制点不足报错', () => {
+  const pts = catmullRom(ARC, 8);
+  assert.deepEqual(pts[0], ARC[0]);
+  assert.deepEqual(pts.at(-1), ARC.at(-1));
+  assert.ok(pts.some(([x, y]) => Math.abs(x - 400) < 1e-9 && Math.abs(y - 120) < 1e-9), '中间控制点在曲线上');
+  assert.throws(() => catmullRom([[0, 0]]), /至少需要 2/);
+});
+
+test('resample：相邻点间距约等于 step（末段除外），首尾保留', () => {
+  const out = resample([[0, 0], [100, 0]], 10);
+  assert.deepEqual(out[0], [0, 0]);
+  assert.deepEqual(out.at(-1), [100, 0]);
+  const gaps = out.slice(1, -1).map((p, i) => Math.hypot(p[0] - out[i][0], p[1] - out[i][1]));
+  assert.ok(gaps.every((g) => Math.abs(g - 10) < 1e-6), gaps.join(','));
+  assert.throws(() => resample([[0, 0], [1, 1]], 0), /step/);
+});
+
+test('ribbon：同 seed 同输出（刷新构图不变），不同 seed 不同', () => {
+  const o = { a: [0, 0], b: [60, 60], wob: 10, seed: 5, gap: 40 };
+  assert.deepEqual(ribbon(ARC, o), ribbon(ARC, o));
+  assert.notDeepEqual(ribbon(ARC, o), ribbon(ARC, { ...o, seed: 6 }));
+});
+
+test('ribbon：输出是闭合点列，全部是有限数', () => {
+  const pts = ribbon(ARC, { a: [0, 0], b: [60, 60], gap: 40 });
+  assert.ok(pts.length >= 6);
+  assert.ok(pts.every((p) => p.length === 2 && p.every(Number.isFinite)));
+});
+
+test('ribbon：收尖端比中段窄，且不会收成零宽或交叉', () => {
+  const pts = ribbon(ARC, { a: [0, 0], b: [80, 80], pinch: [true, true], wob: 0, gap: 30 });
+  const n = pts.length / 2;
+  const width = (i) => Math.hypot(pts[i][0] - pts[2 * n - 1 - i][0], pts[i][1] - pts[2 * n - 1 - i][1]);
+  assert.ok(width(0) > 0, '端点仍有宽度');
+  assert.ok(width(0) < width(Math.floor(n / 2)) * 0.3, '端点明显窄于中段');
+  assert.ok(width(n - 1) < width(Math.floor(n / 2)) * 0.3);
+});
+
+test('ribbon：t0 / t1 截取路径的一段', () => {
+  const full = ribbon(ARC, { a: [0, 0], b: [40, 40], wob: 0, gap: 30 });
+  const part = ribbon(ARC, { a: [0, 0], b: [40, 40], wob: 0, gap: 30, t0: 0.3, t1: 0.6 });
+  assert.ok(part.length < full.length);
+});
+
+test('ribbon：参数不合法时报错', () => {
+  assert.throws(() => ribbon(ARC, { b: [1, 1] }), /需要 a 和 b/);
+  assert.throws(() => ribbon(ARC, { a: [0, 0], b: [1, 1], t0: 0.6, t1: 0.5 }), /t0 < t1/);
 });

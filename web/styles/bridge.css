@@ -44,8 +44,6 @@
 .brg__node[data-state="done"] .brg__halo { fill: var(--ochre); opacity: .28; }
 
 
-.brg__node[data-state="skipped"] { opacity: .4; }
-
 .brg__node[data-state="error"] .brg__moon-lit { fill: var(--ink); opacity: .15; }
 .brg__node[data-state="error"] .brg__ring { stroke: var(--cinnabar); opacity: .55; }
 .brg__node[data-state="error"] .brg__cross { opacity: 1; }
@@ -54,9 +52,6 @@
   0%, 100% { opacity: .15; transform: scale(.85); }
   50%      { opacity: .45; transform: scale(1.15); }
 }
-
-.brg__result { min-height: 1.4em; margin: 0; font-family: var(--f-small); font-size: var(--fs-small); color: var(--cinnabar-text); opacity: 0; transition: opacity var(--dur-ink); }
-.brg__result.is-on { opacity: 1; }
 
 @media (max-width: 720px) {
   .brg { padding: var(--s3) var(--edge) var(--s2); }

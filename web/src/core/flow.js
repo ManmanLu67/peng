@@ -1,5 +1,5 @@
 // 状态迁移：reduce(state, event) → { state, effects }。纯函数，不碰网络与计时。
-// effects 由 commands 执行：CALL_CHAT 调 ports.chat，PLAY_PATH 经 ports.clock 逐个点亮节点。
+// effects 由 commands 执行：CALL_CHAT 调 ports.chat，并经 ports.clock 逐个点亮节点。
 
 import { STATUS, NODE_STATUS } from './contract.js';
 
@@ -24,7 +24,6 @@ export function createFlow({ ladder, nodes }) {
       pendingId: null,          // 正在等待响应的那条消息；普通聊天不改 activeId
       nodes: idleNodes(),
       traceSimulated: false,
-      understood: false,        // 已点「看懂了」：只在前端结束这一次，换句或再请求时复位
       inputMode: 'translate',   // chat 只对话；translate 把这一句简化到右侧
       demo: false,              // 演示模式中：输入与按钮禁用（features 读它）
       reqSeq: 0,
@@ -72,7 +71,6 @@ export function createFlow({ ladder, nodes }) {
         reqId,
         lastCall,
         error: null,
-        understood: false,
         nodes: idleNodes(),
         // 请求在途时还没有真实 trace，节点是按固定节奏模拟点亮的；响应回来后再按 trace 是否存在改写
         traceSimulated: true,
@@ -138,13 +136,6 @@ export function createFlow({ ladder, nodes }) {
       case 'NOT_UNDERSTOOD':
         if (!canAct(s) || !ladder.canStepDown(s.rung)) return noop(s);
         return stepRequest(s, 'not_understood', s.rung - 1);
-
-      case 'UNDERSTOOD': {
-        // 只在前端结束：不调接口。03 跳过，02、04 由 PLAY_PATH 依次点亮。
-        if (!canAct(s) || s.understood) return noop(s);
-        const next = { ...s, understood: true, nodes: { ...s.nodes, ...markSkipped('understood') } };
-        return { state: next, effects: [{ type: 'PLAY_PATH', path: pathOf('understood') }] };
-      }
 
       case 'SET_RUNG': {
         const n = e.rung;
@@ -259,7 +250,6 @@ export function createFlow({ ladder, nodes }) {
             rung: m.rung,
             inputRung: m.inputRung,
             status: ladder.isEnglish(m.rung) ? STATUS.ENGLISH : STATUS.RESULT,
-            understood: false,
           },
           effects: [],
         };
@@ -275,15 +265,6 @@ export function createFlow({ ladder, nodes }) {
       default:
         return noop(s);
     }
-  }
-
-  /** nodes.json 的 skip[action] 列出的节点标成跳过（即使上一圈已点亮）。 */
-  function markSkipped(action) {
-    const out = {};
-    for (const id of nodes.skip?.[action] ?? []) {
-      if (id in idleNodes()) out[id] = NODE_STATUS.SKIPPED;
-    }
-    return out;
   }
 
   return { initialState, reduce };

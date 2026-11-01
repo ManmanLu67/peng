@@ -14,6 +14,6 @@ export default {
   defaults: { hsk: 3 },
   flags: {
     demoMode: true,
-    showApiBadge: typeof window !== 'undefined' ? new URL(window.location.href).hostname === 'localhost' : true,
+    showApiBadge: true,
   },
 };

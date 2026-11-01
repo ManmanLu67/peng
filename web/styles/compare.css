@@ -62,6 +62,10 @@
 }
 
 /* 反馈按钮：右下，直角细框，朱砂框 + 朱砂字 */
-.act { padding: var(--s3) var(--s4); display: flex; justify-content: flex-end; }
-.act__btn { min-width: 180px; }
-@media (max-width: 720px) { .act { padding: var(--s3) var(--edge); } .act__btn { width: 100%; } }
+.act { padding: var(--s3) var(--s4); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s3); }
+.act[hidden], .act__btn[hidden] { display: none; }
+.act__btn { min-width: 120px; }
+@media (max-width: 720px) {
+  .act { padding: var(--s3) var(--edge); gap: var(--s2); }
+  .act__btn { flex: 1 1 calc(50% - var(--s2)); min-width: 0; }
+}

@@ -68,7 +68,8 @@ button, input, textarea { font: inherit; color: inherit; }
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  /* 放在顶栏下面：底部是操作区（重试、没看懂等），不能被盖住 */
+  top: calc(var(--topbar) + var(--s3) + env(safe-area-inset-top, 0px));
   transform: translateX(-50%);
   max-width: calc(100vw - 2 * var(--edge));
   padding: var(--s2) var(--s3);

@@ -56,6 +56,20 @@ test('availability：运行中全部禁用；没有结果时也禁用', () => {
   assert.equal(idle.send, true);
 });
 
+test('availability：失败后只有“重试”可用，改档和结束都不亮', () => {
+  const failed = ladder.availability({
+    status: 'error', rung: 4, messages: [{}], understood: false, lastCall: { action: 'submit', req: {} },
+  });
+  assert.equal(failed.retry, true);
+  assert.equal(failed.simpler || failed.closer || failed.notUnderstood || failed.gotIt, false);
+  assert.equal(failed.send, true);
+  // 没有上一次请求、演示中、或不是失败态时，不出现重试
+  assert.equal(ladder.availability({ status: 'error', rung: null, messages: [], understood: false }).retry, false);
+  assert.equal(ladder.availability({ status: 'error', messages: [], demo: true, lastCall: {} }).retry, false);
+  assert.equal(ladder.availability({ status: 'result', rung: 4, messages: [{}], understood: false, lastCall: {} }).retry, false);
+  assert.equal(ladder.availability({ status: 'running', rung: 4, messages: [{}], understood: false, lastCall: {} }).retry, false);
+});
+
 test('availability：看懂后“看懂了”禁用', () => {
   const a = ladder.availability({ status: 'result', rung: 4, messages: [{}], understood: true });
   assert.equal(a.gotIt, false);

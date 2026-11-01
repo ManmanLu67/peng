@@ -25,7 +25,8 @@ export default {
     }
 
     const render = ({ rung, status, demo }) => {
-      const open = status !== 'running' && !demo && rung != null;
+      // 与 flow 一致：只有停在结果上才能换档，失败态下点了也没反应
+      const open = (status === 'result' || status === 'english') && !demo && rung != null;
       for (const [n, li] of lis) {
         const on = status !== 'running' && n === rung;
         li.disabled = !open;

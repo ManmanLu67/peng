@@ -40,16 +40,31 @@ test('请求在途时 traceSimulated=true（节点是模拟点亮的），带真
   assert.equal(again.state.traceSimulated, true);
 });
 
+test('SUBMIT：原文里用冒号写出的场景，立刻出现在这句话下面', () => {
+  const { state } = flow.reduce(init(), { type: 'SUBMIT', text: '一个人对着水杯说：这水太烫了' });
+  assert.equal(state.messages[0].text, '一个人对着水杯说：这水太烫了');
+  assert.equal(state.messages[0].context, '一个人对着水杯说');
+
+  const plain = flow.reduce(init(), { type: 'SUBMIT', text: '床前明月光' });
+  assert.equal(plain.state.messages[0].context, '');
+
+  const given = flow.reduce(init(), { type: 'SUBMIT', text: '日照香炉生紫烟', context: '一个人对着水杯说' });
+  assert.equal(given.state.messages[0].context, '一个人对着水杯说');
+});
+
 test('SUBMIT：转 running，生成 CALL_CHAT，请求带所选档', () => {
   const { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: ' 日照香炉生紫烟 ', context: '水杯' });
   assert.equal(state.status, 'running');
   assert.equal(effects.length, 1);
   assert.equal(effects[0].type, 'CALL_CHAT');
+  assert.equal(state.inputMode, 'translate');
   assert.equal(effects[0].req.action, 'submit');
   assert.equal(effects[0].req.message, '日照香炉生紫烟');
   assert.equal(effects[0].req.target_rung, 4);
   assert.equal(effects[0].req.client, 'user');
   assert.deepEqual(effects[0].path, ['rewrite']);
+  assert.equal(state.activeId, null);
+  assert.equal(state.rung, null);
 });
 
 test('演示中的请求标成 demo，平时是 user', () => {
@@ -207,6 +222,61 @@ test('SELECT_MESSAGE：切换解读卡恢复该条的档位', () => {
   const back = flow.reduce(s, { type: 'SELECT_MESSAGE', id: 1 });
   assert.equal(back.state.rung, 4);
   assert.equal(back.state.status, 'result');
+});
+
+test('普通回复不改变档位，也不换掉右侧那条解释', () => {
+  const explained = flow.reduce(resolved(4), { type: 'SET_INPUT_MODE', mode: 'chat' }).state;
+  assert.equal(explained.rung, 4);
+  const { state, effects } = flow.reduce(explained, { type: 'SUBMIT', text: '你好' });
+  assert.equal(state.activeId, explained.activeId);
+  assert.equal(state.rung, 4);
+  assert.deepEqual(effects[0].path, []);
+  assert.equal(effects[0].req.action, 'chat');
+  const chat = flow.reduce(state, {
+    type: 'RESPONSE', reqId: effects[0].reqId,
+    resp: { ok: true, intent: 'chat', rung: 4, output: { lang: 'zh', text: '你好呀' }, reply_text: '你好呀', error: null },
+  });
+  assert.equal(chat.state.rung, 4);
+  assert.equal(chat.state.activeId, explained.activeId);
+  assert.equal(chat.state.status, 'result');
+  assert.equal(chat.state.messages.at(-1).mode, 'chat');
+  assert.equal(chat.state.messages.at(-1).reply, '你好呀');
+  assert.equal(chat.state.nodes.rewrite, 'idle');
+});
+
+test('聊天模式不改右侧；降档不改已经抽出的原句', () => {
+  const chatting = flow.reduce(init(), { type: 'SET_INPUT_MODE', mode: 'chat' }).state;
+  let { state, effects } = flow.reduce(chatting, { type: 'SUBMIT', text: '床前明月光' });
+  assert.equal(effects[0].req.action, 'chat');
+  assert.deepEqual(effects[0].path, []);
+  assert.equal(state.messages[0].context, '');
+  ({ state } = flow.reduce(state, {
+    type: 'RESPONSE', reqId: effects[0].reqId,
+    resp: {
+      ok: true, intent: 'explain', sentence: '床前明月光', rung: 4,
+      output: { lang: 'zh', text: '不该上右侧' }, reply_text: '这是一句诗。', error: null,
+    },
+  }));
+  assert.equal(state.rung, null);
+  assert.equal(state.activeId, null);
+  assert.equal(state.messages.at(-1).mode, 'chat');
+  assert.equal(state.messages.at(-1).reply, '这是一句诗。');
+
+  const back = flow.reduce(state, { type: 'SET_INPUT_MODE', mode: 'translate' }).state;
+  ({ state, effects } = flow.reduce(back, { type: 'SUBMIT', text: '我不懂床前明月光是什么意思' }));
+  assert.equal(effects[0].req.action, 'submit');
+  assert.deepEqual(effects[0].path, ['rewrite']);
+  ({ state } = flow.reduce(state, {
+    type: 'RESPONSE', reqId: effects[0].reqId, resp: resp(4, { sentence: '床前明月光' }),
+  }));
+  assert.equal(state.messages.at(-1).subject, '床前明月光');
+  const down = flow.reduce(state, { type: 'NOT_UNDERSTOOD' });
+  ({ state } = flow.reduce(down.state, {
+    type: 'RESPONSE', reqId: down.effects[0].reqId, resp: resp(3),
+  }));
+  assert.equal(state.rung, 3);
+  assert.equal(state.messages.at(-1).subject, '床前明月光');
+  assert.equal(down.effects[0].req.message, '床前明月光');
 });
 
 test('RESET：回到 idle 并取消在途任务', () => {

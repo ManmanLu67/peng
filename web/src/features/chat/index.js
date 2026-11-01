@@ -1,6 +1,6 @@
 // 左栏对话：用户消息、解读卡、示例按钮、下划线输入框、发送。
 // 写状态只经 ctx.commands；示例句来自 data/demo.json，不写进组件。
-import { h, svg, bilingual } from '../../ui/index.js';
+import { h, svg } from '../../ui/index.js';
 
 const MAX_LEN = 200;
 
@@ -16,11 +16,23 @@ export default {
     const samples = data.demo.samples ?? [];
 
     const messages = h('div', { class: 'chat__messages', role: 'log', 'aria-live': 'off' });
+    const modes = h('div', { class: 'chat__modes', role: 'group', 'aria-label': '模式 · Mode' });
+    const modeButtons = new Map();
+    for (const [id, zh, en] of [['translate', '降维翻译', 'Simplify'], ['chat', '聊天', 'Chat']]) {
+      const btn = h('button', {
+        type: 'button', class: 'chat__mode', 'data-mode': id, 'aria-label': `${zh} · ${en}`,
+        onclick: () => commands.setInputMode(id),
+      }, zh);
+      modeButtons.set(id, btn);
+      modes.append(btn);
+    }
+    const hintZh = h('span', { class: 'bi__zh' }, '');
+    const hintEn = h('span', { class: 'bi__en', lang: 'en' }, '');
     const status = h('p', { class: 'chat__status', role: 'status', 'aria-live': 'polite' });
     const examples = h('div', { class: 'chat__examples', role: 'group', 'aria-label': '示例 · Examples' });
     const input = h('input', {
       class: 'chat__input', type: 'text', maxlength: MAX_LEN, autocomplete: 'off', spellcheck: 'false',
-      placeholder: '输入想简化的中文 · Type Chinese',
+      placeholder: '输入想简化的中文 · Type Chinese to simplify',
       'aria-label': '输入文字 · Input text',
     });
     const send = h('button', { class: 'chat__send', type: 'submit', 'aria-label': '发送 · Send' }, sendIcon());
@@ -54,7 +66,7 @@ export default {
     const offFail = store.subscribe((s) => s.status, (status) => {
       if (status !== 'error' || input.value.trim() !== '') return;
       const s = store.get();
-      const failed = s.messages.find((m) => m.id === s.activeId && !m.resp);
+      const failed = s.messages.find((m) => m.id === s.pendingId && !m.resp);
       if (failed) { input.value = failed.text; syncControls(); }
     });
 
@@ -80,22 +92,24 @@ export default {
       messages.replaceChildren();
       for (const m of s.messages) {
         const selected = m.id === s.activeId;
-        const done = !!m.resp;
+        const done = m.mode === 'explain' && !!m.resp;
         messages.append(h('article', { class: 'chat__msg', 'data-id': m.id },
           h('p', { class: 'label' }, 'USER · 用户'),
           h('p', { class: 'chat__text', lang: 'zh' }, m.text),
           m.context ? h('p', { class: 'chat__ctx' }, `语境 · ${m.context}`) : null,
-          h('hr', { class: 'rule chat__rule' }),
-          h('button', {
+          m.mode === 'chat' && m.reply ? h('p', { class: 'label' }, 'REPLY · 回复') : null,
+          m.mode === 'chat' && m.reply ? h('p', { class: 'chat__reply' }, m.reply) : null,
+          done ? h('hr', { class: 'rule chat__rule' }) : null,
+          done ? h('button', {
             type: 'button', class: ['chat__card', selected && 'is-active'], 'aria-pressed': String(selected),
-            disabled: !done || s.status === 'running' || s.demo,
+            disabled: s.status === 'running' || s.demo,
             onclick: () => commands.select(m.id),
           },
           h('span', { class: 'chat__card-meta' },
             h('span', null, `Level: ${levelLabel(m)}`),
-            h('span', null, done ? 'Analysis Done' : (s.status === 'running' && selected ? 'Analyzing…' : 'No result'))),
+            h('span', null, 'Analysis Done')),
           h('span', { class: 'chat__card-body' },
-            done ? `点击查看 ${ladder.get(m.rung)?.label.en ?? ''} 简化结果 · Click to view` : '等待结果 · Waiting'))));
+            `点击查看 ${ladder.get(m.rung)?.label.en ?? ''} 简化结果 · Click to view`)) : null));
       }
       const last = messages.lastElementChild;
       if (last?.scrollIntoView) last.scrollIntoView({ block: 'nearest' });
@@ -104,20 +118,37 @@ export default {
         : s.status === 'error' ? '出错了，输入已保留，可重新发送 · Something went wrong. Your input is kept.'
           : '';
       status.classList.toggle('is-error', s.status === 'error');
+      const translating = s.inputMode !== 'chat';
+      const locked = s.status === 'running' || s.demo;
+      for (const [id, btn] of modeButtons) {
+        const on = id === (translating ? 'translate' : 'chat');
+        btn.setAttribute('aria-pressed', String(on));
+        btn.classList.toggle('is-on', on);
+        btn.disabled = locked;
+      }
+      examples.hidden = !translating;
+      input.placeholder = translating
+        ? '输入想简化的中文 · Type Chinese to simplify'
+        : '说一句话 · Say something';
+      const live = ctx.ports.chat?.kind === 'live';
+      hintZh.textContent = translating
+        ? (live ? '这句话会按你的等级简化，出现在右边' : '示例句会按等级简化。其他句子保持原文')
+        : (live ? '只在左边聊天，不会改右边' : '接上模型后才能聊天');
+      hintEn.textContent = translating
+        ? (live ? 'This line is simplified to your level on the right' : 'Sample lines are simplified by level. Anything else stays as written')
+        : (live ? 'Chat stays on the left and does not change the right side' : 'Chat needs a connected model');
       syncControls();
     }
 
     el.append(h('section', { class: 'chat', 'aria-label': '对话 · Chat' },
+      modes,
       messages,
       h('div', { class: 'chat__bottom' }, status, examples, form,
-        h('p', { class: 'chat__hint label' }, bilingual(
-          ctx.ports.chat?.kind === 'live' ? '文字将发送到你配置的模型接口' : '示例句会按等级简化。其他内容保持原文，不会离开本机。',
-          ctx.ports.chat?.kind === 'live' ? 'Text is sent to the model API you configured' : 'Sample lines are simplified by level. Anything else stays as written and never leaves this device.',
-          { inline: true },
-        )))));
+        h('p', { class: 'chat__hint label' }, h('span', { class: 'bi bi--inline' },
+          hintZh, h('span', { class: 'bi__sep', 'aria-hidden': 'true' }, ' · '), hintEn)))));
 
     render(store.get());
-    const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo }), () => render(store.get()));
+    const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo, mode: s.inputMode }), () => render(store.get()));
     return () => { off(); offFail(); el.replaceChildren(); };
   },
 };

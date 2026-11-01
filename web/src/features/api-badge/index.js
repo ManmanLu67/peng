@@ -2,7 +2,7 @@
 import { h } from '../../ui/index.js';
 
 const TEXT = {
-  mock: { badge: '本机', hint: '示例句会简化，其他内容保持原文' },
+  mock: { badge: '本机', hint: '示例句会简化。其他话需要接上模型才能对话' },
   live: { badge: '已连接', hint: '文字会发送到你配置的模型' },
 };
 

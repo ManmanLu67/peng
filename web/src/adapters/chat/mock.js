@@ -52,6 +52,18 @@ export function create(options = {}, env = {}) {
     const entry = find(req.message);
     const lang = n === 1 ? 'en' : 'zh';
 
+    if (req.action === 'chat') {
+      const reply = '接上模型后才能对话';
+      return {
+        ok: true,
+        intent: 'chat',
+        rung: req.target_rung ?? 4,
+        output: { lang: 'zh', text: reply },
+        reply_text: reply,
+        error: null,
+      };
+    }
+
     if (entry) {
       const text = entry.rungs[String(n)];
       return {
@@ -67,7 +79,7 @@ export function create(options = {}, env = {}) {
       };
     }
 
-    // 没有准备好的句子：原样返回，当作原文，不另写说明
+    // 升降档时没有准备好的句子：原样停在原文
     const text = req.message;
     return {
       ok: true,

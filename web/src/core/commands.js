@@ -62,11 +62,16 @@ export function createCommands({ store, bus, flow, ports, dwellMs = [400, 800], 
         controller = ctl;
         const played = playPath(path);
         ports.chat.send(req, { signal: ctl.signal }).then(
-          // 回放跑完再显示结果，避免结果先于节点动画出现
-          (resp) => played.then(() => {
-            if (ctl.signal.aborted) return;
-            dispatch({ type: 'RESPONSE', reqId, resp });
-          }),
+          // 自由输入先不点亮节点。确认是解释后，再走改写路径，播完才更新右侧。
+          (resp) => {
+            const follow = path.length === 0 && resp.intent !== 'chat'
+              ? playPath(effect.explainPath ?? [])
+              : played;
+            return follow.then(() => {
+              if (ctl.signal.aborted) return;
+              dispatch({ type: 'RESPONSE', reqId, resp });
+            });
+          },
           (err) => {
             const code = errorCode(err);
             if (code === 'aborted' || ctl.signal.aborted) return;
@@ -96,6 +101,7 @@ export function createCommands({ store, bus, flow, ports, dwellMs = [400, 800], 
     understood: () => dispatch({ type: 'UNDERSTOOD' }),
     retry: () => dispatch({ type: 'RETRY' }),
     setHsk: (rung) => dispatch({ type: 'SET_HSK', rung }),
+    setInputMode: (mode) => dispatch({ type: 'SET_INPUT_MODE', mode }),
     select: (id) => dispatch({ type: 'SELECT_MESSAGE', id }),
     reset: () => dispatch({ type: 'RESET' }),
     setDemo: (on) => dispatch({ type: 'SET_DEMO', on }),

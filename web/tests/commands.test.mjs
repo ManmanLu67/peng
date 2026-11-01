@@ -63,8 +63,8 @@ test('更简单 / 还原不经过节点 02、03；没看懂会经过', async () 
 test('节点逐个点亮，不是一次全亮', async () => {
   const { commands, store, clock } = setup();
   commands.submit(SAMPLE);
-  commands.notUnderstood(); // running 中被忽略
   assert.equal(store.get().nodes.rewrite, 'running');
+  commands.notUnderstood(); // running 中被忽略
   await settle(clock);
   commands.notUnderstood();
   assert.equal(store.get().nodes.rewrite, 'running');
@@ -105,16 +105,29 @@ test('error:shown 事件在失败时发出', async () => {
   assert.deepEqual(events, ['network']);
 });
 
-test('非示例句：原样返回原文，不附加说明', async () => {
+test('降维翻译：没有准备好的句子原样出现在右侧', async () => {
   const { commands, store, clock } = setup();
   commands.submit('随便一句话');
   await settle(clock);
-  const resp = store.get().messages[0].resp;
-  assert.equal(resp.output.text, '随便一句话');
-  assert.equal(resp.rung, 8);
-  assert.equal(resp.output.lang, 'zh');
-  assert.equal(resp.mock_placeholder, undefined);
-  assert.equal(resp.english, undefined);
+  const s = store.get();
+  assert.equal(s.inputMode, 'translate');
+  assert.equal(s.rung, 8);
+  assert.equal(s.messages[0].mode, 'explain');
+  assert.equal(s.messages[0].resp.output.text, '随便一句话');
+});
+
+test('聊天模式：没有模型时只回复一句，不改右侧', async () => {
+  const { commands, store, clock } = setup();
+  commands.setInputMode('chat');
+  commands.submit('随便一句话');
+  await settle(clock);
+  const s = store.get();
+  assert.equal(s.rung, null);
+  assert.equal(s.activeId, null);
+  assert.equal(s.nodes.rewrite, 'idle');
+  assert.equal(s.messages[0].mode, 'chat');
+  assert.equal(s.messages[0].reply, '接上模型后才能对话');
+  assert.equal(s.messages[0].resp.intent, 'chat');
 });
 
 test('防乱序：慢的旧响应不会覆盖新状态', async () => {

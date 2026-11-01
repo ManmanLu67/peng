@@ -1,0 +1,60 @@
+{
+  "entries": [
+    {
+      "id": "yu-qi",
+      "match": "与[^，。！？]{1,8}齐",
+      "level": 7,
+      "title": "与……齐……",
+      "zh": "「与」接上一个事物，「齐」表示一同。晚霞与孤鹜齐飞，就是晚霞和野鸭一起飞。",
+      "en": "与…齐… puts two things side by side, doing the same thing."
+    },
+    {
+      "id": "gong-yise",
+      "match": "共[^，。！？]{1,8}一色",
+      "level": 7,
+      "title": "共……一色",
+      "zh": "「共……一色」表示两样东西连成同一种颜色。秋水共长天一色，就是江水和天空一个颜色。",
+      "en": "共…一色 says two things share one color."
+    },
+    {
+      "id": "chao-ci",
+      "match": "朝辞",
+      "level": 7,
+      "title": "朝辞",
+      "zh": "「朝」是清晨，「辞」在古文里是告别。朝辞就是清晨离开。",
+      "en": "朝辞 means leaving at dawn."
+    },
+    {
+      "id": "loc-jian",
+      "match": "(?<![时房中之])间(?=$|[，。！？])",
+      "level": 6,
+      "title": "……间",
+      "zh": "名词后面的「间」表示在其中。彩云间就是在彩云中间。",
+      "en": "间 after a noun means in the middle of it."
+    },
+    {
+      "id": "tai-le",
+      "match": "太[^，。！？]{1,6}了",
+      "level": 2,
+      "title": "太……了",
+      "zh": "「太……了」表示程度很高，常常带有过分的意思。这水太烫了，就是水烫得受不了。",
+      "en": "太…了 marks a very high, often excessive, degree."
+    },
+    {
+      "id": "shi-de",
+      "match": "是[^，。！？]{1,12}的",
+      "level": 2,
+      "title": "是……的",
+      "zh": "「是……的」用来强调一件事的情况，或解释原因、方式。",
+      "en": "是…的 emphasizes how or why something is so."
+    },
+    {
+      "id": "zai-li",
+      "match": "在[^，。！？]{1,8}里",
+      "level": 2,
+      "title": "在……里",
+      "zh": "「在……里」表示人或事物在某个范围的里面。",
+      "en": "在…里 places someone or something inside a place."
+    }
+  ]
+}

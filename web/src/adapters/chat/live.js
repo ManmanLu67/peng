@@ -79,11 +79,14 @@ export function parseModelContent(raw) {
   };
 }
 
-/** 只收下原文里已经写明、且不是整句本身的那一段。 */
+/** 只收下原文里已经写明、且不是整句本身的那一段。去掉模型多加的引号和句末标点后再核对。 */
 function recognizedContext(message, raw) {
   if (typeof raw !== 'string') return undefined;
-  const text = raw.trim();
   const source = String(message ?? '').trim();
+  const text = raw.trim()
+    .replace(/^["'「『]+|["'」』]+$/g, '')
+    .replace(/[。！？，、：:\s]+$/g, '')
+    .trim();
   if (!text || text === source || !source.includes(text)) return undefined;
   return text;
 }
@@ -92,6 +95,68 @@ function endpoint(baseUrl) {
   const trimmed = String(baseUrl ?? '').trim().replace(/\/+$/, '');
   if (trimmed.endsWith('/chat/completions')) return trimmed;
   return `${trimmed}/chat/completions`;
+}
+
+/** DeepSeek 不传 thinking 时默认长思考，25 秒内容易超时。其他接口不带此字段。 */
+function requestExtras(baseUrl) {
+  try {
+    if (new URL(endpoint(baseUrl)).host === 'api.deepseek.com') {
+      return { thinking: { type: 'disabled' } };
+    }
+  } catch {
+    // 地址不合法时仍按原样请求，由随后的网络错误提示
+  }
+  return {};
+}
+
+/** 对话：判断是在闲聊，还是在请人解释某一句。 */
+export function parseChatContent(raw) {
+  if (typeof raw !== 'string') throw new PengError('bad_response', '模型没有返回文本');
+  let body = raw.trim();
+  const fence = body.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fence) body = fence[1].trim();
+  let data;
+  try {
+    data = JSON.parse(body);
+  } catch {
+    throw new PengError('bad_response', '模型返回的不是 JSON');
+  }
+  const intent = data?.intent === 'explain' ? 'explain' : 'chat';
+  const reply = typeof data?.reply === 'string' ? data.reply.trim() : '';
+  const sentence = typeof data?.sentence === 'string' ? data.sentence.trim() : '';
+  const note = data?.culture_note;
+  const culture = note && typeof note === 'object'
+    ? {
+        zh: typeof note.zh === 'string' ? note.zh : '',
+        en: typeof note.en === 'string' ? note.en : '',
+      }
+    : null;
+  const parsed = {
+    intent,
+    reply,
+    sentence,
+    input_rung: Number.isInteger(data?.input_rung) ? data.input_rung : undefined,
+    text: typeof data?.text === 'string' ? data.text.trim() : '',
+    english: typeof data?.english === 'string' ? data.english.trim() : '',
+    culture_note: culture && (culture.zh || culture.en) ? culture : undefined,
+    context: typeof data?.context === 'string' && data.context.trim() ? data.context.trim() : undefined,
+  };
+  if (intent === 'explain' && !parsed.text) throw new PengError('bad_response', '模型返回缺少 text');
+  if (intent === 'chat' && !reply) throw new PengError('bad_response', '模型返回缺少 reply');
+  return parsed;
+}
+
+function chatPrompt(req) {
+  const history = (req.history ?? [])
+    .map((h) => `${h.role === 'assistant' ? '回复' : '用户'}：${h.text}`)
+    .join('\n');
+  return [
+    '你在和汉语学习者聊天。这一轮只聊天，不要改写或解释句子。',
+    history ? `此前对话：\n${history}` : '此前没有对话。',
+    `学习者刚刚说：${req.message}`,
+    '用 reply 直接回答。',
+    '只输出 JSON：{"reply":"..."}',
+  ].join('\n');
 }
 
 function promptFor(req) {
@@ -106,7 +171,7 @@ function promptFor(req) {
       '用中文把意思说清楚。难度必须是 T=min(L, input_rung)。不得高于学习者档，不得写成英文。',
       '若句子已经不高于 L，就按句子本身的档位用明白的话重说一遍，不要再压低，也不要拔高。',
       '保留原意。不要加称呼，不要解释步骤。',
-      '若句子里另写了场景、说话人或听话人，把那一段原文摘到 context。必须是句子里的原句，不要编造，不要复述整句。没有就给空字符串。',
+      '若句子里另写了场景、说话人或听话人，把那一段按原文字摘到 context，一个字都不要改。不要编造，不要复述整句。没有就给空字符串。',
       '只输出 JSON：{"input_rung":8,"text":"降级后的中文","english":"简短英文释义","context":"","culture_note":{"zh":"可选","en":"optional"}}',
       '没有文化背景就省略 culture_note。',
     ].join('\n');
@@ -151,11 +216,16 @@ export function create(options = {}, env = {}) {
     jsonObject = true,
   } = options;
   const mock = createMock({ delayMs: [0, 0] }, env);
+  const samples = new Set((env.data?.demo?.entries ?? []).map((e) => e.match));
 
   return {
     kind: 'live',
     async send(req, { signal } = {}) {
-      if (req?.client === 'demo') return mock.send(req, { signal });
+      // 演示和三句例句都用内置结果，不打模型。没看懂时按同一句继续用内置档位。
+      const sample = samples.has(String(req?.message ?? '').trim());
+      if (req?.client === 'demo' || (req?.action !== 'chat' && sample)) {
+        return mock.send(req, { signal });
+      }
 
       const timeoutSignal = AbortSignal.timeout(timeoutMs);
       const timed = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
@@ -172,8 +242,9 @@ export function create(options = {}, env = {}) {
             temperature: 0.2,
             messages: [
               { role: 'system', content: SYSTEM },
-              { role: 'user', content: promptFor(req) },
+              { role: 'user', content: req.action === 'chat' ? chatPrompt(req) : promptFor(req) },
             ],
+            ...requestExtras(baseUrl),
             ...(jsonObject ? { response_format: { type: 'json_object' } } : {}),
           }),
           signal: timed,
@@ -196,7 +267,21 @@ export function create(options = {}, env = {}) {
       } catch {
         throw new PengError('bad_response', '接口没有返回 JSON');
       }
-      return assertValid(toResponse(req, parseModelContent(payload?.choices?.[0]?.message?.content)));
+      const content = payload?.choices?.[0]?.message?.content;
+      if (req.action === 'chat') {
+        const parsed = parseChatContent(content);
+        const reply = parsed.reply || parsed.text;
+        if (!reply) throw new PengError('bad_response', '模型返回缺少 reply');
+        return assertValid({
+          ok: true,
+          intent: 'chat',
+          rung: clampInt(req.target_rung, 1, 8) ?? 4,
+          output: { lang: 'zh', text: reply },
+          reply_text: reply,
+          error: null,
+        });
+      }
+      return assertValid(toResponse(req, parseModelContent(content)));
     },
   };
 }

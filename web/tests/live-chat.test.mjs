@@ -66,6 +66,24 @@ test('live 已登记，kind 为 live', () => {
   assert.equal(create(OPTS).kind, 'live');
 });
 
+test('例句不打网络，沿用内置结果；没看懂也沿用', async () => {
+  let called = false;
+  const chat = create({
+    ...OPTS,
+    fetch: async () => { called = true; throw new Error('should not fetch'); },
+  }, { data: { demo: readData('demo') } });
+  const resp = await chat.send({
+    action: 'submit', client: 'user', message: SAMPLE, target_rung: 4, current_rung: null,
+  });
+  assert.equal(called, false);
+  assert.equal(resp.output.text, readData('demo').entries[0].rungs['4']);
+  const down = await chat.send({
+    action: 'not_understood', client: 'user', message: SAMPLE, target_rung: 3, current_rung: 4,
+  });
+  assert.equal(called, false);
+  assert.equal(down.output.text, readData('demo').entries[0].rungs['3']);
+});
+
 test('demo 请求不打网络，走示例句', async () => {
   let called = false;
   const chat = create({
@@ -110,6 +128,32 @@ test('submit 取更低档，请求打到 chat/completions', async () => {
   assert.equal(resp.english, 'Hot.');
   assert.deepEqual(resp.culture_note, { zh: '诗', en: 'poem' });
   assert.equal(resp.mock_placeholder, undefined);
+});
+
+test('DeepSeek 关闭思考；其他接口不带 thinking', async () => {
+  let deepseekBody;
+  let otherBody;
+  const deepseek = create({
+    ...OPTS,
+    baseUrl: 'https://api.deepseek.com',
+    fetch: async (_u, o) => {
+      deepseekBody = JSON.parse(o.body);
+      return model(JSON.stringify({ input_rung: 8, text: '水很烫。' }));
+    },
+  });
+  await deepseek.send({ action: 'submit', message: '水很烫', target_rung: 4 });
+  assert.deepEqual(deepseekBody.thinking, { type: 'disabled' });
+
+  const other = create({
+    ...OPTS,
+    baseUrl: 'https://api.example.com/v1',
+    fetch: async (_u, o) => {
+      otherBody = JSON.parse(o.body);
+      return model(JSON.stringify({ input_rung: 8, text: '水很烫。' }));
+    },
+  });
+  await other.send({ action: 'submit', message: '水很烫', target_rung: 4 });
+  assert.equal(otherBody.thinking, undefined);
 });
 
 test('submit：只收下原文里写明的语境，没有就不带', async () => {
@@ -228,6 +272,41 @@ test('有密钥和地址才改用 live，空配置保持 mock', () => {
   assert.equal(next.chat.options.baseUrl, 'https://api.example.com/v1/');
   assert.equal(next.chat.options.model, 'm');
   assert.equal(next.clock, base.clock);
+});
+
+test('聊天请求即使被写成解释，也只返回回复', async () => {
+  let prompt = '';
+  const chat = create({
+    ...OPTS,
+    fetch: async (_u, o) => {
+      prompt = JSON.parse(o.body).messages.at(-1).content;
+      return model(JSON.stringify({
+        intent: 'explain', reply: '这句是在说月光。', sentence: '床前明月光',
+        input_rung: 8, text: '床前有明亮的月光。',
+      }));
+    },
+  }, { data: { demo: readData('demo') } });
+  const resp = await chat.send({
+    action: 'chat', message: SAMPLE, target_rung: 4, history: [{ role: 'user', text: '上一句' }],
+  });
+  assert.equal(resp.intent, 'chat');
+  assert.equal(resp.reply_text, '这句是在说月光。');
+  assert.equal(resp.sentence, undefined);
+  assert.match(prompt, /只聊天/);
+  assert.match(prompt, /上一句/);
+});
+
+test('降维翻译的示例句不打网络，聊天同一句会打网络', async () => {
+  let called = false;
+  const exact = create({
+    ...OPTS,
+    fetch: async () => { called = true; throw new Error('should not fetch'); },
+  }, { data: { demo: readData('demo') } });
+  const sample = await exact.send({ action: 'submit', client: 'user', message: SAMPLE, target_rung: 4 });
+  const down = await exact.send({ action: 'not_understood', client: 'user', message: SAMPLE, target_rung: 3, current_rung: 4 });
+  assert.equal(called, false);
+  assert.equal(sample.output.text, readData('demo').entries[0].rungs['4']);
+  assert.equal(down.output.text, readData('demo').entries[0].rungs['3']);
 });
 
 test('模型正文不是 JSON 时是 bad_response', async () => {

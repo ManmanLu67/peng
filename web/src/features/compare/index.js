@@ -4,6 +4,7 @@
 //         语法标注通过 annotate() 的 grammar 参数接入。
 import { h, bilingual } from '../../ui/index.js';
 import { annotate } from '../../core/annotate.js';
+import { knowledgePoints } from '../../core/knowledge.js';
 
 const SAFE = /^[\w-]+$/;
 
@@ -21,6 +22,13 @@ export default {
     const { store, ladder, data, ports } = ctx;
     const hsk = data.hsk.entries;
     const glosses = data.glosses.entries;
+    const grammar = data.grammar?.entries ?? [];
+    const kindLabel = {
+      allusion: ['典故', 'Allusion'],
+      classical: ['文言', 'Classical'],
+      word: ['词语', 'Word'],
+      grammar: ['语法', 'Grammar'],
+    };
     const types = data['annotation-types'];
     const typeLabel = Object.fromEntries(types.map((t) => [t.id, t.label]));
 
@@ -89,6 +97,19 @@ export default {
       return { p, words: noted };
     }
 
+    function pointList(text, minLevel) {
+      const items = knowledgePoints(text, { segmenter: ports.segmenter, hsk, glosses, grammar, minLevel });
+      if (!items.length) return null;
+      return h('div', { class: 'cmp__points' }, ...items.map((item) => {
+        const [zh, en] = kindLabel[item.kind] ?? kindLabel.word;
+        return h('article', { class: 'cmp__point' },
+          h('p', { class: 'cmp__point-kicker' }, `${zh} · ${en}`),
+          h('p', { class: 'cmp__point-title' }, item.title, item.py ? h('span', { class: 'cmp__point-py' }, ` ${item.py}`) : null),
+          h('p', { class: 'cmp__point-zh' }, item.zh),
+          item.en ? h('p', { class: 'cmp__point-en', lang: 'en' }, item.en) : null);
+      }));
+    }
+
     function glossList(words) {
       if (!words.length) return null;
       return h('ul', { class: 'cmp__gloss' }, ...words.map((w) => h('li', null,
@@ -113,13 +134,13 @@ export default {
       body.replaceChildren();
 
       if (!msg) { body.append(renderEmpty('在左侧输入一句话，或点一个示例', 'Type a sentence on the left, or pick an example')); return; }
-      if (s.status === 'running') {
-        body.append(h('div', { class: 'cmp__skeleton', role: 'status', 'aria-label': '处理中 · Working' },
-          h('span'), h('span'), h('span')));
-        return;
-      }
-      if (s.status === 'error' || !msg.resp) {
-        body.append(renderEmpty('这次没有拿到结果，输入已保留', 'No result this time. Your input is kept.'));
+      if (!msg.resp) {
+        if (s.status === 'running') {
+          body.append(h('div', { class: 'cmp__skeleton', role: 'status', 'aria-label': '处理中 · Working' },
+            h('span'), h('span'), h('span')));
+        } else {
+          body.append(renderEmpty('这次没有拿到结果，输入已保留', 'No result this time. Your input is kept.'));
+        }
         return;
       }
 
@@ -129,8 +150,9 @@ export default {
 
       // 左：原文
       const minLevel = levelFor(s);
-      const left = renderSpans(msg.text, minLevel);
-      const colL = h('div', { class: 'cmp__col' }, heading('原文', 'Original Text'), left.p, glossList(left.words));
+      const original = msg.subject || msg.text;
+      const left = renderSpans(original, minLevel);
+      const colL = h('div', { class: 'cmp__col' }, heading('原文', 'Original Text'), left.p, pointList(original, minLevel));
 
       // 右：当前档
       const colR = h('div', { class: 'cmp__col' });

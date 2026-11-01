@@ -14,6 +14,12 @@
 .cmp mark:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
 .cmp mark.is-oov { text-decoration-thickness: 1px; }
 
+.cmp__points { display: flex; flex-direction: column; gap: var(--s4); margin-top: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.cmp__point-kicker { margin: 0; font-family: var(--f-small); font-size: var(--fs-label); letter-spacing: .12em; color: var(--muted); }
+.cmp__point-title { margin: var(--s1) 0 0; font-family: var(--f-title); font-size: 18px; line-height: 1.5; }
+.cmp__point-py { font-family: var(--f-small); font-size: 13px; color: var(--muted); }
+.cmp__point-zh { margin: var(--s1) 0 0; font-size: 14px; line-height: 1.7; }
+.cmp__point-en { margin: var(--s1) 0 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
 .cmp__gloss { list-style: none; margin: 0 0 var(--s4); padding: 0; font-family: var(--f-small); font-size: 13px; line-height: 1.8; color: var(--muted); }
 .cmp__gloss strong { color: var(--ink); font-family: var(--f-title); }
 

@@ -116,6 +116,19 @@ test('降维翻译：没有准备好的句子原样出现在右侧', async () =>
   assert.equal(s.messages[0].resp.output.text, '随便一句话');
 });
 
+test('点阶梯：示例换到点中的那一档，原句和语境不动', async () => {
+  const { commands, store, clock } = setup();
+  commands.submit(SAMPLE, '一个人对着水杯说');
+  await settle(clock);
+  commands.setRung(2);
+  await settle(clock);
+  const s = store.get();
+  assert.equal(s.rung, 2);
+  assert.equal(s.messages[0].text, SAMPLE);
+  assert.equal(s.messages[0].context, '一个人对着水杯说');
+  assert.equal(s.messages[0].resp.output.text, '水很烫。');
+});
+
 test('聊天模式：没有模型时只回复一句，不改右侧', async () => {
   const { commands, store, clock } = setup();
   commands.setInputMode('chat');

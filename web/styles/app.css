@@ -95,7 +95,7 @@
 #root[data-page="/app"] > .feature--chat        { grid-area: chat; border-right: 1px solid var(--line); }
 #root[data-page="/app"] > .feature--bridge      { grid-area: bridge; border-bottom: 1px solid var(--line); }
 #root[data-page="/app"] > .feature--compare     { grid-area: compare; overflow-y: auto; }
-#root[data-page="/app"] > .feature--ladder-bar  { grid-area: compare; justify-self: end; align-self: start; pointer-events: none; }
+#root[data-page="/app"] > .feature--ladder-bar  { grid-area: compare; justify-self: end; align-self: start; pointer-events: none; z-index: 2; }
 #root[data-page="/app"] > .feature--actions     { grid-area: actions; justify-self: end; border-top: 1px solid var(--line); width: 100%; }
 
 /* ---------- 窄屏 ---------- */

@@ -10,6 +10,7 @@
     "not_understood": ["rewrite", "notclear", "stepdown"],
     "step_down":      ["rewrite"],
     "step_up":        ["rewrite"],
+    "set_rung":       ["rewrite"],
     "understood":     ["notclear", "bridge"]
   },
   "skip": {

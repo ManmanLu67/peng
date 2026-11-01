@@ -26,6 +26,7 @@ const INTENT = {
   not_understood: 'not_understood',
   step_down: 'level_changed',
   step_up: 'level_changed',
+  set_rung: 'level_changed',
   chat: 'other',
 };
 
@@ -37,6 +38,7 @@ function targetRung(req) {
     case 'step_down':
     case 'not_understood': n = cur - 1; break;
     case 'step_up': n = cur + 1; break;
+    case 'set_rung': n = req.target_rung; break;
     default: n = req.target_rung ?? cur;
   }
   return Math.min(8, Math.max(1, n));

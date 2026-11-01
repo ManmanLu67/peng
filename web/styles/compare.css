@@ -7,7 +7,8 @@
 .cmp__h { margin: 0; font-family: var(--f-disp); font-style: italic; font-weight: 400; font-size: 20px; white-space: nowrap; }
 .cmp__rule { flex: 1; height: 1px; background: var(--line); }
 
-.cmp__text { font-family: var(--f-title); font-size: var(--fs-compare); line-height: var(--lh-compare); overflow-wrap: anywhere; margin-bottom: var(--s4); }
+.cmp__text { font-family: var(--f-title); font-size: var(--fs-compare); line-height: var(--lh-compare); overflow-wrap: anywhere; margin-bottom: var(--s3); }
+.cmp__py { margin: 0 0 var(--s4); font-family: var(--f-small); font-size: 14px; line-height: 1.7; color: var(--muted); letter-spacing: .02em; }
 .cmp__text--en { font-family: var(--f-disp); font-style: italic; font-size: 24px; line-height: 1.6; }
 
 .cmp mark { background: none; color: inherit; text-underline-offset: .22em; text-decoration-thickness: 2px; cursor: pointer; }
@@ -46,7 +47,8 @@
 
 /* 阶梯条：右缘纵向，当前档朱砂粗竖条 */
 .lad { list-style: none; margin: 0; padding: var(--s4) var(--s3) 0 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
-.lad__item { display: flex; align-items: center; gap: var(--s2); height: 28px; }
+.lad__item { display: flex; align-items: center; gap: var(--s2); height: 28px; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; pointer-events: auto; }
+.lad__item:disabled { cursor: default; }
 .lad__label { font-family: var(--f-small); font-size: var(--fs-label); letter-spacing: .08em; color: var(--muted); }
 .lad__bar { width: 3px; height: 100%; background: var(--line); opacity: .45; }
 .lad__item.is-on .lad__label { color: var(--ink); font-weight: 600; }

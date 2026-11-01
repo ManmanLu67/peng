@@ -113,7 +113,7 @@ export function createFlow({ ladder, nodes }) {
         const given = translating ? (e.context ?? '').trim() : '';
         const msg = {
           id, text, subject: '', context: given || (translating ? sceneContext(text) : ''),
-          mode: null, reply: '', resp: null, rung: null, inputRung: null,
+          pinyin: '', mode: null, reply: '', resp: null, rung: null, inputRung: null,
         };
         const messages = [...kept, msg];
         if (!translating) {
@@ -146,6 +146,12 @@ export function createFlow({ ladder, nodes }) {
       case 'NOT_UNDERSTOOD':
         if (!canAct(s) || !ladder.canStepDown(s.rung)) return noop(s);
         return stepRequest(s, 'not_understood', s.rung - 1);
+
+      case 'SET_RUNG': {
+        const n = e.rung;
+        if (s.demo || !canAct(s) || !ladder.get(n) || n === s.rung) return noop(s);
+        return stepRequest(s, 'set_rung', n);
+      }
 
       case 'UNDERSTOOD': {
         // 只在前端结束：不调接口。03 跳过，02、04 由 PLAY_PATH 依次点亮。
@@ -188,6 +194,9 @@ export function createFlow({ ladder, nodes }) {
                   ? m.subject
                   : ((typeof resp.sentence === 'string' && resp.sentence.trim()) ? resp.sentence.trim() : m.text),
                 context: m.context?.trim() ? m.context : (typeof resp.context === 'string' ? resp.context.trim() : m.context),
+                pinyin: m.pinyin?.trim()
+                  ? m.pinyin
+                  : (typeof resp.pinyin === 'string' ? resp.pinyin.trim() : ''),
                 resp,
                 rung: resp.rung,
                 inputRung: resp.input_rung ?? m.inputRung,

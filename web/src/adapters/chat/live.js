@@ -19,6 +19,7 @@ const INTENT = {
   not_understood: 'not_understood',
   step_down: 'level_changed',
   step_up: 'level_changed',
+  set_rung: 'level_changed',
   chat: 'other',
 };
 
@@ -37,14 +38,11 @@ function sentenceRung(inputRung) {
 }
 
 /**
- * submit：T = min(学习者档, 句子难度)，夹在 2–7。
- * 没看懂 / 升降档：采用请求里的 target_rung，允许英文档 1。
+ * submit：直接用学习者档，夹在 2–7。句子更简单也不再降到更低档。
+ * 没看懂 / 升降档 / 点阶梯：采用请求里的 target_rung，允许英文档 1。
  */
 export function chooseTargetRung(action, userRung, inputRung, requested) {
-  if (action === 'submit') {
-    const learner = clampInt(userRung, 2, 7) ?? 4;
-    return Math.min(learner, sentenceRung(inputRung));
-  }
+  if (action === 'submit') return clampInt(userRung, 2, 7) ?? 4;
   return clampInt(requested, 1, 8) ?? 1;
 }
 
@@ -76,7 +74,15 @@ export function parseModelContent(raw) {
     english: typeof data.english === 'string' ? data.english.trim() : '',
     culture_note: culture && (culture.zh || culture.en) ? culture : undefined,
     context: typeof data.context === 'string' && data.context.trim() ? data.context.trim() : undefined,
+    pinyin: asPinyin(data.pinyin),
   };
+}
+
+function asPinyin(value) {
+  if (typeof value !== 'string') return undefined;
+  const text = value.trim();
+  if (!text || /[㐀-鿿]/.test(text) || !/[a-zāáǎàēéěèīíǐìōóǒòūúǔùüǖǘǚǜ]/i.test(text)) return undefined;
+  return text;
 }
 
 /** 只收下原文里已经写明、且不是整句本身的那一段。去掉模型多加的引号和句末标点后再核对。 */
@@ -168,11 +174,11 @@ function promptFor(req) {
       `句子：${req.message}`,
       `语境：${context}`,
       '判断句子难度 input_rung（整数 2 到 8；古文或明显超过 HSK 6 记 8）。',
-      '用中文把意思说清楚。难度必须是 T=min(L, input_rung)。不得高于学习者档，不得写成英文。',
-      '若句子已经不高于 L，就按句子本身的档位用明白的话重说一遍，不要再压低，也不要拔高。',
+      '用中文把意思说清楚。难度必须是学习者档 L，不要因为句子更简单而改到更低档，也不要高于 L，不要写成英文。',
       '保留原意。不要加称呼，不要解释步骤。',
       '若句子里另写了场景、说话人或听话人，把那一段按原文字摘到 context，一个字都不要改。不要编造，不要复述整句。没有就给空字符串。',
-      '只输出 JSON：{"input_rung":8,"text":"降级后的中文","english":"简短英文释义","context":"","culture_note":{"zh":"可选","en":"optional"}}',
+      'pinyin 是原句的全文拼音，带声调，音节之间用空格，不要写汉字。',
+      '只输出 JSON：{"input_rung":8,"text":"降级后的中文","pinyin":"yuán jù pīn yīn","english":"简短英文释义","context":"","culture_note":{"zh":"可选","en":"optional"}}',
       '没有文化背景就省略 culture_note。',
     ].join('\n');
   }
@@ -199,6 +205,7 @@ function toResponse(req, parsed) {
     error: null,
   };
   if (req.action === 'submit') out.input_rung = sentenceRung(parsed.input_rung);
+  if (parsed.pinyin) out.pinyin = parsed.pinyin;
   if (parsed.english) out.english = parsed.english;
   if (parsed.culture_note) out.culture_note = parsed.culture_note;
   const context = recognizedContext(req.message, parsed.context);

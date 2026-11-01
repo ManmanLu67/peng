@@ -4,7 +4,7 @@
 //         语法标注通过 annotate() 的 grammar 参数接入。
 import { h, bilingual } from '../../ui/index.js';
 import { annotate } from '../../core/annotate.js';
-import { knowledgePoints } from '../../core/knowledge.js';
+import { knowledgePoints, sentencePinyin } from '../../core/knowledge.js';
 
 const SAFE = /^[\w-]+$/;
 
@@ -26,7 +26,7 @@ export default {
     const kindLabel = {
       allusion: ['典故', 'Allusion'],
       classical: ['文言', 'Classical'],
-      word: ['词语', 'Word'],
+      word: ['难词', 'Word'],
       grammar: ['语法', 'Grammar'],
     };
     const types = data['annotation-types'];
@@ -152,7 +152,12 @@ export default {
       const minLevel = levelFor(s);
       const original = msg.subject || msg.text;
       const left = renderSpans(original, minLevel);
-      const colL = h('div', { class: 'cmp__col' }, heading('原文', 'Original Text'), left.p, pointList(original, minLevel));
+      const py = sentencePinyin(original, { glosses, hsk, modelPinyin: msg.pinyin });
+      const colL = h('div', { class: 'cmp__col' },
+        heading('原文', 'Original Text'),
+        left.p,
+        py ? h('p', { class: 'cmp__py' }, py) : null,
+        pointList(original, minLevel));
 
       // 右：当前档
       const colR = h('div', { class: 'cmp__col' });

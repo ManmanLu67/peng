@@ -1,6 +1,6 @@
 // 请求/响应形状、校验、错误类型。字段名集中在这里，改名时全局搜索即可（技术文档 14.11）。
 
-export const ACTIONS = Object.freeze(['submit', 'step_down', 'step_up', 'not_understood', 'chat']);
+export const ACTIONS = Object.freeze(['submit', 'step_down', 'step_up', 'set_rung', 'not_understood', 'chat']);
 export const INTENTS = Object.freeze(['rewrite', 'not_understood', 'level_changed', 'chat', 'explain', 'other']);
 export const ERROR_CODES = Object.freeze(['timeout', 'network', 'auth', 'bad_response', 'aborted']);
 

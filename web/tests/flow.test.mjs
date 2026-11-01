@@ -279,6 +279,33 @@ test('聊天模式不改右侧；降档不改已经抽出的原句', () => {
   assert.equal(down.effects[0].req.message, '床前明月光');
 });
 
+test('点阶梯换档，原句、语境和拼音保持不动', () => {
+  let { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: '一个人对着水杯说：日照香炉生紫烟' });
+  ({ state } = flow.reduce(state, {
+    type: 'RESPONSE', reqId: effects[0].reqId,
+    resp: resp(4, { pinyin: 'rì zhào xiāng lú shēng zǐ yān' }),
+  }));
+  assert.equal(state.messages[0].pinyin, 'rì zhào xiāng lú shēng zǐ yān');
+  const jump = flow.reduce(state, { type: 'SET_RUNG', rung: 2 });
+  assert.equal(jump.effects[0].req.action, 'set_rung');
+  assert.equal(jump.effects[0].req.target_rung, 2);
+  assert.equal(jump.effects[0].req.message, '一个人对着水杯说：日照香炉生紫烟');
+  assert.deepEqual(jump.effects[0].path, ['rewrite']);
+  ({ state } = flow.reduce(jump.state, {
+    type: 'RESPONSE', reqId: jump.effects[0].reqId,
+    resp: resp(2, { pinyin: 'bié de pīn yīn', sentence: '另一句' }),
+  }));
+  assert.equal(state.rung, 2);
+  assert.equal(state.messages[0].text, '一个人对着水杯说：日照香炉生紫烟');
+  assert.equal(state.messages[0].context, '一个人对着水杯说');
+  assert.equal(state.messages[0].pinyin, 'rì zhào xiāng lú shēng zǐ yān');
+
+  const same = flow.reduce(state, { type: 'SET_RUNG', rung: 2 });
+  assert.equal(same.effects.length, 0);
+  const busy = flow.reduce(jump.state, { type: 'SET_RUNG', rung: 1 });
+  assert.equal(busy.effects.length, 0);
+});
+
 test('RESET：回到 idle 并取消在途任务', () => {
   const { state, effects } = flow.reduce(resolved(4), { type: 'RESET' });
   assert.equal(state.status, 'idle');

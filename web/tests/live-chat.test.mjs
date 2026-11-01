@@ -20,8 +20,8 @@ test('submit：难句降到学习者档，不低于中文最低档', () => {
   assert.equal(chooseTargetRung('submit', 2, 8, 2), 2);
 });
 
-test('submit：句子已经不高于学习者时停在句子档', () => {
-  assert.equal(chooseTargetRung('submit', 6, 3, 6), 3);
+test('submit：按所选等级输出，句子更简单也不再降档', () => {
+  assert.equal(chooseTargetRung('submit', 6, 3, 6), 6);
   assert.equal(chooseTargetRung('submit', 6, 6, 6), 6);
 });
 
@@ -30,8 +30,8 @@ test('submit：没给出句子难度时当作原文，从而降到学习者档',
   assert.equal(chooseTargetRung('submit', 5, null, 5), 5);
 });
 
-test('submit：模型把难度写成英文档时仍停在中文', () => {
-  assert.equal(chooseTargetRung('submit', 7, 1, 7), 2);
+test('submit：模型把难度写成英文档时仍按学习者档', () => {
+  assert.equal(chooseTargetRung('submit', 7, 1, 7), 7);
 });
 
 test('没看懂和升降档采用请求里的目标档，英文档允许', () => {
@@ -54,6 +54,12 @@ test('parseModelContent：语境有字才留下，空白当作没有', () => {
   assert.equal(parseModelContent('{"text":"水很烫。","context":" 对着水杯说 "}').context, '对着水杯说');
   assert.equal(parseModelContent('{"text":"水很烫。","context":"  "}').context, undefined);
   assert.equal(parseModelContent('{"text":"水很烫。"}').context, undefined);
+});
+
+test('parseModelContent：拼音须是拉丁字母，汉字丢掉', () => {
+  assert.equal(parseModelContent('{"text":"水很烫。","pinyin":"shuǐ hěn tàng"}').pinyin, 'shuǐ hěn tàng');
+  assert.equal(parseModelContent('{"text":"水很烫。","pinyin":"水很烫"}').pinyin, undefined);
+  assert.equal(parseModelContent('{"text":"水很烫。"}').pinyin, undefined);
 });
 
 test('parseModelContent：缺 text 抛 bad_response', () => {
@@ -189,14 +195,20 @@ test('submit：只收下原文里写明的语境，没有就不带', async () =>
   assert.equal(empty.context, undefined);
 });
 
-test('submit：句子更简单时停在句子档', async () => {
+test('submit：句子更简单时仍按所选等级，并收下原句拼音', async () => {
+  let prompt = '';
   const chat = create({
     ...OPTS,
-    fetch: async () => model(JSON.stringify({ input_rung: 3, text: '水很烫。' })),
+    fetch: async (_u, o) => {
+      prompt = JSON.parse(o.body).messages.at(-1).content;
+      return model(JSON.stringify({ input_rung: 3, text: '水很烫。', pinyin: 'shuǐ hěn tàng' }));
+    },
   });
   const resp = await chat.send({ action: 'submit', message: '水很烫', target_rung: 6 });
-  assert.equal(resp.rung, 3);
+  assert.match(prompt, /pinyin/);
+  assert.equal(resp.rung, 6);
   assert.equal(resp.input_rung, 3);
+  assert.equal(resp.pinyin, 'shuǐ hěn tàng');
   assert.equal(resp.english, undefined);
 });
 

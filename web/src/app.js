@@ -33,7 +33,7 @@ function showFatal(err) {
   const box = document.createElement('div');
   box.className = 'feature-error';
   box.setAttribute('role', 'alert');
-  box.textContent = `启动失败：${err.message}`;
+  box.textContent = '页面没能打开，请刷新再试 · The page could not load. Please refresh.';
   root.append(box);
 }
 
@@ -58,7 +58,16 @@ function installGuards(bus) {
     console.error(e.reason);
     toast('出了点问题，页面仍可使用 · Something went wrong');
   });
-  bus.on('error:shown', ({ code }) => toast(`请求失败（${code}） · Request failed`));
+  const REASON = {
+    timeout: ['等了太久，没有收到回复，请再试一次', 'No reply in time. Please try again'],
+    network: ['网络连不上，请检查网络后再试', 'Cannot connect. Check your network and try again'],
+    auth: ['模型的密钥不对或已失效', 'The model key is invalid or expired'],
+    bad_response: ['模型这次的回复没法使用，请再试一次', 'The reply could not be used. Please try again'],
+  };
+  bus.on('error:shown', ({ code }) => {
+    const [zh, en] = REASON[code] ?? REASON.network;
+    toast(`${zh} · ${en}`);
+  });
 }
 
 /** 没有 config.local.js（或它被浏览器拦下）时继续用 mock。 */
@@ -94,7 +103,6 @@ export async function boot() {
   });
 
   installGuards(bus);
-  if (config.flags.debug) globalThis.__peng = ctx;
 
   mountRouter(pages, featureRegistry, ctx, {
     root: document.getElementById('root'),

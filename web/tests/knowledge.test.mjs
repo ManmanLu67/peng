@@ -48,6 +48,31 @@ test('低于学习者等级的词和语法不列入', () => {
   assert.ok(list.some((p) => p.title === '烫'));
 });
 
+test('模型拆出的语法点并入列表：同名不重复，低于等级的不列', () => {
+  const extraGrammar = [
+    { title: '虽然……但是……', zh: '表示转折。', en: 'although... but', level: 4 },
+    { title: '太……了', zh: '重复的', level: 4 },
+    { title: '把字句', zh: '太简单', level: 2 },
+    { title: '被字句', zh: '没写等级' },
+  ];
+  const list = knowledgePoints('虽然水太烫了，但是他把杯子拿起来了', {
+    segmenter, hsk, glosses, grammar, extraGrammar, minLevel: 3,
+  });
+  const grams = list.filter((p) => p.kind === 'grammar');
+  assert.deepEqual(grams.map((p) => p.title), ['虽然……但是……', '被字句']);
+  assert.equal(grams[0].zh, '表示转折。');
+  assert.equal(grams.filter((p) => p.title === '太……了').length, 0);
+
+  // 本地词表命中的同名语法优先，模型的不再重复
+  const dup = knowledgePoints('这水太烫了', {
+    segmenter, hsk, glosses, grammar, minLevel: 0,
+    extraGrammar: [{ title: '太……了', zh: '模型版', level: 2 }],
+  });
+  const tai = dup.filter((p) => p.title === '太……了');
+  assert.equal(tai.length, 1);
+  assert.match(tai[0].zh, /程度很高/);
+});
+
 test('句中没有的语法不出现；房间里的间不当成文言间', () => {
   assert.equal(points('水很烫。').some((p) => p.kind === 'grammar'), false);
   assert.equal(points('房间里有水。', 0).some((p) => p.title === '……间'), false);

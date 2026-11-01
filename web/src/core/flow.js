@@ -113,7 +113,7 @@ export function createFlow({ ladder, nodes }) {
         const given = translating ? (e.context ?? '').trim() : '';
         const msg = {
           id, text, subject: '', context: given || (translating ? sceneContext(text) : ''),
-          pinyin: '', mode: null, reply: '', resp: null, rung: null, inputRung: null,
+          pinyin: '', grammar: [], mode: null, reply: '', resp: null, rung: null, inputRung: null,
         };
         const messages = [...kept, msg];
         if (!translating) {
@@ -197,6 +197,8 @@ export function createFlow({ ladder, nodes }) {
                 pinyin: m.pinyin?.trim()
                   ? m.pinyin
                   : (typeof resp.pinyin === 'string' ? resp.pinyin.trim() : ''),
+                // 语法点跟拼音一样只在第一次简化时记下，换档不改
+                grammar: m.grammar?.length ? m.grammar : (Array.isArray(resp.grammar) ? resp.grammar : []),
                 resp,
                 rung: resp.rung,
                 inputRung: resp.input_rung ?? m.inputRung,

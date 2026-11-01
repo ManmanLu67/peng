@@ -21,8 +21,6 @@
 .cmp__point-py { font-family: var(--f-small); font-size: 13px; color: var(--muted); }
 .cmp__point-zh { margin: var(--s1) 0 0; font-size: 14px; line-height: 1.7; }
 .cmp__point-en { margin: var(--s1) 0 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
-.cmp__gloss { list-style: none; margin: 0 0 var(--s4); padding: 0; font-family: var(--f-small); font-size: 13px; line-height: 1.8; color: var(--muted); }
-.cmp__gloss strong { color: var(--ink); font-family: var(--f-title); }
 
 .cmp__en { margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--line); }
 .cmp__more { background: none; border: 0; padding: var(--s1) 0; cursor: pointer; font-family: var(--f-disp); font-style: italic; font-size: 18px; color: var(--muted); }

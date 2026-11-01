@@ -12,10 +12,8 @@ export default {
   // 启动时一次性 fetch 的 data/*.json，切页不再有请求。新增数据文件时在这里登记。
   data: ['rungs', 'nodes', 'annotation-types', 'demo', 'hsk', 'glosses', 'grammar', 'team'],
   defaults: { hsk: 3 },
-  // debug: 暴露 globalThis.__peng 供浏览器控制台检查；公开部署前改为 false
   flags: {
     demoMode: true,
     showApiBadge: typeof window !== 'undefined' ? new URL(window.location.href).hostname === 'localhost' : true,
-    debug: typeof window !== 'undefined' ? new URL(window.location.href).hostname === 'localhost' : true
   },
 };

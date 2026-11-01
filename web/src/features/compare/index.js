@@ -97,8 +97,8 @@ export default {
       return { p, words: noted };
     }
 
-    function pointList(text, minLevel) {
-      const items = knowledgePoints(text, { segmenter: ports.segmenter, hsk, glosses, grammar, minLevel });
+    function pointList(text, minLevel, extraGrammar = []) {
+      const items = knowledgePoints(text, { segmenter: ports.segmenter, hsk, glosses, grammar, extraGrammar, minLevel });
       if (!items.length) return null;
       return h('div', { class: 'cmp__points' }, ...items.map((item) => {
         const [zh, en] = kindLabel[item.kind] ?? kindLabel.word;
@@ -108,13 +108,6 @@ export default {
           h('p', { class: 'cmp__point-zh' }, item.zh),
           item.en ? h('p', { class: 'cmp__point-en', lang: 'en' }, item.en) : null);
       }));
-    }
-
-    function glossList(words) {
-      if (!words.length) return null;
-      return h('ul', { class: 'cmp__gloss' }, ...words.map((w) => h('li', null,
-        h('strong', null, w.word),
-        ` (${w.py}): ${w.en}`)));
     }
 
     function heading(zh, en) {
@@ -157,7 +150,7 @@ export default {
         heading('原文', 'Original Text'),
         left.p,
         py ? h('p', { class: 'cmp__py' }, py) : null,
-        pointList(original, minLevel));
+        pointList(original, minLevel, msg.grammar));
 
       // 右：当前档
       const colR = h('div', { class: 'cmp__col' });
@@ -168,7 +161,7 @@ export default {
         colR.append(heading('英文', 'English'), h('p', { class: 'cmp__text cmp__text--en', lang: 'en' }, resp.output.text));
       } else {
         const right = renderSpans(resp.output.text, minLevel);
-        colR.append(heading('简化', `${label.en} Rewrite`), right.p, glossList(right.words));
+        colR.append(heading('简化', `${label.en} Rewrite`), right.p);
         if (resp.english) {
           const btn = h('button', { type: 'button', class: 'cmp__more', 'aria-expanded': String(showEnglish), onclick: () => { showEnglish = !showEnglish; render(); } },
             showEnglish ? 'Hide English ↑' : 'View in English →');

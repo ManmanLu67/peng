@@ -75,7 +75,29 @@ export function parseModelContent(raw) {
     culture_note: culture && (culture.zh || culture.en) ? culture : undefined,
     context: typeof data.context === 'string' && data.context.trim() ? data.context.trim() : undefined,
     pinyin: asPinyin(data.pinyin),
+    grammar: asGrammar(data.grammar),
   };
+}
+
+/** 模型给的语法点：要有名称和中文讲解才收；最多 4 条，同名只留第一条。 */
+function asGrammar(value) {
+  if (!Array.isArray(value)) return undefined;
+  const seen = new Set();
+  const out = [];
+  for (const item of value) {
+    const title = typeof item?.title === 'string' ? item.title.trim() : '';
+    const zh = typeof item?.zh === 'string' ? item.zh.trim() : '';
+    if (!title || !zh || seen.has(title)) continue;
+    seen.add(title);
+    out.push({
+      title,
+      zh,
+      en: typeof item.en === 'string' ? item.en.trim() : '',
+      level: Number.isInteger(item.level) ? item.level : undefined,
+    });
+    if (out.length === 4) break;
+  }
+  return out.length ? out : undefined;
 }
 
 function asPinyin(value) {
@@ -178,7 +200,8 @@ function promptFor(req) {
       '保留原意。不要加称呼，不要解释步骤。',
       '若句子里另写了场景、说话人或听话人，把那一段按原文字摘到 context，一个字都不要改。不要编造，不要复述整句。没有就给空字符串。',
       'pinyin 是原句的全文拼音，带声调，音节之间用空格，不要写汉字。',
-      '只输出 JSON：{"input_rung":8,"text":"降级后的中文","pinyin":"yuán jù pīn yīn","english":"简短英文释义","context":"","culture_note":{"zh":"可选","en":"optional"}}',
+      `grammar 拆解原句里学习者档 L 以上才会学到的语法点，最多 4 条。每条：title 是格式本身，例如“把……放在……”“虽然……但是……”；zh 用${RUNG_LABEL[Math.max(2, L - 1)] ?? 'HSK 2'}以内的简单中文说明它表示什么、怎么用，并指出原句里对应的那一段；en 是一句英文；level 是它大约属于的 HSK 等级（整数 1 到 6，文言格式记 7）。只写原句里真有的，不要编造；没有就给空数组。`,
+      '只输出 JSON：{"input_rung":8,"text":"降级后的中文","pinyin":"yuán jù pīn yīn","grammar":[{"title":"虽然……但是……","zh":"表示转折。“虽然”后面是让步，“但是”后面才是重点。原句里的“虽然天冷，但是他没穿外套”就是这样。","en":"although... but...","level":3}],"english":"简短英文释义","context":"","culture_note":{"zh":"可选","en":"optional"}}',
       '没有文化背景就省略 culture_note。',
     ].join('\n');
   }
@@ -206,6 +229,7 @@ function toResponse(req, parsed) {
   };
   if (req.action === 'submit') out.input_rung = sentenceRung(parsed.input_rung);
   if (parsed.pinyin) out.pinyin = parsed.pinyin;
+  if (req.action === 'submit' && parsed.grammar) out.grammar = parsed.grammar;
   if (parsed.english) out.english = parsed.english;
   if (parsed.culture_note) out.culture_note = parsed.culture_note;
   const context = recognizedContext(req.message, parsed.context);

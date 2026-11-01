@@ -27,7 +27,7 @@ function pointFrom(title, entry, kind) {
   };
 }
 
-export function knowledgePoints(text, { segmenter, hsk, glosses, grammar = [], minLevel = 0 }) {
+export function knowledgePoints(text, { segmenter, hsk, glosses, grammar = [], extraGrammar = [], minLevel = 0 }) {
   const source = String(text ?? '');
   const { spans } = annotate(source, { segmenter, hsk, glosses, minLevel, limit: 20 });
   const allusions = [];
@@ -53,16 +53,34 @@ export function knowledgePoints(text, { segmenter, hsk, glosses, grammar = [], m
   allusions.sort(byPlace);
   words.sort(byPlace);
   const points = [...allusions, ...words];
+  // 词表认得的格式（哪怕因为太简单被滤掉），模型再给同名的也不要，等级以词表为准
+  const known = new Set();
   for (const item of grammar) {
     if (!item?.match || !item.zh || !item.title) continue;
-    if (Number.isInteger(item.level) && item.level <= minLevel) continue;
     let matched = false;
     try {
       matched = new RegExp(item.match).test(source);
     } catch {
       matched = false;
     }
-    if (!matched || seen.has(item.title)) continue;
+    if (!matched) continue;
+    known.add(item.title);
+    if (Number.isInteger(item.level) && item.level <= minLevel) continue;
+    if (seen.has(item.title)) continue;
+    seen.add(item.title);
+    points.push({
+      kind: 'grammar',
+      title: item.title,
+      py: '',
+      level: item.level ?? 0,
+      zh: item.zh,
+      en: item.en ?? '',
+    });
+  }
+  // 模型拆出来的语法点：本地词表已经讲过同名的就不重复；没写等级的一律保留
+  for (const item of extraGrammar) {
+    if (!item?.title || !item.zh || seen.has(item.title) || known.has(item.title)) continue;
+    if (Number.isInteger(item.level) && item.level <= minLevel) continue;
     seen.add(item.title);
     points.push({
       kind: 'grammar',

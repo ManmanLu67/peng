@@ -279,6 +279,25 @@ test('聊天模式不改右侧；降档不改已经抽出的原句', () => {
   assert.equal(down.effects[0].req.message, '床前明月光');
 });
 
+test('语法点记在这句话上，换档不改也不丢', () => {
+  const point = { title: '虽然……但是……', zh: '表示转折。', en: 'although... but', level: 3 };
+  let { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: '虽然冷，但是他没穿外套' });
+  assert.deepEqual(state.messages[0].grammar, []);
+  ({ state } = flow.reduce(state, {
+    type: 'RESPONSE', reqId: effects[0].reqId, resp: resp(4, { grammar: [point] }),
+  }));
+  assert.deepEqual(state.messages[0].grammar, [point]);
+  const down = flow.reduce(state, { type: 'NOT_UNDERSTOOD' });
+  ({ state } = flow.reduce(down.state, {
+    type: 'RESPONSE', reqId: down.effects[0].reqId, resp: resp(3, { grammar: [{ title: '别的', zh: '别的讲解' }] }),
+  }));
+  assert.deepEqual(state.messages[0].grammar, [point]);
+
+  const none = flow.reduce(init(), { type: 'SUBMIT', text: '水很烫' });
+  const bare = flow.reduce(none.state, { type: 'RESPONSE', reqId: none.effects[0].reqId, resp: resp(4) });
+  assert.deepEqual(bare.state.messages[0].grammar, []);
+});
+
 test('点阶梯换档，原句、语境和拼音保持不动', () => {
   let { state, effects } = flow.reduce(init(), { type: 'SUBMIT', text: '一个人对着水杯说：日照香炉生紫烟' });
   ({ state } = flow.reduce(state, {

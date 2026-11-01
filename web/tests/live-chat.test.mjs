@@ -62,6 +62,38 @@ test('parseModelContent：拼音须是拉丁字母，汉字丢掉', () => {
   assert.equal(parseModelContent('{"text":"水很烫。"}').pinyin, undefined);
 });
 
+test('parseModelContent：语法点要有名称和讲解，同名去重，最多 4 条', () => {
+  const g = (n) => ({ title: `格式${n}`, zh: `讲解${n}`, en: `e${n}`, level: 3 });
+  const parsed = parseModelContent(JSON.stringify({
+    text: '水很烫。',
+    grammar: [g(1), g(1), { title: '缺讲解' }, { zh: '缺名称' }, 'bad', g(2), g(3), g(4), g(5)],
+  }));
+  assert.deepEqual(parsed.grammar.map((x) => x.title), ['格式1', '格式2', '格式3', '格式4']);
+  assert.deepEqual(parsed.grammar[0], { title: '格式1', zh: '讲解1', en: 'e1', level: 3 });
+  assert.equal(parseModelContent('{"text":"水很烫。","grammar":[]}').grammar, undefined);
+  assert.equal(parseModelContent('{"text":"水很烫。","grammar":"x"}').grammar, undefined);
+  assert.equal(parseModelContent('{"text":"水很烫。"}').grammar, undefined);
+});
+
+test('submit 请求语法拆解并带回；换档请求不带', async () => {
+  let prompt = '';
+  const body = { input_rung: 8, text: '水很烫。', grammar: [{ title: '虽然……但是……', zh: '表示转折。', en: 'although... but', level: 3 }] };
+  const chat = create({
+    ...OPTS,
+    fetch: async (_u, o) => {
+      prompt = JSON.parse(o.body).messages.at(-1).content;
+      return model(JSON.stringify(body));
+    },
+  });
+  const first = await chat.send({ action: 'submit', message: '虽然冷，但是他没穿外套', target_rung: 4 });
+  assert.match(prompt, /grammar/);
+  assert.equal(first.grammar[0].title, '虽然……但是……');
+
+  const down = await chat.send({ action: 'not_understood', message: '虽然冷，但是他没穿外套', current_rung: 4, target_rung: 3 });
+  assert.doesNotMatch(prompt, /grammar/);
+  assert.equal(down.grammar, undefined);
+});
+
 test('parseModelContent：缺 text 抛 bad_response', () => {
   assert.throws(() => parseModelContent('{"input_rung":8}'), (err) => err instanceof PengError && err.code === 'bad_response');
   assert.throws(() => parseModelContent('not json'), (err) => err instanceof PengError && err.code === 'bad_response');

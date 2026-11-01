@@ -2,7 +2,7 @@
 // 功能代码只认这些接口，不认具体实现（技术文档 14.3）。
 
 /**
- * @typedef {{ action: 'submit'|'step_down'|'step_up'|'not_understood'|'chat',
+ * @typedef {{ action: 'submit'|'set_rung'|'not_understood'|'chat',
  *             message: string, context?: string,
  *             current_rung: number|null, target_rung: number,
  *             conversation_id?: string, client?: string }} PengRequest

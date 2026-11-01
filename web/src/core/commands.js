@@ -1,7 +1,7 @@
 // 功能唯一的写入口。内部走 flow.reduce，再执行 effects：
 //   CALL_CHAT  调 ports.chat.send（带 AbortController），同时经 ports.clock 逐个点亮节点
 //   PLAY_PATH  只点亮节点（"看懂了"不调接口）
-//   CANCEL     取消在途请求与全部节点定时器
+//   CANCEL   取消在途请求与全部节点定时器
 // 请求防乱序：flow 以 reqId 丢弃旧响应；这里再 abort 旧请求，并清掉旧的节点定时器。
 
 import { NODE_STATUS, errorCode } from './contract.js';
@@ -95,11 +95,9 @@ export function createCommands({ store, bus, flow, ports, dwellMs = [400, 800], 
   return {
     dispatch,
     submit: (text, context = '') => dispatch({ type: 'SUBMIT', text, context }),
-    stepDown: () => dispatch({ type: 'STEP_DOWN' }),
-    stepUp: () => dispatch({ type: 'STEP_UP' }),
+    understood: () => dispatch({ type: 'UNDERSTOOD' }),
     notUnderstood: () => dispatch({ type: 'NOT_UNDERSTOOD' }),
     setRung: (rung) => dispatch({ type: 'SET_RUNG', rung }),
-    understood: () => dispatch({ type: 'UNDERSTOOD' }),
     retry: () => dispatch({ type: 'RETRY' }),
     setHsk: (rung) => dispatch({ type: 'SET_HSK', rung }),
     setInputMode: (mode) => dispatch({ type: 'SET_INPUT_MODE', mode }),

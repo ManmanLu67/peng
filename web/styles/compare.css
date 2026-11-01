@@ -1,5 +1,5 @@
 /* 对比区与阶梯条。无阴影，分区靠细线；正文大号衬线，行距 1.9。 */
-.cmp { position: relative; padding: var(--s4) 120px var(--s4) var(--s5); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.cmp { position: relative; padding: var(--s4) 120px var(--s4) var(--s5); }
 .cmp__cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s5); }
 .cmp__col { min-width: 0; }
 

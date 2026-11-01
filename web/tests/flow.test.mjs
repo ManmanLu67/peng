@@ -142,26 +142,13 @@ test('没看懂：降一级，路径 01→02→03', () => {
   assert.deepEqual(effects[0].path, ['rewrite', 'notclear', 'stepdown']);
 });
 
-test('更简单 / 更接近原文：不经过 02、03', () => {
-  const down = flow.reduce(resolved(4), { type: 'STEP_DOWN' });
-  assert.deepEqual(down.effects[0].path, ['rewrite']);
-  assert.equal(down.effects[0].req.target_rung, 3);
-  const up = flow.reduce(resolved(4), { type: 'STEP_UP' });
-  assert.deepEqual(up.effects[0].path, ['rewrite']);
-  assert.equal(up.effects[0].req.target_rung, 5);
-});
-
-test('两端：英文档不能再降，原文档不能再升', () => {
+test('英文档不能再降', () => {
   const en = resolved(1);
-  assert.equal(flow.reduce(en, { type: 'STEP_DOWN' }).state, en);
   assert.equal(flow.reduce(en, { type: 'NOT_UNDERSTOOD' }).state, en);
-  const org = resolved(8);
-  assert.equal(flow.reduce(org, { type: 'STEP_UP' }).state, org);
 });
 
-test('没有结果时升降无效', () => {
+test('没有结果时降档、看懂了都无效', () => {
   const s = init();
-  assert.equal(flow.reduce(s, { type: 'STEP_DOWN' }).state, s);
   assert.equal(flow.reduce(s, { type: 'NOT_UNDERSTOOD' }).state, s);
   assert.equal(flow.reduce(s, { type: 'UNDERSTOOD' }).state, s);
 });
@@ -176,6 +163,13 @@ test('看懂了：不调接口，只播 02、04，03 标记跳过', () => {
   assert.equal(state.nodes.stepdown, 'skipped');
   // 再点一次无效
   assert.equal(flow.reduce(state, { type: 'UNDERSTOOD' }).state, state);
+});
+
+test('「更简单」已替换：STEP_DOWN 事件不再改变状态', () => {
+  const s = resolved(4);
+  const r = flow.reduce(s, { type: 'STEP_DOWN' });
+  assert.equal(r.state, s);
+  assert.equal(r.effects.length, 0);
 });
 
 test('FAIL：转 error，正在执行的节点画叉，保留消息便于重试', () => {

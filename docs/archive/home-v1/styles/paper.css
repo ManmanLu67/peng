@@ -1,0 +1,75 @@
+/* 首页纸张与构图。哑光、无投影、撕纸边。
+   纸张质感 = SVG feTurbulence 滤镜（#paper-fiber，由 home-hero 注入）。
+   性能预案：若在目标笔记本上明显卡顿，把纸块预渲染为 WebP 并去掉 filter（SCOPE 禁止项 8，需先记录实测）；
+   用户笔记本实测滤镜开 / 关均约 59 fps，目前不触发。 */
+
+.hero { position: relative; flex: 1; min-height: calc(100dvh - var(--topbar)); overflow: hidden; background: var(--paper); }
+
+.hero__art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* 纸块。不使用 mix-blend-mode / 阴影：深色互叠会变成近黑，窄缝也会被叠成黑条。 */
+/* 纤维白边：很淡的一圈，只在纸边露一点毛边，不压过纸块本身 */
+.hero__fringe { fill: none; stroke: var(--paper); stroke-width: 5; stroke-linejoin: round; opacity: .32; }
+.hero__paper.is-textured { filter: url(#paper-fiber); }
+/* 米白穿插块比底纸略深半度，才看得出是一块压上去的纸 */
+.hero__paper.is-bright { stroke: rgba(27, 27, 27, .06); stroke-width: 1.5; }
+.hero__stone { fill: var(--indigo); opacity: .85; }
+.hero__person, .hero__person path, .hero__person ellipse, .hero__cup { fill: var(--indigo); }
+.hero__person { color: var(--indigo); }
+.hero__cup { fill: var(--teal); }
+.hero__scene-bird { color: var(--indigo); }
+
+/* 鹊桥与小灯 */
+.hero__bird { color: var(--paper); stroke: var(--indigo); stroke-width: 1.6; paint-order: stroke; stroke-linejoin: round; transform-box: fill-box; }
+.hero__lamp-glow { fill: var(--cinnabar); opacity: .28; }
+.hero__lamp-core { fill: var(--cinnabar); }
+.hero__lead { stroke: var(--on-indigo); stroke-width: 1; opacity: .55; }
+.hero__no { fill: var(--on-indigo); font-family: var(--f-disp); font-size: 34px; font-weight: 300; }
+.hero__nolabel { fill: var(--on-indigo); font-family: var(--f-body); font-size: 15px; opacity: .8; letter-spacing: .12em; }
+
+/* 点击桥进入工作台：桥自己就是 SVG 链接（热区随画面一起缩放 / 裁切，不会和桥错位）。
+   画布整体不接收鼠标，只有桥接收；键盘入口只保留“开始”按钮。 */
+.hero__art { pointer-events: none; }
+.hero__bridge-a { pointer-events: all; cursor: pointer; }
+.hero__bridge-hit { fill: transparent; }
+
+/* ---- 文字层 ---- */
+.hero__text { position: absolute; left: 5%; top: 9%; max-width: 40%; color: var(--on-indigo); }
+.hero__title { margin: 0; font-family: var(--f-title); font-weight: 400; font-size: clamp(30px, 4.6vw, 72px); line-height: 1.28; letter-spacing: .04em; }
+.hero__sub { margin: var(--s3) 0 0; font-family: var(--f-disp); font-style: italic; font-size: clamp(16px, 1.7vw, 26px); opacity: .92; }
+
+
+.hero__entry { position: absolute; right: 6%; bottom: 8%; display: flex; align-items: center; gap: var(--s3); }
+.hero__entry-rule { width: 64px; height: 1px; background: var(--ink); opacity: .5; }
+.hero__start {
+  display: inline-flex; align-items: baseline; gap: var(--s2); padding: var(--s3) var(--s5);
+  background: var(--cinnabar); color: var(--on-indigo); text-decoration: none;
+  font-family: var(--f-title); font-size: clamp(18px, 1.8vw, 26px); letter-spacing: .3em;
+  border: 0; border-radius: 0; transition: transform var(--dur-fast);
+}
+.hero__start:hover { transform: translateY(-2px); }
+.hero__start:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.hero__start-en { font-family: var(--f-small); font-size: .55em; letter-spacing: .2em; opacity: .9; }
+
+
+/* 悬停“开始”：小灯变亮，桥上喜鹊轻微位移一次（不循环） */
+.hero:has(.hero__start:hover) .hero__lamp-glow { opacity: .5; transition: opacity var(--dur-ink); }
+.hero:has(.hero__start:hover) .hero__bridge { transform: translateY(-3px); transition: transform var(--dur-ink); }
+
+/* 窄屏：色块改纵向堆叠的构图在 SVG 里不好表达，改用 slice 裁切 + 缩小文字，入口固定右下 */
+@media (max-width: 720px) {
+  .hero { min-height: calc(100dvh - var(--topbar)); }
+  /* 缝在画面中线略偏左；文字盒的右缘必须留在缝的左边，浅色字才不会落到米白缝上 */
+  .hero__text { left: var(--edge); top: 5%; max-width: calc(46% - var(--edge)); }
+  .hero__title { font-size: clamp(24px, 7.4vw, 40px); }
+  .hero__sub { font-size: 14px; }
+  .hero__entry { right: var(--edge); bottom: calc(var(--edge) + env(safe-area-inset-bottom, 0px)); position: fixed; }
+  .hero__entry-rule { display: none; }
+}
+
+/* 视口很矮（信息流缩略图尺寸，约 400×250）：只留大形，去掉会糊成一团的小字和序号 */
+@media (max-height: 360px) {
+  .hero__sub, .hero__numbers { display: none; }
+  .hero__title { font-size: clamp(20px, 6vw, 30px); }
+  .hero__start { padding: var(--s2) var(--s4); font-size: 16px; }
+}

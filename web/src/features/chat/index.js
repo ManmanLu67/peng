@@ -1,6 +1,6 @@
 // 左栏对话：用户消息、解读卡、示例按钮、下划线输入框、发送。
 // 写状态只经 ctx.commands；示例句来自 data/demo.json，不写进组件。
-import { h, svg } from '../../ui/index.js';
+import { h, svg, bilingual } from '../../ui/index.js';
 
 const MAX_LEN = 200;
 
@@ -22,7 +22,7 @@ export default {
       const btn = h('button', {
         type: 'button', class: 'chat__mode', 'data-mode': id, 'aria-label': `${zh} · ${en}`,
         onclick: () => commands.setInputMode(id),
-      }, zh);
+      }, bilingual(zh, en, { inline: true }));
       modeButtons.set(id, btn);
       modes.append(btn);
     }

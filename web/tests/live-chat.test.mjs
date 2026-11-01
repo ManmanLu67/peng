@@ -36,10 +36,10 @@ test('submit：模型把难度写成英文档时仍按学习者档', () => {
 
 test('没看懂和升降档采用请求里的目标档，英文档允许', () => {
   assert.equal(chooseTargetRung('not_understood', 4, 8, 3), 3);
-  assert.equal(chooseTargetRung('step_down', 2, 8, 1), 1);
-  assert.equal(chooseTargetRung('step_up', 4, 8, 5), 5);
-  assert.equal(chooseTargetRung('step_down', 4, 8, 0), 1);
-  assert.equal(chooseTargetRung('step_up', 4, 8, 9), 8);
+  assert.equal(chooseTargetRung('not_understood', 2, 8, 1), 1);
+  assert.equal(chooseTargetRung('set_rung', 4, 8, 5), 5);
+  assert.equal(chooseTargetRung('not_understood', 4, 8, 0), 1);
+  assert.equal(chooseTargetRung('set_rung', 4, 8, 9), 8);
 });
 
 test('parseModelContent：去掉代码围栏并读出字段', () => {

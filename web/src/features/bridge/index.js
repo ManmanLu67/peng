@@ -1,5 +1,5 @@
-// 鹊桥节点条：宣纸底上一条下垂赭石弧线、4 个固定月相。
-// 鸟是原来那 4 只共用喜鹊，每颗月相上方一只；末只镜像仰头。没有月间鸟群。
+// 鹊桥节点条：宣纸底上一条下垂赭石弧线、4 个固定月相（改写、没看懂、降档、结束）。
+// 鸟是共用的喜鹊，每颗月相上方一只；末只镜像仰头。没有月间鸟群。
 // 序号和标签读 data/nodes.json。状态只改颜色，不改月相形状。
 // P1 预留：节点详情弹窗（点击节点 → 输入 / 输出 / 耗时）在 bindNode 里接入。
 import { h, svg, ensureSymbols } from '../../ui/index.js';
@@ -84,14 +84,15 @@ export default {
 
     const sr = h('ol', { class: 'sr-only', 'aria-label': '处理步骤 · Steps' },
       ...nodes.map((node, i) => h('li', { 'data-node': node.id }, `步骤 ${i + 1}：${node.label.zh}`)));
-    const tag = h('p', { class: 'brg__tag label', role: 'status', 'aria-live': 'polite' });
     const text = h('p', { class: 'brg__result', role: 'status', 'aria-live': 'polite' });
 
     el.append(h('section', { class: 'brg', 'aria-label': '工作流节点 · Workflow' },
-      h('div', { class: 'brg__scroll' }, board), sr, tag, text));
+      h('div', { class: 'brg__scroll' }, board), sr, text));
 
     function render(s) {
       const done = s.understood || (s.nodes[nodes.at(-1).id] === 'done');
+      text.textContent = done ? '读懂了 · Understood' : '';
+      text.classList.toggle('is-on', done);
       lis.forEach(({ node, grp }, i) => {
         const st = s.nodes[node.id] ?? 'idle';
         grp.dataset.state = st;
@@ -99,9 +100,6 @@ export default {
         else grp.removeAttribute('aria-current');
         sr.children[i].textContent = `步骤 ${i + 1}：${node.label.zh}，${STATE_TEXT[st] ?? st}`;
       });
-      tag.textContent = '';
-      text.textContent = done ? '读懂了 · Understood' : '';
-      text.classList.toggle('is-on', done);
     }
 
     render(store.get());

@@ -17,8 +17,6 @@ const RUNG_LABEL = {
 const INTENT = {
   submit: 'rewrite',
   not_understood: 'not_understood',
-  step_down: 'level_changed',
-  step_up: 'level_changed',
   set_rung: 'level_changed',
   chat: 'other',
 };

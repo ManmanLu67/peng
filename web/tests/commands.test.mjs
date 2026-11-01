@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { PengError } from '../src/core/contract.js';
 import { setup, settle, flush, SAMPLE } from './helpers.mjs';
 
-test('水杯例句：HSK 3 提交 → 连点“没看懂”降到英文 → 看懂了', async () => {
+test('水杯例句：HSK 3 提交 → 连点“没看懂”降到英文', async () => {
   const { commands, store, clock, ladder } = setup();
 
   commands.submit(SAMPLE, '一个人对着水杯说');
@@ -25,37 +25,45 @@ test('水杯例句：HSK 3 提交 → 连点“没看懂”降到英文 → 看�
   assert.deepEqual(seen, [3, 2, 1]);
   s = store.get();
   assert.equal(s.status, 'english');
-  assert.equal(ladder.availability(s).simpler, false);
+  assert.equal(ladder.availability(s).notUnderstood, false);
+  assert.equal(ladder.availability(s).gotIt, true);
 
   // 没看懂 = 01→02→03 全部点亮
   assert.deepEqual([s.nodes.rewrite, s.nodes.notclear, s.nodes.stepdown], ['done', 'done', 'done']);
 
+  // 看懂了：不调接口，02、04 依次点亮，03 标记跳过，只能点一次
   commands.understood();
   await settle(clock);
   s = store.get();
   assert.equal(s.understood, true);
+  assert.equal(s.rung, 1);
+  assert.equal(s.nodes.notclear, 'done');
   assert.equal(s.nodes.bridge, 'done');
   assert.equal(s.nodes.stepdown, 'skipped');
+  assert.equal(ladder.availability(s).gotIt, false);
 });
 
-test('更简单 / 还原不经过节点 02、03；没看懂会经过', async () => {
-  const { commands, store, clock } = setup();
+test('看懂了不发请求；没看懂会经过 02、03', async () => {
+  let sends = 0;
+  const { commands, store, clock, chat } = setup();
+  const send = chat.send.bind(chat);
+  chat.send = (...a) => { sends += 1; return send(...a); };
+
   commands.submit(SAMPLE);
   await settle(clock);
+  assert.equal(sends, 1);
 
-  commands.stepDown();
+  commands.understood();
   await settle(clock);
-  assert.equal(store.get().rung, 3);
-  assert.equal(store.get().nodes.notclear, 'idle');
-  assert.equal(store.get().nodes.stepdown, 'idle');
-
-  commands.stepUp();
-  await settle(clock);
+  assert.equal(sends, 1, '看懂了不应该再调接口');
   assert.equal(store.get().rung, 4);
-  assert.equal(store.get().nodes.notclear, 'idle');
+  assert.equal(store.get().nodes.notclear, 'done');
 
+  // 再请求一次（没看懂）时复位：understood 回到 false，节点重新走
   commands.notUnderstood();
+  assert.equal(store.get().understood, false);
   await settle(clock);
+  assert.equal(sends, 2);
   assert.equal(store.get().nodes.notclear, 'done');
   assert.equal(store.get().nodes.stepdown, 'done');
 });
@@ -188,7 +196,7 @@ test('store.subscribe：只在切片变化时通知', async () => {
   store.subscribe((s) => s.rung, (rung) => calls.push(rung));
   commands.submit(SAMPLE);
   await settle(clock);
-  commands.stepDown();
+  commands.notUnderstood();
   await settle(clock);
   assert.deepEqual(calls, [4, 3]);
 });

@@ -1,9 +1,9 @@
 /* 左栏对话。分区只靠 1px 细线；解读卡、示例、按钮直角细框；输入框只有下划线。 */
 .chat { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: var(--s4) var(--s4) var(--s3); gap: var(--s4); }
-.chat__modes { display: flex; gap: var(--s4); flex: none; }
+.chat__modes { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); flex: none; }
 .chat__mode {
   background: none; border: 0; padding: var(--s1) 0; cursor: pointer;
-  font-family: var(--f-small); font-size: var(--fs-small); letter-spacing: .12em;
+  font-family: var(--f-small); font-size: var(--fs-small); letter-spacing: .06em;
   color: var(--muted); border-bottom: 2px solid transparent;
 }
 .chat__mode:hover:not(:disabled) { color: var(--ink); }

@@ -24,7 +24,7 @@ export function createFlow({ ladder, nodes }) {
       pendingId: null,          // 正在等待响应的那条消息；普通聊天不改 activeId
       nodes: idleNodes(),
       traceSimulated: false,
-      understood: false,
+      understood: false,        // 已点「看懂了」：只在前端结束这一次，换句或再请求时复位
       inputMode: 'translate',   // chat 只对话；translate 把这一句简化到右侧
       demo: false,              // 演示模式中：输入与按钮禁用（features 读它）
       reqSeq: 0,
@@ -135,29 +135,21 @@ export function createFlow({ ladder, nodes }) {
         }, messages, { pendingId: id });
       }
 
-      case 'STEP_DOWN':
-        if (!canAct(s) || !ladder.canStepDown(s.rung)) return noop(s);
-        return stepRequest(s, 'step_down', s.rung - 1);
-
-      case 'STEP_UP':
-        if (!canAct(s) || !ladder.canStepUp(s.rung)) return noop(s);
-        return stepRequest(s, 'step_up', s.rung + 1);
-
       case 'NOT_UNDERSTOOD':
         if (!canAct(s) || !ladder.canStepDown(s.rung)) return noop(s);
         return stepRequest(s, 'not_understood', s.rung - 1);
-
-      case 'SET_RUNG': {
-        const n = e.rung;
-        if (s.demo || !canAct(s) || !ladder.get(n) || n === s.rung) return noop(s);
-        return stepRequest(s, 'set_rung', n);
-      }
 
       case 'UNDERSTOOD': {
         // 只在前端结束：不调接口。03 跳过，02、04 由 PLAY_PATH 依次点亮。
         if (!canAct(s) || s.understood) return noop(s);
         const next = { ...s, understood: true, nodes: { ...s.nodes, ...markSkipped('understood') } };
         return { state: next, effects: [{ type: 'PLAY_PATH', path: pathOf('understood') }] };
+      }
+
+      case 'SET_RUNG': {
+        const n = e.rung;
+        if (s.demo || !canAct(s) || !ladder.get(n) || n === s.rung) return noop(s);
+        return stepRequest(s, 'set_rung', n);
       }
 
       case 'RESPONSE': {

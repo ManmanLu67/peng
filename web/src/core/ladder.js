@@ -9,15 +9,14 @@ export function createLadder(rungs) {
   const max = list[list.length - 1].n;
 
   const canStepDown = (n) => Number.isInteger(n) && n > min;
-  const canStepUp = (n) => Number.isInteger(n) && n < max;
 
   /**
    * 按钮可用性。state 需要有 status / rung / messages / understood。
-   * 没看懂与更简单一样，到英文就不能再降。
+   * 没看懂到英文就不能再降；看懂了点过一次就不再亮，换句或再请求后复位。
    */
   function availability(state) {
     const busy = state.status === 'running' || !!state.demo;   // 演示中与运行中一样禁用输入和按钮
-    // 只有停在结果上才能改档或结束；失败态下这些按钮不亮，免得点了没反应（flow 同样只认 result / english）
+    // 只有停在结果上才能改档；失败态下这些按钮不亮，免得点了没反应（flow 同样只认 result / english）
     const showing = state.status === 'result' || state.status === 'english';
     const hasResult = state.rung != null && state.messages.length > 0;
     const idle = !busy && showing && hasResult;
@@ -25,8 +24,6 @@ export function createLadder(rungs) {
       busy,
       send: !busy,
       retry: !state.demo && state.status === 'error' && !!state.lastCall,
-      simpler: idle && canStepDown(state.rung),
-      closer: idle && canStepUp(state.rung),
       notUnderstood: idle && canStepDown(state.rung),
       gotIt: idle && !state.understood,
     };
@@ -44,7 +41,6 @@ export function createLadder(rungs) {
     isEnglish: (n) => byN.get(n)?.lang === 'en',
     isOriginal: (n) => !!byN.get(n)?.original,
     canStepDown,
-    canStepUp,
     availability,
   };
 }

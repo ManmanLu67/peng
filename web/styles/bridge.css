@@ -43,6 +43,7 @@
 .brg__node[data-state="done"] .brg__ring { stroke: var(--ochre); opacity: 1; }
 .brg__node[data-state="done"] .brg__halo { fill: var(--ochre); opacity: .28; }
 
+
 .brg__node[data-state="skipped"] { opacity: .4; }
 
 .brg__node[data-state="error"] .brg__moon-lit { fill: var(--ink); opacity: .15; }
@@ -54,7 +55,6 @@
   50%      { opacity: .45; transform: scale(1.15); }
 }
 
-.brg__tag { min-height: 1.4em; margin: var(--s1) 0 0; text-transform: none; letter-spacing: .08em; }
 .brg__result { min-height: 1.4em; margin: 0; font-family: var(--f-small); font-size: var(--fs-small); color: var(--cinnabar-text); opacity: 0; transition: opacity var(--dur-ink); }
 .brg__result.is-on { opacity: 1; }
 

@@ -1,6 +1,6 @@
 // 首页主视觉：手工纸底、两张一样大的近正方形色纸、中央深藏青小人、「进入」。
 // 左卡逆时针约 3°，右卡顺时针约 3°。两张卡可以在舞台里拖动，卡上的内容一起走。
-// 对角线上 7 只鸟不可拖，只可点。静止鸟尖端朝上，没点开时在右下并留出右缘，点开后沿弧线飞到 T 的对称点。
+// 对角线上 7 只鸟不可拖，只可点。静止鸟尖端朝上，没点开时在右下并留出右缘，点开后沿弧线飞到 A 的对称点。
 // 七只鸟不转圈，沿弧线落到角标上方。字等鸟落定后再出现。双击小人和「进入」去工作台。
 import { h, svg } from '../../ui/index.js';
 import {
@@ -332,12 +332,12 @@ function rightCard(lookup) {
 
   const rewrite = h('p', { class: 'hero__rewrite', hidden: true, 'aria-live': 'polite' });
   const tagWord = COPY.tag.right;
-  const gAt = tagWord.indexOf('g');
+  const rowAt = tagWord.indexOf('p');
   const tag = h('p', { class: 'hero__tag' },
-    h('span', { class: 'hero__tag-t' }, tagWord[0]),
-    tagWord.slice(1, gAt),
-    h('span', { class: 'hero__tag-g' }, tagWord[gAt]),
-    tagWord.slice(gAt + 1));
+    h('span', { class: 'hero__tag-first' }, tagWord[0]),
+    tagWord.slice(1, rowAt),
+    h('span', { class: 'hero__tag-row' }, tagWord[rowAt]),
+    tagWord.slice(rowAt + 1));
   const root = h('div', {
     class: 'hero__card hero__card--right', role: 'group',
     'aria-label': '右卡，箭形鸟群',
@@ -372,12 +372,12 @@ function rightCard(lookup) {
 
   function placeMarkCorner() {
     const mark = stillBird();
-    const tEl = tag.querySelector('.hero__tag-t');
+    const firstEl = tag.querySelector('.hero__tag-first');
     let tx = size.w * 0.09;
     let ty = size.h * 0.9;
-    if (tEl && tEl.offsetWidth > 0) {
-      tx = tag.offsetLeft + tEl.offsetLeft + tEl.offsetWidth / 2;
-      ty = tag.offsetTop + tEl.offsetTop + tEl.offsetHeight / 2;
+    if (firstEl && firstEl.offsetWidth > 0) {
+      tx = tag.offsetLeft + firstEl.offsetLeft + firstEl.offsetWidth / 2;
+      ty = tag.offsetTop + firstEl.offsetTop + firstEl.offsetHeight / 2;
     }
     const mirrored = mirrorThroughCenter(tx, ty, size.w, size.h);
     const ext = birdExtent(mark._place.s * baseK(), 0);
@@ -389,10 +389,10 @@ function rightCard(lookup) {
   function placeDockTargets() {
     const flockBirds = arrows.filter(isFlock);
     const k = baseK();
-    const gEl = tag.querySelector('.hero__tag-g');
+    const rowEl = tag.querySelector('.hero__tag-row');
     const band = tagMetrics();
-    const startX = gEl && gEl.offsetWidth > 0
-      ? tag.offsetLeft + gEl.offsetLeft + gEl.offsetWidth / 2
+    const startX = rowEl && rowEl.offsetWidth > 0
+      ? tag.offsetLeft + rowEl.offsetLeft + rowEl.offsetWidth / 2
       : size.w * 0.14;
     const extents = flockBirds.map((g) => birdExtent(g._place.s * k, g._place.rot));
     const maxHalf = extents.reduce((n, ext) => Math.max(n, ext.halfH), 0);

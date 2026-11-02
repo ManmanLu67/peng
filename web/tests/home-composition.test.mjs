@@ -40,10 +40,10 @@ test('对角线上七只鸟从英语到 HSK 6，静止鸟朝上，右卡的鸟�
   assert.equal(still[0].text, undefined);
   assert.ok(ARROWS.every((a) => a.drag === false));
   assert.ok(still[0].fx > 0.8, '静止鸟占位在右侧');
-  assert.ok(still[0].fy > 0.7, '静止鸟占位在右下，飞完后的位置是 T 的对称点');
+  assert.ok(still[0].fy > 0.7, '静止鸟占位在右下，飞完后的位置是 A 的对称点');
 });
 
-test('静止鸟的对称点：左下的 T 映到右上', () => {
+test('静止鸟的对称点：左下的 A 映到右上', () => {
   assert.deepEqual(mirrorThroughCenter(20, 80, 100, 100), { x: 80, y: 20 });
   assert.deepEqual(mirrorThroughCenter(50, 50, 100, 100), { x: 50, y: 50 });
 });
@@ -73,8 +73,8 @@ test('左卡一行两句，角标和页脚按说明正文', () => {
   assert.ok(POEM.columns.every((col) => col.length === 2 && col.every((line) => line.length === 5)));
   const flat = POEM.columns.flat().join('');
   assert.equal(flat.length, 80);
-  assert.equal(COPY.tag.left, 'Native Language');
-  assert.equal(COPY.tag.right, 'Target Language');
+  assert.equal(COPY.tag.left, 'Original Text');
+  assert.equal(COPY.tag.right, 'Adapted Text');
   assert.equal(COPY.footer.left, 'Meet the language halfway.');
   assert.equal(COPY.footer.left.includes('*'), false);
   assert.equal(COPY.footer.left.includes('\n'), false);

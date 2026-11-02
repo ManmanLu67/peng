@@ -91,7 +91,7 @@ export const POEM = {
 };
 
 export const COPY = {
-  tag: { left: 'Native Language', right: 'Target Language' },
+  tag: { left: 'Original Text', right: 'Adapted Text' },
   enter: '进入',
   footer: {
     left: 'Meet the language halfway.',

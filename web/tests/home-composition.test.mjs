@@ -1,78 +1,99 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { VIEW, NARROW, LAYERS, FLOCK, SPECKS, STARS, SCENE, TEXT, WIDE_MIN_ASPECT } from '../src/features/home-hero/composition.js';
+import { readFileSync } from 'node:fs';
+import {
+  CARDS, ARROWS, POEM, COPY, FOLLOW, GAIN, NARROW_MAX,
+  HOVER_TURN, HOVER_SCALE, FLOCK_AIM, clampBird,
+} from '../src/features/home-hero/composition.js';
 
-const blocks = Object.values(LAYERS).flat();
+test('两张近正方形色纸：左卡逆时针 3°，右卡顺时针 3°', () => {
+  assert.equal(CARDS.length, 2);
+  assert.equal(new Set(CARDS.map((c) => c.id)).size, 2);
+  assert.equal(new Set(CARDS.map((c) => c.seed)).size, 2);
+  assert.equal(CARDS[0].tone, 'var(--card-amber)');
+  assert.equal(CARDS[1].tone, 'var(--card-pumpkin)');
+  assert.equal(CARDS[0].turn, -3);
+  assert.equal(CARDS[1].turn, 3);
+});
 
-test('构图：每块纸的 id 唯一，顶点都是有限数，且至少 3 个点', () => {
-  const ids = blocks.map((b) => b.id);
-  assert.equal(new Set(ids).size, ids.length, '重复的 id');
-  for (const b of blocks) {
-    assert.ok(b.pts.length >= 3, `${b.id} 顶点不足`);
-    assert.ok(b.pts.every((p) => p.length === 2 && p.every(Number.isFinite)), `${b.id} 有非有限数`);
+test('对角线上七只鸟从英语到 HSK 6，另有一只朝上且不可拖', () => {
+  const flock = ARROWS.filter((a) => a.drag);
+  const still = ARROWS.filter((a) => a.drag === false);
+  assert.equal(flock.length, 7);
+  assert.deepEqual(flock.map((a) => a.id), ['en', 'hsk1', 'hsk2', 'hsk3', 'hsk4', 'hsk5', 'hsk6']);
+  assert.deepEqual(flock.map((a) => a.label), ['英语', 'HSK 1', 'HSK 2', 'HSK 3', 'HSK 4', 'HSK 5', 'HSK 6']);
+  for (let i = 1; i < flock.length; i++) {
+    assert.ok(flock[i].fx > flock[i - 1].fx, 'fx 应递增');
+    assert.ok(flock[i].fy < flock[i - 1].fy, 'fy 应递减');
+    assert.ok(flock[i].s >= flock[i - 1].s, '应由小到大');
   }
-});
-
-test('构图：纸块的 seed 唯一（同 seed 会让两块纸的撕边一模一样）', () => {
-  const seeds = blocks.map((b) => b.seed);
-  assert.equal(new Set(seeds).size, seeds.length);
-});
-
-test('构图：只用 composition 里允许的色 token', () => {
-  const ok = /^var\(--(paper|ochre|indigo|teal|rust|charcoal|soot|soot-deep|graphite|sand|tan|slate)\)$/;
-  for (const b of blocks) assert.match(b.tone, ok, `${b.id} 用了未声明的色 ${b.tone}`);
-});
-
-test('鸟群：约 50 只，三种形态，相向而飞（左右都有）', () => {
-  assert.ok(FLOCK.length >= 45 && FLOCK.length <= 55, `共 ${FLOCK.length} 只`);
-  assert.deepEqual([...new Set(FLOCK.map((f) => f[0]))].sort(), ['far', 'glide', 'spread']);
-  const r = FLOCK.filter((f) => f[1] === 'r').length;
-  const l = FLOCK.filter((f) => f[1] === 'l').length;
-  assert.equal(r + l, FLOCK.length, '朝向只能是 r / l');
-  assert.ok(r >= 15 && l >= 15, `朝右 ${r}，朝左 ${l}：两边都要有足够多`);
-});
-
-test('鸟群：朝右的鸟在拱顶左侧为主，朝左的鸟在拱顶右侧为主（相会而非穿越）', () => {
-  const crest = 1260;
-  const rightFacing = FLOCK.filter((f) => f[1] === 'r');
-  const leftFacing = FLOCK.filter((f) => f[1] === 'l');
-  const inside = (arr, pred) => arr.filter((f) => pred(f[2])).length / arr.length;
-  assert.ok(inside(rightFacing, (x) => x < crest) >= 0.9, '朝右的鸟应几乎都在拱顶左侧');
-  assert.ok(inside(leftFacing, (x) => x > crest) >= 0.9, '朝左的鸟应几乎都在拱顶右侧');
-});
-
-test('鸟群：拱顶中缝没有鸟互相压住（x 1225–1310 之间、y 480–560 内不放鸟）', () => {
-  const inGap = FLOCK.filter(([, , x, y]) => x > 1225 && x < 1310 && y > 480 && y < 560);
-  assert.equal(inGap.length, 0, JSON.stringify(inGap));
-});
-
-test('鸟群：所有鸟都在画内，缩放与不透明度合法', () => {
-  for (const [kind, dir, x, y, climb, s, o] of FLOCK) {
-    assert.ok(x > 0 && x < VIEW.w && y > 0 && y < VIEW.h, `${kind} ${x},${y} 出界`);
-    assert.ok(Number.isFinite(climb) && s > 0, `${kind} 参数不合法`);
-    assert.ok(o === undefined || (o > 0 && o <= 1));
-    assert.ok(dir === 'r' || dir === 'l');
+  for (const a of flock) {
+    assert.equal(a.rot, FLOCK_AIM);
+    assert.equal(a.text, undefined);
+    assert.ok(a.fx > 0.08 && a.fx < 0.92 && a.fy > 0.08 && a.fy < 0.96);
   }
+  assert.equal(flock.filter((a) => a.tone === 'paper').length, 4);
+  assert.equal(flock.filter((a) => a.tone === 'navy').length, 3);
+  assert.equal(still.length, 1);
+  assert.equal(still[0].rot, 0);
+  assert.equal(still[0].label, '飞鸟');
+  assert.equal(still[0].text, undefined);
+  assert.ok(still[0].fx > 0.85, '静止鸟在右卡右侧');
+  assert.ok(still[0].fy > 0.74 && still[0].fy < 0.9, '静止鸟在右下，并高于落底的一排');
 });
 
-test('点缀：小黑点只落在右上象限，星 3 颗', () => {
-  assert.ok(SPECKS.every(([cx, cy]) => cx >= 1250 && cy <= 480), '黑点跑出了右上象限');
-  assert.equal(STARS.length, 3);
-  assert.equal(new Set(STARS.map((s) => s[3])).size, 3, '三颗星的延迟要错开');
+test('拖动边界：卡内不动，出界被拉回，半宽过大时落到中心', () => {
+  const stay = clampBird(50, 40, 10, 12, 100, 80);
+  assert.deepEqual(stay, { x: 50, y: 40 });
+  const pulled = clampBird(-20, 200, 10, 8, 100, 80);
+  assert.equal(pulled.x, 10);
+  assert.equal(pulled.y, 72);
+  assert.ok(pulled.x - 10 >= 0 && pulled.x + 10 <= 100);
+  assert.ok(pulled.y - 8 >= 0 && pulled.y + 8 <= 80);
+  const huge = clampBird(5, 5, 60, 50, 100, 80);
+  assert.deepEqual(huge, { x: 50, y: 40 });
 });
 
-test('行人在左下暗坡上，约 x 185–235', () => {
-  assert.ok(SCENE.x >= 185 && SCENE.x <= 235);
-  assert.ok(SCENE.y > VIEW.h * 0.7);
+test('悬停放大并逆时针转 90°', () => {
+  assert.equal(HOVER_TURN, -90);
+  assert.ok(HOVER_SCALE > 1);
 });
 
-test('文字框：右缘留余量仍在画内；竖屏阈值与它一致', () => {
-  assert.ok(TEXT.x + TEXT.w + 40 <= WIDE_MIN_ASPECT * VIEW.h + 1e-6);
-  assert.ok(TEXT.bottom < VIEW.h, '底边留在画内');
-  assert.ok(WIDE_MIN_ASPECT > 1 && WIDE_MIN_ASPECT < 2);
+test('左卡一行两句，角标和页脚按说明正文', () => {
+  assert.equal(POEM.columns.length, 8);
+  assert.equal(POEM.columns[0][0], '行行重行行');
+  assert.equal(POEM.columns[0][1], '与君生别离');
+  assert.equal(POEM.columns.at(-1).at(-1), '努力加餐饭');
+  assert.ok(POEM.columns.every((col) => col.length === 2 && col.every((line) => line.length === 5)));
+  const flat = POEM.columns.flat().join('');
+  assert.equal(flat.length, 80);
+  assert.equal(COPY.tag.left, 'Native Language');
+  assert.equal(COPY.tag.right, 'Target Language');
+  assert.equal(COPY.footer.left, 'Meet the language halfway.');
+  assert.equal(COPY.footer.left.includes('*'), false);
+  assert.equal(COPY.footer.left.includes('\n'), false);
+  assert.equal(COPY.footer.right, 'Ctrl+Alt+Culture — PENG STUDIOS');
+  assert.equal(COPY.enter, '进入');
+  assert.ok(FOLLOW >= 0.08 && FOLLOW <= 0.15);
+  assert.equal(GAIN, 0.35);
+  assert.equal(NARROW_MAX, 720);
 });
 
-test('竖屏：取景宽度能装下行人与拱的左半', () => {
-  assert.ok(NARROW.w > SCENE.x + 100);
-  assert.ok(NARROW.w < VIEW.w);
+test('首页降维静态稿与阶梯 1–7 档对齐', () => {
+  const rungs = JSON.parse(readFileSync(new URL('../data/rungs.json', import.meta.url), 'utf8'));
+  const poem = JSON.parse(readFileSync(new URL('../data/home-poem.json', import.meta.url), 'utf8'));
+  for (const id of ['en', 'hsk1', 'hsk2', 'hsk3', 'hsk4', 'hsk5', 'hsk6']) {
+    const rung = rungs.find((r) => r.id === id);
+    const entry = poem.rungs[String(rung.n)];
+    assert.equal(typeof entry.text, 'string');
+    assert.ok(entry.text.trim().length > 0);
+    assert.equal(entry.lang, rung.lang === 'en' ? 'en' : 'zh');
+  }
+  assert.equal(poem.rungs['8'], undefined);
+});
+
+test('页脚标语整句输出，不再把后半句拆开', () => {
+  const src = readFileSync(new URL('../src/features/home-hero/index.js', import.meta.url), 'utf8');
+  assert.match(src, /COPY\.footer\.left/);
+  assert.equal(src.includes('halfway'), false);
 });

@@ -1,84 +1,246 @@
-/* 首页纸张与构图（v2）。哑光、无投影、撕纸边。主参考 reference/主视觉.jpg。
-   纸张质感 = SVG feTurbulence 滤镜（#paper-fiber 纸块、#paper-base 底纸，由 home-hero 注入）。
-   性能预案：若在目标笔记本上明显卡顿，把纸块预渲染为 WebP 并去掉 filter（SCOPE 禁止项 8，需先记录实测）。
-   v1（鹊桥）已封存：docs/archive/home-v1/styles/paper.css，git tag home-v1。 */
+/* 首页：手工纸底、左芥黄右南瓜橙两张一样大的直边色纸、中央深藏青学习者。哑光，无投影，不用混合模式。
+   底纸是纯 --paper；纸纹只在卡片上，用 SVG 滤镜 #paper-fiber，由 home-hero 注入。
+   插画补色只声明在 .hero 里，不进全局 token。深浅色主题下首页都保持这套纸色，顶栏仍跟随主题。
+   卡片盒子本身不位移。可拖的鸟松手后转回。最右下角那只尖端朝上，点开的改写横排在右卡上。 */
 
-/* 插画补色：首页 token 里没有，只在 .hero 内声明，不污染全局。取值按 主视觉.jpg 采样后微调。
-   采样 → 本文件：赭红 #A05F42 → --rust；炭灰 #4E4744 → --charcoal；前景坡 #262524 → --soot；
-   沙色 #D3B08F~#D8BEA0 → --sand；石墨 #8D8C86 → --graphite；石板蓝 #71777A → --slate。
-   纯黑 --bird 只给鸟、头发、裤子。 */
+#root[data-page="/"] > .feature--home-hero { display: flex; flex: 1; min-height: 0; }
+
 .hero {
-  --charcoal: #4B4543; --soot: #2E2D2F; --soot-deep: #252426;
-  --graphite: #8A8983; --sand: #D6B896; --tan: #C4A478; --rust: #A8603F; --slate: #747B80;
-  --bird: #17161A; --star: #6B6672;
-  --coat: #9AA6B0; --skin: #E0BD98; --pack: #8A6A46;
+  --navy: #1A2744;
+  --card-amber: #e8b45a;
+  --card-pumpkin: #e07a30;
+  --paper: #F5F0E6;
+  --ink: #1B1B1B;
+  --on-indigo: #F3EDE2;
+  --poem: #1A2744;
+  --poem-dim: #4A4034;
+  --foot: #5C6574;
+  --ease: cubic-bezier(.22, 1, .36, 1);
 
-  /* 这是一幅印刷感的插画，深浅色主题下都保持纸本原貌：黑鸟只有落在浅纸上才看得见，
-     所以在 .hero 内局部固定纸色、墨色和小字色，覆盖主题 token。顶栏仍跟随主题。 */
-  --paper: #F5F0E6; --ink: #1B1B1B; --muted: #6B665D; --ochre: #A9763D; --indigo: #1C2B4A; --teal: #3E6A78;
-  --on-indigo: #F5F0E6; --cinnabar: #C8412B;
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--topbar));
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+}
+.hero__defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
-  position: relative; flex: 1; min-height: calc(100dvh - var(--topbar)); overflow: hidden; background: var(--paper); color: var(--ink);
+/* 三段式。卡片高度由舞台决定，上下留出呼吸区和页脚。 */
+.hero__stage {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 0.36fr) minmax(0, 1fr);
+  column-gap: clamp(16px, 2vw, 32px);
+  align-items: center;
+  padding: clamp(28px, 7vh, 72px) clamp(20px, 3.4vw, 48px) clamp(40px, 9vh, 88px);
 }
 
-.hero__art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-.hero__base { fill: var(--paper); }
-
-/* 纸块。不使用 mix-blend-mode / 阴影：深色互叠会变成近黑，窄缝也会被叠成黑条。 */
-/* 纤维白边：很淡的一圈，只在纸边露一点毛边，不压过纸块本身 */
-.hero__fringe { fill: none; stroke: var(--paper); stroke-width: 5; stroke-linejoin: round; opacity: .32; }
-.hero__paper.is-textured { filter: url(#paper-fiber); }
-/* 米白穿插块比底纸略深半度，才看得出是一块压上去的纸 */
-.hero__paper.is-bright { stroke: rgba(27, 27, 27, .06); stroke-width: 1.5; }
-/* 水彩洇色：被纸块裁住的低透明度色斑 */
-.hero__wash { pointer-events: none; }
-
-.hero__birds, .hero__speck { fill: var(--bird); }
-
-.hero__star { fill: none; stroke: var(--star); stroke-width: 2; stroke-linecap: round; animation: hero-twinkle 4s ease-in-out infinite alternate; }
-@keyframes hero-twinkle { from { opacity: .25; } to { opacity: .85; } }
-@media (prefers-reduced-motion: reduce) { .hero__star { animation: none; } }
-
-/* 行人 */
-.hero__shadow { fill: var(--soot-deep); opacity: .5; }
-.hero__trousers, .hero__hair { fill: var(--bird); }
-.hero__boots { fill: var(--soot); }
-.hero__coat { fill: var(--coat); }
-.hero__coat-light { fill: var(--paper); opacity: .28; }
-.hero__arm { fill: var(--coat); opacity: .85; }
-.hero__pack { fill: var(--pack); }
-.hero__strap { fill: none; stroke: var(--ink); stroke-width: 3; opacity: .6; }
-.hero__skin { fill: var(--skin); }
-
-/* ---- 文字层：拱下右下空白（设计说明 5：首选标题、副标题、主 CTA）。
-   画面 slice 铺满，空白区的位置随视口宽高比变化，所以按百分比放，并让它避开人物与鸟群核心区。 */
-/* 横版：位置和字号来自 JS 算出的 --tx / --ty / --ts（画面缩放），文字框跟着画面里的那块空白走。
-   JS 没跑时的兜底值只保证文字可见。 */
-.hero__text { position: absolute; left: var(--tx, 56%); bottom: var(--tb, 3%); width: calc(var(--ts, 1) * 400px); color: var(--ink); text-align: left; }
-.hero__title { margin: 0; font-family: var(--f-title); font-weight: 400; font-size: max(22px, calc(var(--ts, 1) * 46px)); line-height: 1.3; letter-spacing: .04em; }
-.hero__sub { margin: calc(var(--ts, 1) * 8px) 0 calc(var(--ts, 1) * 16px); font-family: var(--f-disp); font-style: italic; font-size: max(14px, calc(var(--ts, 1) * 22px)); color: var(--muted); }
-
-.hero__start {
-  display: inline-flex; align-items: baseline; gap: var(--s2);
-  padding: max(10px, calc(var(--ts, 1) * 16px)) max(24px, calc(var(--ts, 1) * 40px));
-  background: var(--cinnabar); color: var(--on-indigo); text-decoration: none;
-  font-family: var(--f-title); font-size: max(17px, calc(var(--ts, 1) * 26px)); letter-spacing: .3em;
-  border: 0; border-radius: 0; transition: transform var(--dur-fast);
+.hero__card {
+  position: relative;
+  width: min(100%, 72cqh);
+  aspect-ratio: 1;
+  height: auto;
+  max-height: 100%;
+  justify-self: center;
+  min-height: 0;
+  container-type: size;
+  animation: hero-rise 560ms var(--ease) both;
 }
-.hero__start:hover { transform: translateY(-2px); }
-.hero__start:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
-.hero__start-en { font-family: var(--f-small); font-size: .55em; letter-spacing: .2em; opacity: .9; }
+.hero__card--right { animation-delay: 80ms; }
+.hero__card-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero__lift { position: absolute; inset: 0; pointer-events: none; }
+.hero__paper { stroke: none; }
 
-/* 竖版（JS 在 .hero 上写 data-fit="narrow"：竖屏、≤720px、4:3 平板等放不下横版文字框的视口）：
-   构图改取左侧（行人 + 拱的左半），底对齐；上方是纸，标题放在那里。 */
-.hero[data-fit="narrow"] .hero__text { left: var(--edge); right: var(--edge); top: 6%; bottom: auto; width: auto; }
-.hero[data-fit="narrow"] .hero__title { font-size: clamp(26px, 6vw, 44px); }
-.hero[data-fit="narrow"] .hero__sub { font-size: 14px; margin: var(--s2) 0 var(--s3); }
-.hero[data-fit="narrow"] .hero__start { padding: 12px 28px; font-size: 18px; }
+/* 竖排诗：八列、每列两句中间留空，加一列注释，自右向左，在卡片里居中。 */
+.poem {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4em;
+  height: 100%;
+  padding: 6% 6% 12% 6%;
+  box-sizing: border-box;
+  font-family: var(--f-title);
+  font-size: 5.6cqh;
+  color: var(--poem);
+}
+.poem__col {
+  writing-mode: vertical-rl;
+  font-size: 1em;
+  letter-spacing: .2em;
+  line-height: 1;
+}
+.poem__phrase { white-space: nowrap; }
+.poem__col .poem__phrase + .poem__phrase { margin-inline-start: 0.65em; }
+.poem__note {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.55em;
+  letter-spacing: .12em;
+  color: var(--poem-dim);
+}
+.poem__note .poem__phrase { writing-mode: vertical-rl; }
 
-/* 视口很矮（信息流缩略图尺寸，约 400×250）：只留大形，去掉副标 */
-@media (max-height: 360px) {
-  .hero__sub { display: none; }
-  .hero__title { font-size: clamp(20px, 6vw, 30px); }
-  .hero__start { padding: var(--s2) var(--s4); font-size: 16px; }
+.hero__rewrite {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 8%;
+  bottom: 34%;
+  margin: 0;
+  overflow: auto;
+  scrollbar-width: none;
+  writing-mode: horizontal-tb;
+  text-align: left;
+  font-family: var(--f-title);
+  font-size: clamp(15px, 3.4cqh, 22px);
+  line-height: 1.65;
+  color: var(--poem);
+  pointer-events: auto;
+}
+.hero__rewrite::-webkit-scrollbar { display: none; }
+.hero__rewrite[lang="en"] {
+  font-family: var(--f-disp);
+  font-style: italic;
+  font-size: clamp(16px, 3.2cqh, 22px);
+}
+.hero__flock.is-open .hero__arrow { cursor: pointer; }
+
+.hero__tag {
+  position: absolute;
+  left: 7%;
+  bottom: 6%;
+  margin: 0;
+  font-family: var(--f-small);
+  font-size: 12px;
+  letter-spacing: .14em;
+  color: var(--poem);
+}
+
+.hero__arrow { color: #F7F1E4; cursor: grab; touch-action: none; }
+.hero__arrow--still { cursor: pointer; }
+.hero__arrow.is-dragging { cursor: grabbing; }
+.hero__arrow[data-tone="navy"] { color: var(--navy); }
+.hero__arrow use { fill: currentColor; }
+.hero__arrow:focus-visible { outline: none; }
+.hero__arrow:focus-visible .hero__arrow-hit { outline: 1px solid var(--navy); }
+
+/* 中央：小人（跟随）+ 按钮（固定） */
+.hero__mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 3.4vh, 36px);
+  min-width: 0;
+}
+.hero__follow { will-change: transform; }
+.hero__learner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.hero__learner-svg { width: clamp(44px, 6.4vh, 60px); height: auto; aspect-ratio: 4 / 5; display: block; overflow: visible; }
+.hero__learner-svg circle,
+.hero__learner-svg path { fill: var(--navy); }
+.hero__learner:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 6px; }
+
+.hero__enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 22px;
+  border-radius: 2px;
+  background: #111;
+  color: var(--on-indigo);
+  font-family: var(--f-title);
+  font-size: 17px;
+  letter-spacing: .32em;
+  text-indent: .32em;          /* 抵消末字右侧的字距，字才居中 */
+  text-decoration: none;
+  transition: background-color 240ms, transform 240ms var(--ease), letter-spacing 240ms, gap 240ms;
+}
+.hero__enter-arrow { width: 0; height: 10px; overflow: visible; opacity: 0; transition: width 240ms, opacity 240ms; }
+.hero__enter:hover,
+.hero__enter:focus-visible {
+  background: var(--cinnabar);
+  transform: translateY(-2px) scale(1.04);
+  letter-spacing: .4em;
+  gap: 8px;
+}
+.hero__enter:hover .hero__enter-arrow,
+.hero__enter:focus-visible .hero__enter-arrow { width: 16px; opacity: 1; }
+.hero__enter:active { transform: translateY(0) scale(.98); }
+.hero__enter:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 4px; }
+
+.hero__foot {
+  position: absolute;
+  z-index: 1;
+  left: clamp(20px, 3.4vw, 48px);
+  right: clamp(20px, 3.4vw, 48px);
+  bottom: clamp(12px, 2.4vh, 24px);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  pointer-events: none;
+}
+.hero__motto {
+  margin: 0;
+  font-family: var(--f-disp);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(18px, 2vw, 26px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: #1B1B1B;
+}
+.hero__motto-mark { color: var(--cinnabar); font-style: italic; }
+.hero__sign {
+  margin: 0;
+  font-family: var(--f-disp);
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: .04em;
+  color: var(--foot);
+}
+
+@keyframes hero-rise {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__card { animation: none; }
+  .hero__enter { transition: none; }
+}
+
+/* 窄屏（≤720px，与工作台一致）：两卡纵向堆叠，小人与按钮放在中间，小人不跟随。页面可以滚动。 */
+@media (max-width: 720px) {
+  #root[data-page="/"] > .feature--home-hero { display: block; flex: none; }
+  .hero { display: block; height: auto; min-height: calc(100dvh - var(--topbar)); overflow: visible; }
+  .hero__stage { display: flex; flex-direction: column; gap: 24px; padding: 20px var(--edge) 8px; }
+  .hero__card, .hero__card--right { width: min(100%, 420px); max-height: none; aspect-ratio: 1; align-self: center; }
+  .poem { padding: 6% 6% 14% 6%; }
+  .hero__mid { min-height: 200px; }
+  .hero__foot { position: static; padding: 12px var(--edge) 28px; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .hero__motto { font-size: 22px; }
+  .hero__sign { font-size: 13px; }
 }

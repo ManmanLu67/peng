@@ -2,7 +2,8 @@
   "nodes": [
     { "id": "rewrite",  "no": "01", "label": { "zh": "改写",   "en": "REWRITE"   } },
     { "id": "notclear", "no": "02", "label": { "zh": "没看懂", "en": "NOT CLEAR" } },
-    { "id": "stepdown", "no": "03", "label": { "zh": "降档",   "en": "STEP DOWN" } }
+    { "id": "stepdown", "no": "03", "label": { "zh": "降档",   "en": "STEP DOWN" } },
+    { "id": "bridge",   "no": "04", "label": { "zh": "结束",   "en": "BRIDGE"    } }
   ],
   "paths": {
     "submit":         ["rewrite"],

@@ -1,217 +1,605 @@
-// 首页视觉（v2）：撕纸地层拱 + 相向而飞的鸟群 + 仰望的行人。主参考 reference/主视觉.jpg。
-// 构图数据在 composition.js；几何在 core/geometry.js（固定 seed，刷新后构图不变）。
-// 只动 opacity（星的闪烁）。哑光、无投影、不用混合模式。
-// v1（鹊桥）已封存：docs/archive/home-v1/，git tag home-v1。
+// 首页主视觉：手工纸底、两张一样大的近正方形色纸、中央深藏青小人、「进入」。
+// 左卡逆时针约 3°，右卡顺时针约 3°。纸纹是很轻的染色不匀。
+// 对角线上 7 只鸟可拖，点开后落到底部并在右卡横排显示该档静态改写。最右下角一只尖端朝上。双击小人和「进入」去工作台。
 import { h, svg } from '../../ui/index.js';
-import { mulberry32, tornPolygon, toPathD } from '../../core/geometry.js';
-import { VIEW, NARROW, LAYERS, FLOCK, SPECKS, STARS, SCENE, TEXT, COPY, WIDE_MIN_ASPECT } from './composition.js';
+import {
+  CARDS, ARROWS, POEM, COPY, FOLLOW, GAIN, NARROW_MAX,
+  HOVER_TURN, HOVER_SCALE, clampBird,
+} from './composition.js';
 
-const ID = { fiber: 'paper-fiber', base: 'paper-base' };
-
-// ---------- 滤镜 ----------
+const ID = { fiber: 'paper-fiber', arrow: 'hero-arrow' };
+const ARROW_PTS = [[0, -22], [18, 16], [0, 6], [-18, 16]];
 const fe = (tag, props, ...kids) => svg(tag, props, ...kids);
 
-/** 纸块：低频浓淡转灰度不偏色 + 高频横向白纤维，normal 叠白；最后用 SourceGraphic 裁回纸块自己的轮廓。 */
-function fiberFilter() {
-  return svg('filter', { id: ID.fiber, x: 0, y: 0, width: '100%', height: '100%', 'color-interpolation-filters': 'sRGB' },
-    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.006 0.010', numOctaves: 2, seed: 3, result: 'washRGB' }),
-    fe('feColorMatrix', { in: 'washRGB', type: 'matrix', values: '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1', result: 'wash' }),
-    fe('feComposite', { in: 'SourceGraphic', in2: 'wash', operator: 'arithmetic', k1: 0, k2: 1, k3: 0.16, k4: -0.08, result: 'toned' }),
-    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.025 0.75', numOctaves: 2, seed: 8, result: 'fiber' }),
-    fe('feColorMatrix', { in: 'fiber', type: 'matrix', values: '0 0 0 0 1  0 0 0 0 .98  0 0 0 0 .92  0 0 0 1 0', result: 'fiberW' }),
-    fe('feComponentTransfer', { in: 'fiberW', result: 'fiberA' }, fe('feFuncA', { type: 'linear', slope: 0.75, intercept: -0.42 })),
-    fe('feBlend', { in: 'fiberA', in2: 'toned', mode: 'normal', result: 'paper' }),
-    fe('feComposite', { in: 'paper', in2: 'SourceGraphic', operator: 'in' }));
+/** 色纸：很轻的染色不匀，再加很少的细纤维。不用混合模式，最后裁回矩形。 */
+function feltFilter() {
+  const speck = (r, g, b, slope, intercept) => `0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  ${slope} 0 0 0 ${intercept}`;
+  return svg('filter', { id: ID.fiber, x: '0', y: '0', width: '100%', height: '100%', 'color-interpolation-filters': 'sRGB' },
+    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.012', numOctaves: 2, seed: 4, result: 'cloud' }),
+    fe('feGaussianBlur', { in: 'cloud', stdDeviation: 2, result: 'cloudB' }),
+    fe('feColorMatrix', { in: 'cloudB', type: 'matrix', values: '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1', result: 'cloudG' }),
+    fe('feComposite', { in: 'SourceGraphic', in2: 'cloudG', operator: 'arithmetic', k1: 0, k2: 0.94, k3: 0.08, k4: 0, result: 'dyed' }),
+    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.035 0.45', numOctaves: 1, seed: 7, result: 'fib' }),
+    fe('feColorMatrix', { in: 'fib', type: 'matrix', values: speck(0.18, 0.1, 0.04, 7, -5.6), result: 'fibA' }),
+    svg('feMerge', { result: 'stacked' },
+      svg('feMergeNode', { in: 'dyed' }),
+      svg('feMergeNode', { in: 'fibA' })),
+    fe('feComposite', { in: 'stacked', in2: 'SourceGraphic', operator: 'in' }));
 }
 
-/** 底纸：米色上白纤维看不见，改用褐色横竖短纤维 + 稀疏墨点 + 大片浓淡。 */
-function baseFilter() {
-  const tint = (r, g, b, a, c) => `0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  ${a} 0 0 0 ${c}`;
-  return svg('filter', { id: ID.base, x: 0, y: 0, width: '100%', height: '100%', 'color-interpolation-filters': 'sRGB' },
-    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.0035 0.006', numOctaves: 3, seed: 5, result: 'cloud' }),
-    fe('feColorMatrix', { in: 'cloud', type: 'matrix', values: '.33 .33 .33 0 0  .33 .33 .33 0 0  .33 .33 .33 0 0  0 0 0 0 1', result: 'cloudG' }),
-    fe('feComposite', { in: 'SourceGraphic', in2: 'cloudG', operator: 'arithmetic', k1: 0, k2: 1, k3: 0.2, k4: -0.1, result: 'toned' }),
-    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.035 0.42', numOctaves: 2, seed: 21, result: 'fa' }),
-    fe('feColorMatrix', { in: 'fa', type: 'matrix', values: tint(.55, .4, .24, 5, -3.3), result: 'fibA' }),
-    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.42 0.035', numOctaves: 2, seed: 33, result: 'fb' }),
-    fe('feColorMatrix', { in: 'fb', type: 'matrix', values: tint(.6, .46, .28, 4, -2.75), result: 'fibB' }),
-    fe('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.16', numOctaves: 1, seed: 40, result: 'fc' }),
-    fe('feColorMatrix', { in: 'fc', type: 'matrix', values: tint(.4, .28, .16, 14, -10.8), result: 'fleck' }),
-    svg('feMerge', null, ...['toned', 'fibA', 'fibB', 'fleck'].map((r) => svg('feMergeNode', { in: r }))));
+function defsSvg() {
+  return svg('svg', { class: 'hero__defs', 'aria-hidden': 'true', focusable: 'false', width: 0, height: 0 },
+    svg('defs', null, feltFilter(),
+      svg('path', { id: ID.arrow, d: 'M0 -22 L18 16 L0 6 L-18 16 Z' })));
 }
 
-// ---------- 喜鹊：三种形态（展翅 / 滑翔 / 远处小鸟），朝右，原点在身体中心 ----------
-// 朝左的鸟在 flock() 里用 scale(-s, s) 水平翻转，不另画。不用 innerHTML，逐个节点建。
-function birdDefs() {
-  const body = svg('g', { id: 'hb-body' },
-    svg('path', { d: 'M-9 -4 C-24 -3 -40 1 -56 7 C-56 11 -52 13 -46 12 C-32 10 -18 9 -6 7 Z' }),
-    svg('path', { d: 'M-12 1 C-8 -6 6 -9 18 -8 C25 -8 28 -4 25 0 C22 4 14 8 4 8 C-3 8 -9 5 -12 1 Z' }),
-    svg('circle', { cx: 24, cy: -4.5, r: 5.2 }),
-    svg('path', { d: 'M28 -7 L40 -3.5 L28 -1.5 Z' }));
-  const wing = svg('path', { id: 'hb-wing', d: 'M12 -4 C13 -20 6 -34 -8 -46 C-9 -41 -12 -39 -15 -39 C-14 -35 -17 -33 -21 -33 C-19 -29 -22 -26 -26 -25 C-22 -21 -22 -17 -20 -14 C-16 -9 -13 -6 -10 -3 Z' });
-  const sweep = svg('path', { id: 'hb-sweep', d: 'M12 -5 C4 -13 -12 -20 -36 -25 C-33 -21 -35 -19 -39 -18 C-34 -15 -35 -12 -39 -10 C-30 -8 -20 -5 -8 -1 Z' });
-  const use = (href, transform) => svg('use', { href, transform });
-  return [
-    body, wing, sweep,
-    svg('g', { id: 'hb-spread' }, use('#hb-body'), use('#hb-wing'), use('#hb-wing', 'translate(7 -1) rotate(16 8 -4) scale(.8)')),
-    svg('g', { id: 'hb-glide' }, use('#hb-body'), use('#hb-sweep'), use('#hb-sweep', 'translate(5 -1) rotate(-14 8 -4) scale(.85)')),
-    svg('g', { id: 'hb-far' }, use('#hb-body'), use('#hb-sweep', 'scale(.9)')),
-  ];
-}
-
-// ---------- 纸块 ----------
-let clipSeq = 0;
-
-/** 水彩晕染：纸块之上的低透明度层次，被纸块自己的轮廓裁住。内缘积色 + 3 个内部色斑，位置由 seed 决定。 */
-function washLayer(b, d) {
-  const id = `hero-wash-${clipSeq++}`;
-  const xs = b.pts.map((p) => p[0]);
-  const ys = b.pts.map((p) => p[1]);
-  const x0 = Math.max(0, Math.min(...xs));
-  const x1 = Math.min(VIEW.w, Math.max(...xs));
-  const y0 = Math.max(0, Math.min(...ys));
-  const y1 = Math.min(VIEW.h, Math.max(...ys));
-  const rnd = mulberry32(b.seed * 7 + 3);
-  const dark = /sand|tan/.test(b.tone) ? 'var(--ochre)' : 'var(--ink)';   // 浅纸积赭色，深纸积墨色
-  const g = svg('g', { class: 'hero__wash', 'clip-path': `url(#${id})`, 'data-wash': b.id },
-    svg('clipPath', { id }, svg('path', { d })),
-    svg('path', { d, fill: 'none', stroke: dark, 'stroke-width': 16, 'stroke-linejoin': 'round', opacity: 0.16 }));
-  for (let i = 0; i < 3; i++) {
-    g.append(svg('ellipse', {
-      cx: x0 + (x1 - x0) * (0.15 + rnd() * 0.7),
-      cy: y0 + (y1 - y0) * (0.15 + rnd() * 0.7),
-      rx: Math.max(30, (x1 - x0) * (0.18 + rnd() * 0.22)),
-      ry: Math.max(24, (y1 - y0) * (0.2 + rnd() * 0.25)),
-      transform: `rotate(${(rnd() * 40 - 20).toFixed(1)})`,
-      fill: i % 2 ? dark : 'var(--paper)',
-      opacity: i % 2 ? 0.1 : 0.13,
-    }));
+/** 直边矩形。viewBox 跟元素像素走，纸纹不被拉伸。子图层用 layout(w, h) 定位。 */
+function cardSvg(card, layers = [], hidden = true) {
+  const paper = svg('rect', {
+    class: 'hero__paper', 'data-block': card.id, fill: card.tone, filter: `url(#${ID.fiber})`,
+  });
+  const art = svg('svg', {
+    class: 'hero__card-svg', 'aria-hidden': hidden ? 'true' : null, focusable: 'false',
+  }, paper, ...layers.map((l) => l.node));
+  let last = '';
+  function resize(w, h) {
+    if (!(w > 0 && h > 0)) return;
+    const key = `${Math.round(w)}x${Math.round(h)}`;
+    if (key === last) return;
+    last = key;
+    art.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    paper.setAttribute('width', w);
+    paper.setAttribute('height', h);
+    for (const l of layers) l.layout(w, h);
   }
-  return g;
+  return { art, resize };
 }
 
-function paperBlocks(list) {
-  const g = svg('g');
-  for (const b of list) {
-    const d = toPathD(tornPolygon(b.pts, { step: b.step, amp: b.amp, seed: b.seed }));
-    // 撕开后的浅色纤维白边：同一轮廓描边，叠在纸块下面
-    g.append(svg('path', { class: 'hero__fringe', d }));
-    g.append(svg('path', {
-      class: ['hero__paper', b.tex && 'is-textured', b.bright && 'is-bright'],
-      d, style: `fill: ${b.tone}`, 'data-block': b.id,
-    }));
-    if (!b.bright && b.wash !== false) g.append(washLayer(b, d));
+/** 一行两句：上句和下句分成两截，中间留空。 */
+function poemColumn(lines) {
+  return h('div', { class: 'poem__col' }, ...lines.map((line) => h('span', { class: 'poem__phrase' }, line)));
+}
+
+function leftCard() {
+  const { art, resize } = cardSvg(CARDS[0]);
+  const root = h('div', {
+    class: 'hero__card hero__card--left', role: 'group',
+    'aria-label': '左卡，古诗十九首·行行重行行',
+    style: `transform: rotate(${CARDS[0].turn}deg)`,
+  },
+  art,
+  h('div', { class: 'hero__lift' },
+    h('div', { class: 'poem' },
+      ...POEM.columns.map((col) => poemColumn(col)),
+      h('div', { class: 'poem__note' },
+        ...POEM.note.map((line) => h('span', { class: 'poem__phrase' }, line)))),
+    h('p', { class: 'hero__tag' }, COPY.tag.left)));
+  return { root, resize };
+}
+
+/** 箭形在当前缩放下的半宽半高，旋转后的轴对齐包围盒。 */
+function birdExtent(scale, rotDeg) {
+  const rad = (rotDeg * Math.PI) / 180;
+  const c = Math.cos(rad);
+  const s = Math.sin(rad);
+  let halfW = 0;
+  let halfH = 0;
+  for (const [px, py] of ARROW_PTS) {
+    halfW = Math.max(halfW, Math.abs((px * c - py * s) * scale));
+    halfH = Math.max(halfH, Math.abs((px * s + py * c) * scale));
   }
-  return g;
+  return { halfW, halfH };
 }
 
-// ---------- 鸟群 / 点缀 / 行人 ----------
-function flock() {
-  const g = svg('g', { class: 'hero__birds', 'data-count': FLOCK.length });
-  for (const [kind, dir, x, y, climb, s, o] of FLOCK) {
-    // 朝左 = 先水平翻转再旋转，爬升角的符号要反过来
-    const rot = dir === 'r' ? -climb : climb;
-    g.append(svg('use', {
-      href: `#hb-${kind}`, opacity: o, 'data-dir': dir,
-      transform: `translate(${x} ${y}) rotate(${rot}) scale(${dir === 'r' ? s : -s} ${s})`,
-    }));
+/** 鸟 id 对上 rungs.json 的 n，再取 home-poem.json 里写好的那一档。 */
+function levelText(ctx) {
+  const poem = ctx?.data?.['home-poem']?.rungs ?? {};
+  const byId = new Map((ctx?.data?.rungs ?? []).map((r) => [r.id, r]));
+  return (id) => {
+    const rung = byId.get(id);
+    const entry = rung ? poem[String(rung.n)] : null;
+    if (!entry || typeof entry.text !== 'string' || entry.text.trim() === '') return null;
+    return { lang: entry.lang === 'en' ? 'en' : 'zh', text: entry.text };
+  };
+}
+
+function rightCard(lookup) {
+  const textFor = typeof lookup === 'function' ? lookup : () => null;
+  const DOCK_AIM = 90;
+  const CLICK_PX = 6;
+  const card = CARDS[1];
+  let shown = null;
+  let size = { w: 1, h: 1 };
+  let glideRaf = 0;
+  let glideLast = 0;
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  const arrows = ARROWS.map((a) => {
+    const hit = svg('g', { class: 'hero__arrow-hit' }, svg('use', { href: `#${ID.arrow}` }));
+    const g = svg('g', {
+      class: a.drag ? 'hero__arrow' : 'hero__arrow hero__arrow--still',
+      'data-tone': a.tone,
+      tabindex: '0',
+      role: 'button',
+      'aria-pressed': 'false',
+      'aria-label': a.label,
+    }, hit);
+    g._place = a;
+    g._hit = hit;
+    g._fx = null;
+    g._rot = a.rot;
+    g._rotTo = a.rot;
+    g._sc = a.s;
+    g._scTo = a.s;
+    g._x = 0;
+    g._y = 0;
+    g._big = false;
+    g._spin = false;
+    g._drag = false;
+    g._pressed = false;
+    g._suppress = false;
+    return g;
+  });
+
+  const flock = svg('g', { class: 'hero__flock' }, ...arrows);
+
+  const paintHit = (g) => {
+    const press = g._pressed ? 0.92 : 1;
+    g._hit.setAttribute('transform', `rotate(${g._rot.toFixed(2)}) scale(${(g._sc * press).toFixed(3)})`);
+  };
+  const paintPos = (g) => {
+    g.setAttribute('transform', `translate(${g._x.toFixed(1)} ${g._y.toFixed(1)})`);
+  };
+  const baseK = () => Math.min(size.w, size.h) / 780;
+
+  const pose = (g) => {
+    if (g._place.drag === false || shown) return;
+    g._scTo = g._place.s * baseK() * (g._big ? HOVER_SCALE : 1);
+    if (!g._drag) g._rotTo = g._place.rot + (g._spin ? HOVER_TURN : 0);
+    kickGlide();
+  };
+
+  const frame = (now) => {
+    glideRaf = 0;
+    const dt = glideLast ? Math.min(48, now - glideLast) : 16.7;
+    glideLast = now;
+    const alpha = motion.matches ? 1 : 1 - (0.85 ** (dt / 16.7));
+    let again = false;
+    for (const g of arrows) {
+      if (g._fx == null) continue;
+      const tx = g._fx * size.w;
+      const ty = g._fy * size.h;
+      const dx = tx - g._x;
+      const dy = ty - g._y;
+      const dr = g._rotTo - g._rot;
+      const ds = g._scTo - g._sc;
+      const settled = Math.abs(dx) < 0.4 && Math.abs(dy) < 0.4 && Math.abs(dr) < 0.2 && Math.abs(ds) < 0.002;
+      if (settled || motion.matches) {
+        g._x = tx;
+        g._y = ty;
+        g._rot = g._rotTo;
+        g._sc = g._scTo;
+      } else {
+        g._x += dx * alpha;
+        g._y += dy * alpha;
+        g._rot += dr * alpha;
+        g._sc += ds * alpha;
+        again = true;
+      }
+      paintHit(g);
+      paintPos(g);
+    }
+    if (again) glideRaf = requestAnimationFrame(frame);
+    else glideLast = 0;
+  };
+  const kickGlide = () => { if (!glideRaf) glideRaf = requestAnimationFrame(frame); };
+
+  const moveBird = (g, x, y) => {
+    const ext = birdExtent(g._sc, g._rot);
+    const next = clampBird(x, y, ext.halfW, ext.halfH, size.w, size.h);
+    g._x = next.x;
+    g._y = next.y;
+    g._fx = next.x / size.w;
+    g._fy = next.y / size.h;
+    paintPos(g);
+  };
+
+  const localPoint = (art, e) => {
+    const pt = art.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const m = art.getScreenCTM();
+    if (!m) return null;
+    const p = pt.matrixTransform(m.inverse());
+    return { x: p.x, y: p.y };
+  };
+
+  const { art, resize } = cardSvg(card, [
+    { node: flock, layout: (w, h) => layoutFlock(w, h) },
+  ], false);
+
+  const rewrite = h('p', { class: 'hero__rewrite', hidden: true, 'aria-live': 'polite' });
+  const tag = h('p', { class: 'hero__tag' }, COPY.tag.right);
+  const root = h('div', {
+    class: 'hero__card hero__card--right', role: 'group',
+    'aria-label': '右卡，箭形鸟群',
+    style: `transform: rotate(${card.turn}deg)`,
+  }, art, h('div', { class: 'hero__lift' }, rewrite, tag));
+
+  function placeDockTargets() {
+    const flockBirds = arrows.filter((g) => g._place.drag !== false);
+    const mark = arrows.find((g) => g._place.drag === false);
+    const k = baseK();
+    const bigHalf = birdExtent(flockBirds.at(-1)._place.s * k, DOCK_AIM).halfH;
+    const markHalf = birdExtent(mark._place.s * k, 0).halfH;
+    const markY = (mark._fy ?? mark._place.fy) * size.h;
+    const belowMark = markY + markHalf + bigHalf + 6;
+    const tagBottom = tag.offsetHeight > 0 ? tag.offsetTop + tag.offsetHeight : size.h * 0.94;
+    const belowTag = tagBottom + bigHalf;
+    const rowY = Math.min(size.h - bigHalf - 2, Math.max(belowMark, belowTag));
+    const startX = tag.offsetWidth > 0 ? tag.offsetLeft : size.w * 0.07;
+    const endX = (mark._fx ?? mark._place.fx) * size.w;
+    flockBirds.forEach((g, i) => {
+      const t = flockBirds.length === 1 ? 0 : i / (flockBirds.length - 1);
+      const ext = birdExtent(g._place.s * k, DOCK_AIM);
+      const next = clampBird(startX + (endX - startX) * t, rowY, ext.halfW, ext.halfH, size.w, size.h);
+      g._fx = next.x / size.w;
+      g._fy = next.y / size.h;
+      g._rotTo = DOCK_AIM;
+      g._scTo = g._place.s * k;
+    });
   }
-  return g;
-}
 
-function sky() {
-  const g = svg('g', { class: 'hero__sky' },
-    svg('g', { class: 'hero__speck' }, ...SPECKS.map(([cx, cy, r]) => svg('circle', { cx, cy, r }))));
-  for (const [x, y, k, delay] of STARS) {
-    g.append(svg('path', {
-      class: 'hero__star', style: `animation-delay: ${delay}s`,
-      d: `M${x} ${y - 5 * k}v${10 * k}M${x - 5 * k} ${y}h${10 * k}M${x - 3 * k} ${y - 3 * k}l${6 * k} ${6 * k}M${x + 3 * k} ${y - 3 * k}l${-6 * k} ${6 * k}`,
-    }));
+  function showLevel(id) {
+    const entry = textFor(id);
+    if (!entry) return;
+    const first = shown == null;
+    shown = id;
+    flock.classList.add('is-open');
+    rewrite.hidden = false;
+    rewrite.lang = entry.lang;
+    rewrite.textContent = entry.text;
+    for (const g of arrows) {
+      g.setAttribute('aria-pressed', g._place.id === id ? 'true' : 'false');
+      if (!first || g._place.drag === false) continue;
+      g._spin = false;
+      g._big = false;
+      g._drag = false;
+      g._dragArmed = false;
+      g.classList.remove('is-dragging');
+    }
+    if (!first) return;
+    placeDockTargets();
+    kickGlide();
   }
-  return g;
+
+  function closeLevel() {
+    shown = null;
+    flock.classList.remove('is-open');
+    rewrite.hidden = true;
+    rewrite.textContent = '';
+    const k = baseK();
+    for (const g of arrows) {
+      g.setAttribute('aria-pressed', 'false');
+      if (g._place.drag === false) continue;
+      g._fx = g._place.fx;
+      g._fy = g._place.fy;
+      g._rotTo = g._place.rot;
+      g._scTo = g._place.s * k;
+      g._spin = false;
+      g._big = false;
+    }
+    kickGlide();
+  }
+
+  function activate(g) {
+    if (g._place.drag === false) {
+      if (shown) closeLevel();
+      return;
+    }
+    if (shown === g._place.id) closeLevel();
+    else showLevel(g._place.id);
+  }
+
+  function layoutFlock(w, h) {
+    size = { w, h };
+    const k = baseK();
+    if (shown) placeDockTargets();
+    for (const g of arrows) {
+      if (g._fx == null) {
+        g._fx = g._place.fx;
+        g._fy = g._place.fy;
+        g._rot = g._place.rot;
+        g._rotTo = g._place.rot;
+        g._sc = g._place.s * k;
+        g._scTo = g._sc;
+      }
+      const docked = shown && g._place.drag !== false;
+      if (docked) {
+        g._rotTo = DOCK_AIM;
+        g._scTo = g._place.s * k;
+      } else {
+        g._scTo = g._place.drag === false ? g._place.s * k : g._place.s * k * (g._big ? HOVER_SCALE : 1);
+        if (!g._drag && g._place.drag !== false) g._rotTo = g._place.rot + (g._spin ? HOVER_TURN : 0);
+      }
+      g._x = g._fx * w;
+      g._y = g._fy * h;
+      g._sc = g._scTo;
+      g._rot = g._rotTo;
+      paintHit(g);
+      paintPos(g);
+    }
+  }
+
+  const keys = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  const canDrag = (g) => g._place.drag !== false && shown == null;
+  const press = (g) => { g._pressed = true; paintHit(g); };
+  const release = (g) => { if (!g._pressed) return; g._pressed = false; paintHit(g); };
+  for (const g of arrows) {
+    g.addEventListener('pointerenter', () => {
+      if (!canDrag(g) || g._drag) return;
+      g._big = true;
+      if (!g._suppress) g._spin = true;
+      pose(g);
+    });
+    g.addEventListener('pointerleave', () => {
+      if (!canDrag(g) || g._drag) return;
+      g._big = false;
+      g._spin = false;
+      g._suppress = false;
+      pose(g);
+    });
+    g.addEventListener('focus', () => {
+      if (!canDrag(g)) return;
+      g._big = true;
+      if (!g._suppress) g._spin = true;
+      pose(g);
+    });
+    g.addEventListener('blur', () => {
+      if (!canDrag(g)) return;
+      g._big = g.matches(':hover');
+      if (!g._big) {
+        g._spin = false;
+        g._suppress = false;
+      }
+      pose(g);
+    });
+    g.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      g._px = e.clientX;
+      g._py = e.clientY;
+      g._dragArmed = false;
+      if (!canDrag(g)) {
+        press(g);
+        try { g.setPointerCapture(e.pointerId); } catch { /* 捕获失败时仍由 pointerup 弹回 */ }
+        e.preventDefault();
+        return;
+      }
+      const p = localPoint(art, e);
+      if (!p) return;
+      g._grabX = p.x - g._x;
+      g._grabY = p.y - g._y;
+      g._dragArmed = true;
+      try { g.setPointerCapture(e.pointerId); } catch { /* 非可信事件时捕获会失败，拖动仍由本元素上的 pointermove 继续 */ }
+      e.preventDefault();
+    });
+    g.addEventListener('pointermove', (e) => {
+      if (g._dragArmed && !g._drag && Math.hypot(e.clientX - g._px, e.clientY - g._py) >= CLICK_PX) {
+        g._drag = true;
+        g.classList.add('is-dragging');
+      }
+      if (!g._drag) return;
+      const p = localPoint(art, e);
+      if (!p) return;
+      moveBird(g, p.x - g._grabX, p.y - g._grabY);
+    });
+    const finish = (e, cancel) => {
+      const moved = Math.hypot((e.clientX ?? g._px) - g._px, (e.clientY ?? g._py) - g._py);
+      if (!canDrag(g)) {
+        release(g);
+        if (!cancel && moved < CLICK_PX) activate(g);
+        return;
+      }
+      const wasDrag = g._drag;
+      g._dragArmed = false;
+      if (!wasDrag) {
+        if (!cancel && moved < CLICK_PX) activate(g);
+        return;
+      }
+      g._drag = false;
+      g.classList.remove('is-dragging');
+      g._spin = false;
+      g._suppress = true;
+      g._big = g.matches(':hover') || g.matches(':focus');
+      pose(g);
+    };
+    g.addEventListener('pointerup', (e) => finish(e, false));
+    g.addEventListener('pointercancel', (e) => finish(e, true));
+    g.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!g._keyHold) { g._keyHold = true; press(g); }
+        return;
+      }
+      if (!canDrag(g)) return;
+      const d = keys[e.key];
+      if (!d) return;
+      e.preventDefault();
+      moveBird(g, g._x + d[0] * size.w * 0.02, g._y + d[1] * size.h * 0.02);
+    });
+    g.addEventListener('keyup', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (!g._keyHold) return;
+      g._keyHold = false;
+      release(g);
+      activate(g);
+    });
+  }
+
+  return {
+    root,
+    resize,
+    destroy() { if (glideRaf) cancelAnimationFrame(glideRaf); },
+  };
 }
 
-/** 行人：左下暗坡上，背包，仰头望天。黑只给头发和裤子；上衣、背包、脸走补色。 */
-function wanderer() {
-  const p = (cls, d, extra) => svg('path', { class: cls, d, ...extra });
-  return svg('g', { class: 'hero__person', transform: `translate(${SCENE.x} ${SCENE.y})`, 'aria-hidden': 'true' },
-    svg('ellipse', { class: 'hero__shadow', cx: 2, cy: 107, rx: 26, ry: 5 }),
-    p('hero__trousers', 'M-14 62 L-18 100 L-6 100 L0 68Z M4 66 L8 100 L20 100 L20 62Z'),
-    p('hero__boots', 'M-22 98 h18 l2 8 h-22Z M5 98 h18 l2 8 h-20Z'),
-    p('hero__coat', 'M-16 8 C-6 0 12 0 20 10 L26 70 C14 74 -4 74 -20 68Z'),
-    p('hero__coat-light', 'M-8 14 C0 10 10 10 16 14 L18 40 L-6 40Z'),
-    p('hero__arm', 'M-14 12 L-24 52 L-14 54 L-6 22Z'),
-    p('hero__pack', 'M-30 30 C-42 32 -46 52 -40 66 C-32 72 -22 68 -20 56 L-18 34Z'),
-    p('hero__strap', 'M-30 30 C-24 26 -18 28 -14 22'),
-    p('hero__skin', 'M-2 -2 L14 -2 L14 10 L-2 10Z'),
-    svg('ellipse', { class: 'hero__skin', cx: 9, cy: -12, rx: 12, ry: 14, transform: 'rotate(14 9 -12)' }),
-    p('hero__hair', 'M-3 -16 C-4 -30 12 -34 20 -24 C22 -18 18 -22 12 -22 C6 -22 2 -18 -3 -16Z'));
+function learnerMark() {
+  return svg('svg', { class: 'hero__learner-svg', viewBox: '0 0 80 100', 'aria-hidden': 'true' },
+    svg('circle', { cx: 40, cy: 16, r: 13 }),
+    svg('path', { d: 'M22 40 H58 L68 96 H12 Z' }));
 }
 
-// ---------- 响应式（设计说明 11）----------
-// 横版（宽高比 ≥ WIDE_MIN_ASPECT）：完整构图，左下对齐 + cover 铺满。左下对齐是因为行人在左下角，
-// 居中裁切会在偏方的窗口里把他裁掉；被裁掉的只会是右侧山体和天空。文字框按同一个缩放换算成像素。
-// 竖版（竖屏、4:3 平板等）：只取 x 0–NARROW.w，底对齐，保留行人 + 拱的左半 + 左岸鸟群；
-// 上方多出来的只是纸，底纸矩形跟着 viewBox 走，标题放在那里。
-function fit(hero, art, base) {
-  const cw = art.clientWidth || window.innerWidth;
-  const ch = art.clientHeight || window.innerHeight;
-  const wide = cw / ch >= WIDE_MIN_ASPECT && cw > 720;
+function soften(offset, limit) {
+  if (!(limit > 0)) return 0;
+  return limit * Math.tanh(offset / limit);
+}
+
+function center(hero) {
+  const followEl = h('div', { class: 'hero__follow' });
+  const learner = h('button', {
+    type: 'button', class: 'hero__learner', 'aria-pressed': 'true',
+    'aria-label': '学习者。单击停在原地，双击进入工作台',
+  },
+  learnerMark());
+  followEl.append(learner);
+  const enter = h('a', { class: 'hero__enter', href: '#/app', 'aria-label': '进入工作台' },
+    h('span', { class: 'hero__enter-zh' }, COPY.enter),
+    svg('svg', { class: 'hero__enter-arrow', viewBox: '0 0 16 10', 'aria-hidden': 'true' },
+      svg('path', { d: 'M0 5 H12 M8 1 L14 5 L8 9', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.2 })));
+  const mid = h('div', { class: 'hero__mid' }, followEl, enter);
+
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const narrow = window.matchMedia(`(max-width: ${NARROW_MAX}px)`);
+  let on = true;
+  let tx = 0;
+  let ty = 0;
+  let sx = 0;
+  let sy = 0;
   let x = 0;
   let y = 0;
-  let w = VIEW.w;
-  let hh = VIEW.h;
-  if (wide) {
-    const s = Math.max(cw / VIEW.w, ch / VIEW.h);
-    hero.style.setProperty('--ts', s.toFixed(4));
-    hero.style.setProperty('--tx', `${(TEXT.x * s).toFixed(1)}px`);
-    hero.style.setProperty('--tb', `${((VIEW.h - TEXT.bottom) * s).toFixed(1)}px`);
-  } else {
-    w = NARROW.w;
-    hh = Math.max(NARROW.minH, w * (ch / cw));
-    y = VIEW.h - hh;
-    for (const k of ['--ts', '--tx', '--tb']) hero.style.removeProperty(k);
-  }
-  hero.dataset.fit = wide ? 'wide' : 'narrow';
-  art.setAttribute('viewBox', `${x} ${y} ${w} ${hh}`);
-  art.setAttribute('preserveAspectRatio', wide ? 'xMinYMax slice' : 'xMinYMax meet');
-  for (const [k, v] of Object.entries({ x, y, width: w, height: hh })) base.setAttribute(k, v);
+  let raf = 0;
+  let last = 0;
+  let limits = { x: 0, up: 0, down: 0 };
+
+  const canFollow = () => on && !motion.matches && fine.matches && !narrow.matches;
+
+  // 以未位移时的位置量边界：只在尺寸变化时量，不在指针事件里量，免得边量边动
+  const measure = () => {
+    const prev = followEl.style.transform;
+    followEl.style.transform = 'none';
+    const base = followEl.getBoundingClientRect();
+    const box = mid.getBoundingClientRect();
+    const btn = enter.getBoundingClientRect();
+    followEl.style.transform = prev;
+    limits = {
+      x: Math.max(0, Math.min(base.left - box.left, box.right - base.right) - 8),
+      up: Math.max(0, base.top - box.top - 8),
+      down: Math.max(0, btn.top - base.bottom - 12),
+    };
+  };
+
+  const paint = () => { followEl.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`; };
+  const frame = (now) => {
+    raf = 0;
+    const dt = last ? Math.min(48, now - last) : 16.7;
+    last = now;
+    const alpha = 1 - ((1 - FOLLOW) ** (dt / 16.7));
+    const dsx = tx - sx;
+    const dsy = ty - sy;
+    const dx = sx - x;
+    const dy = sy - y;
+    if (Math.hypot(dsx, dsy) < 0.1 && Math.hypot(dx, dy) < 0.1) {
+      sx = tx;
+      sy = ty;
+      x = sx;
+      y = sy;
+      paint();
+      last = 0;
+      return;
+    }
+    sx += dsx * alpha;
+    sy += dsy * alpha;
+    x += (sx - x) * alpha;
+    y += (sy - y) * alpha;
+    paint();
+    raf = requestAnimationFrame(frame);
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  const home = () => { tx = 0; ty = 0; kick(); };
+
+  const aim = (px, py) => {
+    const box = mid.getBoundingClientRect();
+    tx = soften((px - (box.left + box.width / 2)) * GAIN, limits.x);
+    ty = soften((py - (box.top + box.height / 2)) * GAIN, limits.y);
+  };
+
+  mid.addEventListener('pointermove', (e) => {
+    if (!canFollow() || enter.contains(e.target)) return;
+    aim(e.clientX, e.clientY);
+    kick();
+  });
+  mid.addEventListener('pointerleave', () => { if (canFollow()) home(); });
+  learner.addEventListener('click', () => {
+    on = !on;
+    learner.setAttribute('aria-pressed', on ? 'true' : 'false');
+    home();
+  });
+  learner.addEventListener('dblclick', () => { location.hash = '#/app'; });
+
+  const settle = () => {
+    hero.dataset.fit = narrow.matches ? 'narrow' : 'wide';
+    if (!canFollow()) home();
+    measure();
+  };
+  const offs = [motion, fine, narrow].map((mq) => {
+    mq.addEventListener('change', settle);
+    return () => mq.removeEventListener('change', settle);
+  });
+  return {
+    mid,
+    settle,
+    destroy() {
+      if (raf) cancelAnimationFrame(raf);
+      offs.forEach((off) => off());
+    },
+  };
 }
 
 export default {
   id: 'home-hero',
-  mount(el) {
-    const base = svg('rect', { class: 'hero__base', filter: `url(#${ID.base})` });
-    const art = svg('svg', {
-      class: 'hero__art', viewBox: `0 0 ${VIEW.w} ${VIEW.h}`, preserveAspectRatio: 'xMidYMid slice',
-      role: 'img', 'aria-labelledby': 'hero-t hero-d', focusable: 'false',
-    },
-    svg('title', { id: 'hero-t' }, '随身孔子学院主视觉'),
-    svg('desc', { id: 'hero-d' }, COPY.alt),
-    svg('defs', null, fiberFilter(), baseFilter(), ...birdDefs()),
-    base,
-    // 叠放顺序：底纸 → 远景山 → 右侧山体 → 中景地层带（左坡 + 拱）→ 前景坡 → 鸟群 → 点缀 → 行人
-    // 右山体放在拱之前：拱的外层压住山体带子的起端，山体读成从拱顶后面长出来的同一套地层。
-    paperBlocks(LAYERS.far), paperBlocks(LAYERS.right), paperBlocks(LAYERS.strata), paperBlocks(LAYERS.fore),
-    flock(), sky(), wanderer());
-
-    // ---- 文字层（HTML，可读、可聚焦）。放进拱下右下空白 ----
-    const start = h('a', { class: 'hero__start', href: '#/app', 'aria-label': '开始，进入工作台 · Start, open the workbench' },
-      h('span', { class: 'hero__start-zh' }, COPY.start.zh),
-      h('span', { class: 'hero__start-en', lang: 'en' }, COPY.start.en));
-    const text = h('div', { class: 'hero__text' },
-      h('h1', { id: 'home-title', class: 'hero__title' }, ...COPY.title.flatMap((line, i) => (i ? [h('br'), line] : [line]))),
-      h('p', { class: 'hero__sub', lang: 'en' }, COPY.subtitle),
-      start);
-
-    const hero = h('section', { class: 'hero', 'aria-labelledby': 'home-title' }, art, text);
+  mount(el, ctx) {
+    const hero = h('section', { class: 'hero', 'aria-label': '首页主视觉' });
+    const left = leftCard();
+    const right = rightCard(levelText(ctx));
+    const { mid, settle, destroy } = center(hero);
+    const stage = h('div', { class: 'hero__stage' }, left.root, mid, right.root);
+    const line = COPY.footer.left;
+    const mark = line.endsWith('.') ? line.slice(-1) : '';
+    const body = mark ? line.slice(0, -1) : line;
+    const foot = h('footer', { class: 'hero__foot' },
+      h('p', { class: 'hero__motto' }, body, mark ? h('span', { class: 'hero__motto-mark' }, mark) : null),
+      h('p', { class: 'hero__sign' }, COPY.footer.right));
+    hero.append(defsSvg(), h('p', { class: 'sr-only' }, COPY.alt), stage, foot);
     el.append(hero);
 
-    const refit = () => fit(hero, art, base);
-    refit();
-    window.addEventListener('resize', refit);
+    let pending = 0;
+    const layout = () => {
+      pending = 0;
+      left.resize(left.root.clientWidth, left.root.clientHeight);
+      right.resize(right.root.clientWidth, right.root.clientHeight);
+      settle();
+    };
+    const schedule = () => { if (!pending) pending = requestAnimationFrame(layout); };
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+    if (ro) { ro.observe(left.root); ro.observe(right.root); ro.observe(mid); } else window.addEventListener('resize', schedule);
+    schedule();
+
     return () => {
-      window.removeEventListener('resize', refit);
+      if (pending) cancelAnimationFrame(pending);
+      ro ? ro.disconnect() : window.removeEventListener('resize', schedule);
+      right.destroy();
+      destroy();
       el.replaceChildren();
     };
   },

@@ -7,7 +7,6 @@ import chat from './chat/index.js';
 import compare from './compare/index.js';
 import demo from './demo/index.js';
 import homeHero from './home-hero/index.js';
-import hskSelect from './hsk-select/index.js';
 import ladderBar from './ladder-bar/index.js';
 import logo from './logo/index.js';
 import nav from './nav/index.js';
@@ -15,6 +14,6 @@ import teamGrid from './team-grid/index.js';
 import themeToggle from './theme-toggle/index.js';
 import topbar from './topbar/index.js';
 
-const all = [actions, apiBadge, bridge, chat, compare, demo, homeHero, hskSelect, ladderBar, logo, nav, teamGrid, themeToggle, topbar];
+const all = [actions, apiBadge, bridge, chat, compare, demo, homeHero, ladderBar, logo, nav, teamGrid, themeToggle, topbar];
 
 export const featureRegistry = Object.fromEntries(all.map((f) => [f.id, f]));

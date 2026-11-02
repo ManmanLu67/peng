@@ -10,7 +10,7 @@ export default {
     // Mock 故障注入：chat.options.fail = () => true（只在测试里用，不接界面）
   },
   // 启动时一次性 fetch 的 data/*.json，切页不再有请求。新增数据文件时在这里登记。
-  data: ['rungs', 'nodes', 'annotation-types', 'demo', 'hsk', 'glosses', 'grammar', 'team'],
+  data: ['rungs', 'nodes', 'annotation-types', 'demo', 'hsk', 'glosses', 'grammar', 'team', 'home-poem'],
   defaults: { hsk: 3 },
   flags: {
     demoMode: true,

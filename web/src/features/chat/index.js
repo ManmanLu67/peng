@@ -18,6 +18,15 @@ export default {
     const messages = h('div', { class: 'chat__messages', role: 'log', 'aria-live': 'off' });
     const modes = h('div', { class: 'chat__modes', role: 'group', 'aria-label': '模式 · Mode' });
     const modeButtons = new Map();
+    const levels = ladder.list.filter((r) => r.hsk != null).sort((a, b) => a.hsk - b.hsk);
+    const hskSelect = h('select', {
+      class: 'chat__hsk',
+      'aria-label': '起点档位，HSK 1 到 6 · Starting level, HSK 1 to 6',
+      onchange: () => {
+        const n = Number(hskSelect.value);
+        if (n !== store.get().hskStart) commands.setHsk(n);
+      },
+    }, ...levels.map((r) => h('option', { value: String(r.n) }, `HSK ${r.hsk}`)));
     for (const [id, zh, en] of [['translate', '降维翻译', 'Simplify'], ['chat', '聊天', 'Chat']]) {
       const btn = h('button', {
         type: 'button', class: 'chat__mode', 'data-mode': id, 'aria-label': `${zh} · ${en}`,
@@ -26,6 +35,7 @@ export default {
       modeButtons.set(id, btn);
       modes.append(btn);
     }
+    modes.append(hskSelect);
     const hintZh = h('span', { class: 'bi__zh' }, '');
     const hintEn = h('span', { class: 'bi__en', lang: 'en' }, '');
     const status = h('p', { class: 'chat__status', role: 'status', 'aria-live': 'polite' });
@@ -120,6 +130,8 @@ export default {
       status.classList.toggle('is-error', s.status === 'error');
       const translating = s.inputMode !== 'chat';
       const locked = s.status === 'running' || s.demo;
+      hskSelect.value = String(s.hskStart ?? '');
+      hskSelect.disabled = locked;
       for (const [id, btn] of modeButtons) {
         const on = id === (translating ? 'translate' : 'chat');
         btn.setAttribute('aria-pressed', String(on));
@@ -148,7 +160,7 @@ export default {
           hintZh, h('span', { class: 'bi__sep', 'aria-hidden': 'true' }, ' · '), hintEn)))));
 
     render(store.get());
-    const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo, mode: s.inputMode }), () => render(store.get()));
+    const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo, mode: s.inputMode, h: s.hskStart }), () => render(store.get()));
     return () => { off(); offFail(); el.replaceChildren(); };
   },
 };

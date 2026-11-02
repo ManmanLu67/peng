@@ -1,4 +1,4 @@
-/* 页面网格与顶栏。功能自己的样式用各自前缀（.topbar / .hsk / .nav …），不写全局选择器。 */
+/* 页面网格与顶栏。功能自己的样式用各自前缀（.topbar / .nav …），不写全局选择器。 */
 
 /* ---------- 顶栏 ---------- */
 .topbar {
@@ -30,7 +30,34 @@
 }
 .logo__word { font-family: var(--f-disp); font-size: 26px; letter-spacing: .08em; font-weight: 300; }
 
-.nav { display: flex; gap: var(--s4); }
+.nav { display: flex; gap: var(--s4); align-items: center; }
+.nav--brand { gap: clamp(16px, 2.2vw, 40px); }
+.nav--brand .nav__link,
+.nav--brand .nav__label {
+  display: inline-block;
+  padding: var(--s1) 0;
+  border-bottom: 1px solid transparent;
+  line-height: 1;
+  font-family: var(--f-disp);
+  font-size: 12px;
+  letter-spacing: .28em;
+  color: color-mix(in srgb, var(--indigo) 80%, transparent);
+  text-decoration: none;
+}
+#root[data-page="/"] .logo__word { color: var(--indigo); }
+:root[data-theme="dark"] #root[data-page="/"] .logo__word { color: #C9D4E8; }
+:root[data-theme="dark"] .nav--brand .nav__link,
+:root[data-theme="dark"] .nav--brand .nav__label { color: #A8B6CC; }
+.nav--brand .nav__link:hover,
+.nav--brand .nav__link:focus-visible {
+  color: var(--indigo);
+  border-bottom-color: var(--indigo);
+}
+:root[data-theme="dark"] .nav--brand .nav__link:hover,
+:root[data-theme="dark"] .nav--brand .nav__link:focus-visible {
+  color: #E4EAF4;
+  border-bottom-color: #E4EAF4;
+}
 .nav__link {
   text-decoration: none;
   padding: var(--s1) 0;
@@ -38,18 +65,6 @@
 }
 .nav__link:hover { border-bottom-color: var(--ink); }
 .nav__link[aria-current="page"] { border-bottom-color: var(--cinnabar); }
-
-/* HSK 选档：字距拉开的小字，当前档带朱砂短下划线 */
-.hsk { display: flex; gap: var(--s3); flex: none; }
-.hsk__btn {
-  white-space: nowrap;
-  background: none; border: 0; padding: var(--s1) 0; cursor: pointer;
-  font-family: var(--f-small); font-size: var(--fs-small); letter-spacing: .16em;
-  color: var(--muted);
-  border-bottom: 2px solid transparent;
-}
-.hsk__btn:hover { color: var(--ink); }
-.hsk__btn.is-on { color: var(--ink); border-bottom-color: var(--cinnabar); }
 
 .icon-btn {
   display: inline-grid; place-items: center;
@@ -101,17 +116,13 @@
 #root[data-page="/app"] > .feature--actions     { grid-area: actions; justify-self: end; border-top: 1px solid var(--line); width: 100%; }
 
 /* ---------- 窄屏 ---------- */
-/* 顶栏放不下时的收缩顺序：英文副标 → 倒计时 → API 标记 → Logo 文字。HSK 选档永远完整显示。 */
+/* 顶栏放不下时的收缩顺序：英文副标 → 倒计时 → API 标记 → Logo 文字。 */
 @media (max-width: 1180px) { .topbar__slot--right .api-badge { display: none; } }
 @media (max-width: 900px)  { .logo__word { display: none; } }
 
 @media (max-width: 720px) {
-  /* 窄屏只留数字，按钮的 aria-label 仍是完整的 "HSK n"；顶栏四块要在窄屏内放下，所以收紧间距 */
   .topbar { padding: 0 var(--s3); gap: var(--s2); grid-template-columns: auto 1fr auto; }
   .topbar__slot { gap: var(--s2); }
-  .hsk { gap: var(--s1); }
-  .hsk__prefix { display: none; }
-  .hsk__btn { min-width: 24px; letter-spacing: 0; text-align: center; padding: var(--s2) 0; }
   .api-badge { letter-spacing: .06em; }
   .logo__stamp { width: 32px; height: 32px; font-size: 20px; }
   .nav { gap: var(--s3); }
@@ -133,8 +144,6 @@
 
 @media (max-width: 400px) {
   .topbar { padding: 0 var(--s2); }
-  .hsk { gap: 0; }
-  .hsk__btn { min-width: 20px; }
   .logo__stamp { width: 28px; height: 28px; font-size: 18px; }
   .icon-btn { width: 28px; height: 28px; }
 }

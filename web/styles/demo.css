@@ -1,5 +1,5 @@
 /* 演示控件放在顶栏 left 槽（Logo 右侧），随顶栏走，不遮挡页面内容。
-   顶栏左右槽按内容撑开，所以横幅再宽也不会压到中间的 HSK 选档；
+   顶栏左右槽按内容撑开，所以横幅再宽也不会压到中间的导航；
    空间不够时按优先级收缩：先去英文，再去倒计时，最后只留“退出”。 */
 .demo { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
 .demo__start { padding: var(--s1) var(--s3); background: transparent; white-space: nowrap; }

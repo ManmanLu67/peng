@@ -1,4 +1,4 @@
-// 鹊桥节点条：宣纸底上一条下垂赭石弧线、3 个固定月相（改写、没看懂、降档）。
+// 鹊桥节点条：宣纸底上一条下垂赭石弧线、4 个固定月相（改写、没看懂、降档、结束）。
 // 鸟是共用的喜鹊，每颗月相上方一只；末只镜像仰头。没有月间鸟群。
 // 序号和标签读 data/nodes.json。状态只改颜色，不改月相形状。
 // P1 预留：节点详情弹窗（点击节点 → 输入 / 输出 / 耗时）在 bindNode 里接入。
@@ -8,8 +8,8 @@ import { quadCurveAt, moonPhasePath } from '../../core/geometry.js';
 const P0 = [36, 64];
 const C = [500, 188];
 const P1 = [964, 64];
-const MOON_T = [0.14, 0.5, 0.86];
-const MOON_F = [0.2, 0.6, 1];
+const MOON_T = [0.1, 0.3667, 0.6333, 0.9];
+const MOON_F = [0.2, 0.46, 0.72, 1];
 const MOON_R = 18;
 const LABEL_Y = 176;
 const VB = `0 0 1000 220`;
@@ -78,7 +78,7 @@ export default {
       viewBox: VB,
       preserveAspectRatio: 'xMidYMid meet',
       role: 'img',
-      'aria-label': '鹊桥：改写、没看懂、降档三个步骤 · Magpie bridge: three workflow steps',
+      'aria-label': '鹊桥：改写、没看懂、降档、结束四个步骤 · Magpie bridge: four workflow steps',
     }, arc, g);
 
     const sr = h('ol', { class: 'sr-only', 'aria-label': '处理步骤 · Steps' },

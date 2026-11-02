@@ -1,6 +1,23 @@
 /* 左栏对话。分区只靠 1px 细线；解读卡、示例、按钮直角细框；输入框只有下划线。 */
 .chat { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: var(--s4) var(--s4) var(--s3); gap: var(--s4); }
-.chat__modes { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); flex: none; }
+.chat__modes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s4); flex: none; }
+.chat__hsk {
+  margin-left: auto;
+  margin-right: calc(var(--s4) * -1);
+  flex: none;
+  max-width: 100%;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  border-bottom: 2px solid var(--cinnabar);
+  border-radius: 0;
+  padding: var(--s1) var(--s4) var(--s1) 0;
+  font-family: var(--f-small);
+  font-size: var(--fs-small);
+  letter-spacing: .06em;
+  cursor: pointer;
+}
+.chat__hsk:disabled { opacity: .45; cursor: not-allowed; }
 .chat__mode {
   background: none; border: 0; padding: var(--s1) 0; cursor: pointer;
   font-family: var(--f-small); font-size: var(--fs-small); letter-spacing: .06em;
@@ -56,5 +73,6 @@
 
 @media (max-width: 720px) {
   .chat { padding: var(--s3) var(--edge); }
+  .chat__hsk { margin-right: calc(var(--edge) * -1); }
   .chat__messages { max-height: 40vh; }
 }

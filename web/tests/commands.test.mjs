@@ -56,7 +56,7 @@ test('「看懂了」已删除：commands 不再提供，状态里也没有对�
   await settle(clock);
   assert.equal(commands.understood, undefined);
   assert.equal('understood' in store.get(), false);
-  assert.equal('bridge' in store.get().nodes, false);
+  assert.equal(store.get().nodes.bridge, 'idle');
 });
 
 test('节点逐个点亮，不是一次全亮', async () => {

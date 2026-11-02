@@ -20,11 +20,11 @@ function resolved(rung = 4) {
   return state;
 }
 
-test('初始：idle，3 个节点全空，起点 HSK 3 = 第 4 级', () => {
+test('初始：idle，4 个节点全空，起点 HSK 3 = 第 4 级', () => {
   const s = init();
   assert.equal(s.status, 'idle');
   assert.equal(s.hskStart, 4);
-  assert.deepEqual(Object.values(s.nodes), ['idle', 'idle', 'idle']);
+  assert.deepEqual(Object.values(s.nodes), ['idle', 'idle', 'idle', 'idle']);
 });
 
 test('请求在途时 traceSimulated=true（节点是模拟点亮的），带真实 trace 的响应回来后改为 false', () => {

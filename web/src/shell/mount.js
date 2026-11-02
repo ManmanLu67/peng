@@ -11,6 +11,18 @@ function normalize(entry) {
   return typeof entry === 'string' ? { id: entry } : entry;
 }
 
+/** 页面清单里出现的功能 id，含槽位。供按页加载，不在这里执行功能。 */
+export function collectIds(entries, out = []) {
+  for (const entry of entries ?? []) {
+    const item = normalize(entry);
+    out.push(item.id);
+    if (item.slots) {
+      for (const list of Object.values(item.slots)) collectIds(list, out);
+    }
+  }
+  return out;
+}
+
 function resolve(registry, ports, entry) {
   const { id } = normalize(entry);
   const feature = registry[id];

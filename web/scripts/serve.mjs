@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { cacheControl, encodingFor } from './static.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PORT = Number(process.argv[2] ?? process.env.PORT ?? 5173);
@@ -45,20 +46,36 @@ const server = createServer(async (req, res) => {
     return;
   }
   const file = resolvePath(req.url ?? '/');
-  if (!file) {
-    res.writeHead(403).end('Forbidden');
+  if (!file || file.endsWith('.gz') || file.endsWith('.br')) {
+    res.writeHead(file ? 404 : 403, { 'Content-Type': 'text/plain; charset=utf-8' }).end(file ? 'Not found' : 'Forbidden');
     return;
   }
   try {
     const info = await stat(file);
     if (!info.isFile()) throw new Error('not a file');
-    const body = await readFile(file);
-    res.writeHead(200, {
+    const coding = encodingFor(req.headers['accept-encoding']);
+    const suffix = coding === 'br' ? '.br' : coding === 'gzip' ? '.gz' : '';
+    let bodyFile = file;
+    let encoding = null;
+    if (suffix) {
+      try {
+        const alt = await stat(file + suffix);
+        if (alt.isFile()) {
+          bodyFile = file + suffix;
+          encoding = coding;
+        }
+      } catch { /* 开发时的源码没有预压缩文件 */ }
+    }
+    const body = await readFile(bodyFile);
+    const headers = {
       'Content-Type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
       'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
+      'Cache-Control': cacheControl(file),
+      'Vary': 'Accept-Encoding',
       'X-Content-Type-Options': 'nosniff',
-    });
+    };
+    if (encoding) headers['Content-Encoding'] = encoding;
+    res.writeHead(200, headers);
     res.end(req.method === 'HEAD' ? undefined : body);
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found');

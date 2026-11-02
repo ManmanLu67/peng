@@ -26,7 +26,7 @@
 
 1. 页面只组合功能。功能之间不互相引用。改状态只经 commands。外部能力只经 ports。
 2. 模拟数据放在 `web/data/`，不写进界面组件。
-3. 不引入运行时依赖或构建工具。
+3. 页面运行时不引入依赖。开发时 `npm start` 直接提供 `web/src`，不打包。`npm run build` 只写出 `web/dist`：压缩、按页面拆开、文件名带哈希。不把 `config.local.js` 打进包。
 4. 接口返回的文字用 `textContent`，不用 `innerHTML` 拼接。
 5. 不提交密钥。`web/config/config.local.js` 保持在 `.gitignore`。
 6. 首页纸张滤镜在实测卡顿之前不改成预渲染图。

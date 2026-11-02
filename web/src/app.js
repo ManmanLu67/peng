@@ -3,7 +3,7 @@
 
 import config from '../config/app.config.js';
 import { adapterFactories, applyLocalChat } from './adapters/index.js';
-import { featureRegistry } from './features/registry.js';
+import { loadRegistry } from './features/registry.js';
 import { pages } from './pages/index.js';
 import { mountRouter } from './shell/router.js';
 import { createStore, createBus, createLadder, createFlow, createCommands } from './core/index.js';
@@ -104,7 +104,7 @@ export async function boot() {
 
   installGuards(bus);
 
-  mountRouter(pages, featureRegistry, ctx, {
+  mountRouter(pages, loadRegistry, ctx, {
     root: document.getElementById('root'),
     live: document.getElementById('live'),
   });

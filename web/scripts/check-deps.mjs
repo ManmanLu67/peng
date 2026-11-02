@@ -1,5 +1,5 @@
 // 依赖检查：按技术文档 14.2 的表，扫描 src/**/*.js 的静态 import，违规则非零退出。
-// 局限（14.11）：动态 import() 与拼接路径拦不住，只能挡常见违规。
+// 局限（14.11）：拼接出来的路径拦不住。静态 import 和 import() 都会检查。
 // 用法：node scripts/check-deps.mjs
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
@@ -56,7 +56,7 @@ function stripComments(src) {
     .replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 }
 
-const IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s[^'"`;]*?from\s*['"]([^'"]+)['"]|(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g;
+const IMPORT_RE = /(?:^|\n)\s*(?:import|export)\s[^'"`;]*?from\s*['"]([^'"]+)['"]|(?:^|\n)\s*import\s*['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
 
 async function main() {
   const files = await walk(SRC);
@@ -76,7 +76,7 @@ async function main() {
 
     // 1) import 方向
     for (const m of code.matchAll(IMPORT_RE)) {
-      const spec = m[1] ?? m[2];
+      const spec = m[1] ?? m[2] ?? m[3];
       if (!spec.startsWith('.')) {
         problems.push(`${rel}:${lineOf(m.index)} 不允许引入外部依赖 "${spec}"（零依赖）`);
         continue;

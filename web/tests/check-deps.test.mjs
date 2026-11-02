@@ -78,6 +78,15 @@ test('功能里直接 fetch / localStorage → 报错', () => {
   assert.match(r.out, /不得使用 localStorage/);
 });
 
+test('功能动态 import 另一个功能 → 报错', () => {
+  const r = run({
+    'features/x/index.js': "export default import('../y/index.js');\n",
+    'features/y/index.js': 'export default 1;\n',
+  });
+  assert.equal(r.code, 1);
+  assert.match(r.out, /功能 "x" 不得 import 功能 "y"/);
+});
+
 test('引入外部依赖 → 报错（零依赖）', () => {
   const r = run({ 'core/a.js': "import x from 'lodash';\nexport default x;\n" });
   assert.equal(r.code, 1);

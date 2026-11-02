@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { describeMember, stampChar, safeHttps } from '../src/core/team.js';
+import { describeMember, stampChar, safeHttps, safeMailto } from '../src/core/team.js';
 
 test('stampChar：取姓名首字，没有姓名用“朋”，按码点不拆字', () => {
   assert.equal(stampChar('张三'), '张');
@@ -41,6 +41,13 @@ test('safeHttps：只放行 https://', () => {
   }
 });
 
+test('safeMailto：只放行 mailto 邮箱', () => {
+  assert.equal(safeMailto('mailto:a17779650817@163.com'), 'mailto:a17779650817@163.com');
+  assert.equal(safeMailto('https://github.com/x'), null);
+  assert.equal(safeMailto('mailto:javascript:alert(1)'), null);
+  assert.equal(safeMailto(''), null);
+});
+
 test('team.json：4 位成员，序号 01–04，职责中英齐全，姓名已填且印章取首字', () => {
   const team = JSON.parse(readFileSync(new URL('../data/team.json', import.meta.url), 'utf8'));
   assert.equal(team.members.length, 4);
@@ -49,4 +56,12 @@ test('team.json：4 位成员，序号 01–04，职责中英齐全，姓名已�
   assert.ok(ds.every((d) => d.roleZh && d.roleEn));
   assert.ok(ds.every((d) => typeof d.name === 'string' && d.name.length > 0));
   assert.ok(ds.every((d) => d.stamp === [...d.name][0]));
+  assert.equal(ds[1].bio, '让未来更平等地到来');
+  assert.equal(ds[1].link, 'mailto:a17779650817@163.com');
+  assert.equal(ds[3].bio, 'HOW HARD COULD IT BE');
+  assert.equal(ds[3].link, 'mailto:15301160075@163.com');
+  assert.equal(ds[0].bio, null);
+  assert.equal(ds[0].link, null);
+  assert.equal(ds[2].bio, null);
+  assert.equal(ds[2].link, null);
 });

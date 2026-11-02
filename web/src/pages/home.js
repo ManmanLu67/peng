@@ -2,7 +2,7 @@
 export default {
   title: '朋 · 首页',
   features: [
-    { id: 'topbar', slots: { left: ['logo'], center: [], right: [{ id: 'nav', options: { brand: true } }, 'theme-toggle'] } },
+    { id: 'topbar', slots: { left: ['logo'], center: [{ id: 'nav', options: { brand: true } }], right: ['api-badge', 'theme-toggle'] } },
     'home-hero',
   ],
 };

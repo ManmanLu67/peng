@@ -19,14 +19,48 @@ export default {
     const modes = h('div', { class: 'chat__modes', role: 'group', 'aria-label': '模式 · Mode' });
     const modeButtons = new Map();
     const levels = ladder.list.filter((r) => r.hsk != null).sort((a, b) => a.hsk - b.hsk);
-    const hskSelect = h('select', {
+    let hskOpen = false;
+    const hskLabel = h('span', { class: 'chat__hsk-label' }, 'HSK 3');
+    const hskBtn = h('button', {
+      type: 'button',
       class: 'chat__hsk',
+      'aria-haspopup': 'listbox',
+      'aria-expanded': 'false',
       'aria-label': '起点档位，HSK 1 到 6 · Starting level, HSK 1 to 6',
-      onchange: () => {
-        const n = Number(hskSelect.value);
-        if (n !== store.get().hskStart) commands.setHsk(n);
+      onclick: (e) => {
+        e.stopPropagation();
+        if (!hskBtn.disabled) setHskOpen(!hskOpen);
       },
-    }, ...levels.map((r) => h('option', { value: String(r.n) }, `HSK ${r.hsk}`)));
+    }, hskLabel);
+    const hskList = h('div', {
+      class: 'chat__hsk-list', role: 'listbox', hidden: true,
+      'aria-label': 'HSK 1 到 6',
+    });
+    const hskOptions = new Map();
+    for (const r of levels) {
+      const opt = h('button', {
+        type: 'button', class: 'chat__hsk-opt', role: 'option',
+        onclick: () => {
+          if (r.n !== store.get().hskStart) commands.setHsk(r.n);
+          setHskOpen(false);
+          hskBtn.focus();
+        },
+      }, `HSK ${r.hsk}`);
+      hskOptions.set(r.n, opt);
+      hskList.append(opt);
+    }
+    const hskWrap = h('div', { class: 'chat__hsk-wrap' }, hskBtn, hskList);
+    function setHskOpen(next) {
+      hskOpen = next;
+      hskList.hidden = !next;
+      hskBtn.setAttribute('aria-expanded', String(next));
+    }
+    function onHskDoc(e) { if (!hskWrap.contains(e.target)) setHskOpen(false); }
+    function onHskKey(e) {
+      if (e.key === 'Escape' && hskOpen) { setHskOpen(false); hskBtn.focus(); }
+    }
+    document.addEventListener('click', onHskDoc);
+    document.addEventListener('keydown', onHskKey);
     for (const [id, zh, en] of [['translate', '降维翻译', 'Simplify'], ['chat', '聊天', 'Chat']]) {
       const btn = h('button', {
         type: 'button', class: 'chat__mode', 'data-mode': id, 'aria-label': `${zh} · ${en}`,
@@ -35,7 +69,7 @@ export default {
       modeButtons.set(id, btn);
       modes.append(btn);
     }
-    modes.append(hskSelect);
+    modes.append(hskWrap);
     const hintZh = h('span', { class: 'bi__zh' }, '');
     const hintEn = h('span', { class: 'bi__en', lang: 'en' }, '');
     const status = h('p', { class: 'chat__status', role: 'status', 'aria-live': 'polite' });
@@ -130,8 +164,16 @@ export default {
       status.classList.toggle('is-error', s.status === 'error');
       const translating = s.inputMode !== 'chat';
       const locked = s.status === 'running' || s.demo;
-      hskSelect.value = String(s.hskStart ?? '');
-      hskSelect.disabled = locked;
+      const current = levels.find((r) => r.n === s.hskStart);
+      hskLabel.textContent = current ? `HSK ${current.hsk}` : 'HSK';
+      hskBtn.disabled = locked;
+      if (locked && hskOpen) setHskOpen(false);
+      for (const [n, opt] of hskOptions) {
+        const on = n === s.hskStart;
+        opt.setAttribute('aria-selected', String(on));
+        opt.classList.toggle('is-on', on);
+        opt.disabled = locked;
+      }
       for (const [id, btn] of modeButtons) {
         const on = id === (translating ? 'translate' : 'chat');
         btn.setAttribute('aria-pressed', String(on));
@@ -161,6 +203,12 @@ export default {
 
     render(store.get());
     const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo, mode: s.inputMode, h: s.hskStart }), () => render(store.get()));
-    return () => { off(); offFail(); el.replaceChildren(); };
+    return () => {
+      document.removeEventListener('click', onHskDoc);
+      document.removeEventListener('keydown', onHskKey);
+      off();
+      offFail();
+      el.replaceChildren();
+    };
   },
 };

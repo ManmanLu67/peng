@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   CARDS, ARROWS, POEM, COPY, FOLLOW, GAIN, NARROW_MAX,
-  HOVER_TURN, HOVER_SCALE, FLOCK_AIM, clampBird,
+  HOVER_TURN, HOVER_SCALE, FLOCK_AIM, clampBird, mirrorThroughCenter,
 } from '../src/features/home-hero/composition.js';
 
 test('两张近正方形色纸：左卡逆时针 3°，右卡顺时针 3°', () => {
@@ -16,9 +16,9 @@ test('两张近正方形色纸：左卡逆时针 3°，右卡顺时针 3°', () 
   assert.equal(CARDS[1].turn, 3);
 });
 
-test('对角线上七只鸟从英语到 HSK 6，另有一只朝上且不可拖', () => {
-  const flock = ARROWS.filter((a) => a.drag);
-  const still = ARROWS.filter((a) => a.drag === false);
+test('对角线上七只鸟从英语到 HSK 6，静止鸟朝上，右卡的鸟都不可拖', () => {
+  const flock = ARROWS.filter((a) => a.id !== 'mark');
+  const still = ARROWS.filter((a) => a.id === 'mark');
   assert.equal(flock.length, 7);
   assert.deepEqual(flock.map((a) => a.id), ['en', 'hsk1', 'hsk2', 'hsk3', 'hsk4', 'hsk5', 'hsk6']);
   assert.deepEqual(flock.map((a) => a.label), ['英语', 'HSK 1', 'HSK 2', 'HSK 3', 'HSK 4', 'HSK 5', 'HSK 6']);
@@ -38,8 +38,14 @@ test('对角线上七只鸟从英语到 HSK 6，另有一只朝上且不可拖',
   assert.equal(still[0].rot, 0);
   assert.equal(still[0].label, '飞鸟');
   assert.equal(still[0].text, undefined);
-  assert.ok(still[0].fx > 0.85, '静止鸟在右卡右侧');
-  assert.ok(still[0].fy > 0.74 && still[0].fy < 0.9, '静止鸟在右下，并高于落底的一排');
+  assert.ok(ARROWS.every((a) => a.drag === false));
+  assert.ok(still[0].fx > 0.8, '静止鸟占位在右侧');
+  assert.ok(still[0].fy > 0.7, '静止鸟占位在右下，飞完后的位置是 T 的对称点');
+});
+
+test('静止鸟的对称点：左下的 T 映到右上', () => {
+  assert.deepEqual(mirrorThroughCenter(20, 80, 100, 100), { x: 80, y: 20 });
+  assert.deepEqual(mirrorThroughCenter(50, 50, 100, 100), { x: 50, y: 50 });
 });
 
 test('拖动边界：卡内不动，出界被拉回，半宽过大时落到中心', () => {

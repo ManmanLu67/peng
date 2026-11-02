@@ -1,7 +1,7 @@
-/* 首页：手工纸底、左芥黄右南瓜橙两张一样大的直边色纸、中央深藏青学习者。哑光，无投影，不用混合模式。
-   底纸是纯 --paper；纸纹只在卡片上，用 SVG 滤镜 #paper-fiber，由 home-hero 注入。
-   插画补色只声明在 .hero 里，不进全局 token。深浅色主题下首页都保持这套纸色，顶栏仍跟随主题。
-   卡片盒子本身不位移。可拖的鸟松手后转回。最右下角那只尖端朝上，点开的改写横排在右卡上。 */
+/* 首页：手工纸底、左芥黄右南瓜橙两张一样大的直边色纸、中央学习者。哑光，无投影，不用混合模式。
+   底纸跟随主题。纸纹只在卡片上，用 SVG 滤镜 #paper-fiber，由 home-hero 注入。
+   色纸和诗的颜色只声明在 .hero 里，不进全局 token。深色另有一套夜色，浅色不变。
+   右卡的鸟不可拖。静止鸟没点开时在右下，右缘留白。点开的改写横排在右卡上。 */
 
 #root[data-page="/"] > .feature--home-hero { display: flex; flex: 1; min-height: 0; }
 
@@ -9,9 +9,6 @@
   --navy: #1A2744;
   --card-amber: #e8b45a;
   --card-pumpkin: #e07a30;
-  --paper: #F5F0E6;
-  --ink: #1B1B1B;
-  --on-indigo: #F3EDE2;
   --poem: #1A2744;
   --poem-dim: #4A4034;
   --foot: #5C6574;
@@ -26,6 +23,15 @@
   background: var(--paper);
   color: var(--ink);
 }
+:root[data-theme="dark"] .hero {
+  --card-amber: #C4923A;
+  --card-pumpkin: #C46A32;
+  --poem: #F6EDDF;
+  --poem-dim: #D9CBB8;
+  --foot: #D9CBB8;
+}
+:root[data-theme="dark"] .hero__learner-svg circle,
+:root[data-theme="dark"] .hero__learner-svg path { fill: #F6EDDF; }
 .hero__defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* 三段式。卡片高度由舞台决定，上下留出呼吸区和页脚。 */
@@ -51,8 +57,11 @@
   justify-self: center;
   min-height: 0;
   container-type: size;
+  cursor: grab;
+  touch-action: none;
   animation: hero-rise 560ms var(--ease) both;
 }
+.hero__card.is-dragging { cursor: grabbing; }
 .hero__card--right { animation-delay: 80ms; }
 .hero__card-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero__lift { position: absolute; inset: 0; pointer-events: none; }
@@ -96,23 +105,25 @@
   left: 8%;
   right: 8%;
   top: 8%;
-  bottom: 34%;
+  bottom: 22%;
   margin: 0;
-  overflow: auto;
-  scrollbar-width: none;
+  display: grid;
+  align-content: center;
+  overflow: hidden;
   writing-mode: horizontal-tb;
   text-align: left;
   font-family: var(--f-title);
-  font-size: clamp(15px, 3.4cqh, 22px);
-  line-height: 1.65;
+  font-size: clamp(28px, 7.2cqh, 48px);
+  line-height: 1.45;
   color: var(--poem);
   pointer-events: auto;
 }
-.hero__rewrite::-webkit-scrollbar { display: none; }
+.hero__rewrite[hidden] { display: none; }
 .hero__rewrite[lang="en"] {
   font-family: var(--f-disp);
   font-style: italic;
-  font-size: clamp(16px, 3.2cqh, 22px);
+  font-size: clamp(22px, 5.4cqh, 36px);
+  line-height: 1.4;
 }
 .hero__flock.is-open .hero__arrow { cursor: pointer; }
 
@@ -127,7 +138,8 @@
   color: var(--poem);
 }
 
-.hero__arrow { color: #F7F1E4; cursor: grab; touch-action: none; }
+.hero__arrow { color: #F7F1E4; cursor: pointer; touch-action: none; }
+.hero__arrow-pad { fill: #000; fill-opacity: 0; pointer-events: all; }
 .hero__arrow--still { cursor: pointer; }
 .hero__arrow.is-dragging { cursor: grabbing; }
 .hero__arrow[data-tone="navy"] { color: var(--navy); }
@@ -167,8 +179,8 @@
   gap: 0;
   padding: 10px 22px;
   border-radius: 2px;
-  background: #111;
-  color: var(--on-indigo);
+  background: var(--ink);
+  color: var(--paper);
   font-family: var(--f-title);
   font-size: 17px;
   letter-spacing: .32em;
@@ -180,6 +192,7 @@
 .hero__enter:hover,
 .hero__enter:focus-visible {
   background: var(--cinnabar);
+  color: var(--on-indigo);
   transform: translateY(-2px) scale(1.04);
   letter-spacing: .4em;
   gap: 8px;
@@ -210,7 +223,7 @@
   line-height: 1;
   letter-spacing: -0.01em;
   white-space: nowrap;
-  color: #1B1B1B;
+  color: var(--foot);
 }
 .hero__motto-mark { color: var(--cinnabar); font-style: italic; }
 .hero__sign {

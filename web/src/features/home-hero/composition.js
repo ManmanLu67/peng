@@ -34,8 +34,9 @@ const RUNGS = [
 ];
 
 /**
- * 右卡的鸟。前 7 只从左下到右上：英语，然后 HSK 1–6，由小到大，可拖。
- * 最后一只在最右下角、落底鸟群的上方，尖端朝上，只可点。
+ * 右卡的鸟。前 7 只从左下到右上：英语，然后 HSK 1–6，由小到大，不可拖。
+ * 最后一只尖端朝上，只可点。没点开时在右下，右缘留出空白，这里的 fx/fy 只是未测量前的占位。
+ * 点开后飞到 “T” 对卡片中心的对称点。
  * 鸟上不写字，label 只进 aria-label。
  */
 export const ARROWS = [
@@ -49,16 +50,21 @@ export const ARROWS = [
       s: +(0.55 + t * 0.6).toFixed(3),
       rot: FLOCK_AIM,
       tone: i < 4 ? 'paper' : 'navy',
-      drag: true,
+      drag: false,
     };
   }),
-  { id: 'mark', label: '飞鸟', fx: 0.92, fy: 0.8, s: 0.72, rot: 0, tone: 'paper', drag: false },
+  { id: 'mark', label: '飞鸟', fx: 0.9, fy: 0.84, s: 0.72, rot: 0, tone: 'paper', drag: false },
 ];
 
 /**
  * 把鸟心限制在卡片内，使半宽半高也不出界。
  * 半宽大于卡片一半时无法两边都留住，退回卡片中心。
  */
+/** 点 (x, y) 关于矩形中心的对称点。 */
+export function mirrorThroughCenter(x, y, w, h) {
+  return { x: w - x, y: h - y };
+}
+
 export function clampBird(x, y, halfW, halfH, cardW, cardH) {
   const axis = (v, half, card) => {
     if (!(card > 0)) return 0;

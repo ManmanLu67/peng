@@ -20,6 +20,21 @@ export function safeHttps(link) {
   }
 }
 
+const EMAIL = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+/** 只放行 mailto:邮箱。其它写法一律视为没有。 */
+export function safeMailto(link) {
+  const s = text(link);
+  const m = s.match(/^mailto:([^\s?#]+)$/i);
+  if (!m || !EMAIL.test(m[1])) return null;
+  return `mailto:${m[1]}`;
+}
+
+/** https 页面或 mailto 邮箱。二者都不是就没有链接。 */
+export function safeContact(link) {
+  return safeHttps(link) || safeMailto(link);
+}
+
 /** team.json 的一项 → 渲染描述 */
 export function describeMember(m, index) {
   const name = text(m?.name);
@@ -30,6 +45,6 @@ export function describeMember(m, index) {
     roleZh: text(m?.role_zh) || null,
     roleEn: text(m?.role_en) || null,
     bio: text(m?.bio) || null,
-    link: safeHttps(m?.link),
+    link: safeContact(m?.link),
   };
 }

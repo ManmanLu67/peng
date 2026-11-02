@@ -1,13 +1,82 @@
 // 首页主视觉：手工纸底、两张一样大的近正方形色纸、中央深藏青小人、「进入」。
-// 左卡逆时针约 3°，右卡顺时针约 3°。纸纹是很轻的染色不匀。
-// 对角线上 7 只鸟可拖，点开后落到底部并在右卡横排显示该档静态改写。最右下角一只尖端朝上。双击小人和「进入」去工作台。
+// 左卡逆时针约 3°，右卡顺时针约 3°。两张卡可以在舞台里拖动，卡上的内容一起走。
+// 对角线上 7 只鸟不可拖，只可点。静止鸟尖端朝上，没点开时在右下并留出右缘，点开后沿弧线飞到 T 的对称点。
+// 七只鸟不转圈，沿弧线落到角标上方。字等鸟落定后再出现。双击小人和「进入」去工作台。
 import { h, svg } from '../../ui/index.js';
 import {
   CARDS, ARROWS, POEM, COPY, FOLLOW, GAIN, NARROW_MAX,
-  HOVER_TURN, HOVER_SCALE, clampBird,
+  HOVER_TURN, HOVER_SCALE, clampBird, mirrorThroughCenter,
 } from './composition.js';
 
 const ID = { fiber: 'paper-fiber', arrow: 'hero-arrow' };
+let cardLayer = 1;
+
+/** 整张色纸平移，旋转保留。从鸟上按下不拖卡。松手停住，不写出本机。 */
+function bindCardDrag(cardEl, turn) {
+  let dx = 0;
+  let dy = 0;
+  let armed = false;
+  let dragging = false;
+  let px = 0;
+  let py = 0;
+  let ox = 0;
+  let oy = 0;
+  const paint = () => {
+    cardEl.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${turn}deg)`;
+  };
+  const clampIntoStage = () => {
+    const stage = cardEl.closest('.hero__stage');
+    if (!stage) return;
+    const sb = stage.getBoundingClientRect();
+    const cb = cardEl.getBoundingClientRect();
+    let sx = 0;
+    let sy = 0;
+    if (cb.width >= sb.width - 0.5) sx = sb.left - cb.left;
+    else if (cb.left < sb.left) sx = sb.left - cb.left;
+    else if (cb.right > sb.right) sx = sb.right - cb.right;
+    if (cb.height >= sb.height - 0.5) sy = sb.top - cb.top;
+    else if (cb.top < sb.top) sy = sb.top - cb.top;
+    else if (cb.bottom > sb.bottom) sy = sb.bottom - cb.bottom;
+    if (!sx && !sy) return;
+    dx += sx;
+    dy += sy;
+    paint();
+  };
+  cardEl.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest && e.target.closest('.hero__arrow')) return;
+    armed = true;
+    dragging = false;
+    px = e.clientX;
+    py = e.clientY;
+    ox = dx;
+    oy = dy;
+    try { cardEl.setPointerCapture(e.pointerId); } catch { /* 捕获失败时仍靠本元素上的 pointermove */ }
+  });
+  cardEl.addEventListener('pointermove', (e) => {
+    if (!armed) return;
+    const mx = e.clientX - px;
+    const my = e.clientY - py;
+    if (!dragging) {
+      if (Math.hypot(mx, my) < 6) return;
+      dragging = true;
+      cardEl.classList.add('is-dragging');
+      cardEl.style.zIndex = String(++cardLayer);
+    }
+    dx = ox + mx;
+    dy = oy + my;
+    paint();
+    clampIntoStage();
+  });
+  const end = () => {
+    armed = false;
+    if (!dragging) return;
+    dragging = false;
+    cardEl.classList.remove('is-dragging');
+  };
+  cardEl.addEventListener('pointerup', end);
+  cardEl.addEventListener('pointercancel', end);
+}
 const ARROW_PTS = [[0, -22], [18, 16], [0, 6], [-18, 16]];
 const fe = (tag, props, ...kids) => svg(tag, props, ...kids);
 
@@ -74,6 +143,7 @@ function leftCard() {
       h('div', { class: 'poem__note' },
         ...POEM.note.map((line) => h('span', { class: 'poem__phrase' }, line)))),
     h('p', { class: 'hero__tag' }, COPY.tag.left)));
+  bindCardDrag(root, CARDS[0].turn);
   return { root, resize };
 }
 
@@ -105,10 +175,12 @@ function levelText(ctx) {
 
 function rightCard(lookup) {
   const textFor = typeof lookup === 'function' ? lookup : () => null;
-  const DOCK_AIM = 90;
   const CLICK_PX = 6;
+  const DIVE_MS = 780;
+  const ROW_GAP = 10;
   const card = CARDS[1];
   let shown = null;
+  let awaitingReveal = false;
   let size = { w: 1, h: 1 };
   let glideRaf = 0;
   let glideLast = 0;
@@ -116,14 +188,15 @@ function rightCard(lookup) {
 
   const arrows = ARROWS.map((a) => {
     const hit = svg('g', { class: 'hero__arrow-hit' }, svg('use', { href: `#${ID.arrow}` }));
+    const pad = svg('circle', { class: 'hero__arrow-pad', r: 22 });
     const g = svg('g', {
-      class: a.drag ? 'hero__arrow' : 'hero__arrow hero__arrow--still',
+      class: a.id === 'mark' ? 'hero__arrow hero__arrow--still' : 'hero__arrow',
       'data-tone': a.tone,
       tabindex: '0',
       role: 'button',
       'aria-pressed': 'false',
       'aria-label': a.label,
-    }, hit);
+    }, pad, hit);
     g._place = a;
     g._hit = hit;
     g._fx = null;
@@ -138,6 +211,7 @@ function rightCard(lookup) {
     g._drag = false;
     g._pressed = false;
     g._suppress = false;
+    g._phase = null;
     return g;
   });
 
@@ -153,7 +227,7 @@ function rightCard(lookup) {
   const baseK = () => Math.min(size.w, size.h) / 780;
 
   const pose = (g) => {
-    if (g._place.drag === false || shown) return;
+    if (g._place.id === 'mark' || shown) return;
     g._scTo = g._place.s * baseK() * (g._big ? HOVER_SCALE : 1);
     if (!g._drag) g._rotTo = g._place.rot + (g._spin ? HOVER_TURN : 0);
     kickGlide();
@@ -167,6 +241,27 @@ function rightCard(lookup) {
     let again = false;
     for (const g of arrows) {
       if (g._fx == null) continue;
+      if (g._phase === 'dive' || g._phase === 'return') {
+        g._t = Math.min(1, g._t + dt / DIVE_MS);
+        const u = 1 - ((1 - g._t) ** 3);
+        const o = 1 - u;
+        const tx = g._fx * size.w;
+        const ty = g._fy * size.h;
+        g._x = o * o * g._sx + 2 * o * u * g._cx + u * u * tx;
+        g._y = o * o * g._sy + 2 * o * u * g._cy + u * u * ty;
+        g._rot = g._place.rot;
+        g._rotTo = g._place.rot;
+        g._sc = g._place.s * baseK();
+        if (g._t >= 1) {
+          g._phase = null;
+          g._x = tx;
+          g._y = ty;
+          g._scTo = g._sc;
+        } else again = true;
+        paintHit(g);
+        paintPos(g);
+        continue;
+      }
       const tx = g._fx * size.w;
       const ty = g._fy * size.h;
       const dx = tx - g._x;
@@ -189,10 +284,27 @@ function rightCard(lookup) {
       paintHit(g);
       paintPos(g);
     }
+    if (awaitingReveal && shown && arrows.every((g) => g._phase == null)) {
+      awaitingReveal = false;
+      revealRewrite();
+    }
     if (again) glideRaf = requestAnimationFrame(frame);
     else glideLast = 0;
   };
   const kickGlide = () => { if (!glideRaf) glideRaf = requestAnimationFrame(frame); };
+
+  function beginArc(g, phase) {
+    g._phase = phase;
+    g._t = 0;
+    g._sx = g._x;
+    g._sy = g._y;
+    g._rot = g._place.rot;
+    g._rotTo = g._place.rot;
+    const tx = g._fx * size.w;
+    const ty = g._fy * size.h;
+    g._cx = (g._x + tx) / 2;
+    g._cy = Math.min(g._y, ty) - size.h * 0.1;
+  }
 
   const moveBird = (g, x, y) => {
     const ext = birdExtent(g._sc, g._rot);
@@ -219,35 +331,131 @@ function rightCard(lookup) {
   ], false);
 
   const rewrite = h('p', { class: 'hero__rewrite', hidden: true, 'aria-live': 'polite' });
-  const tag = h('p', { class: 'hero__tag' }, COPY.tag.right);
+  const tagWord = COPY.tag.right;
+  const gAt = tagWord.indexOf('g');
+  const tag = h('p', { class: 'hero__tag' },
+    h('span', { class: 'hero__tag-t' }, tagWord[0]),
+    tagWord.slice(1, gAt),
+    h('span', { class: 'hero__tag-g' }, tagWord[gAt]),
+    tagWord.slice(gAt + 1));
   const root = h('div', {
     class: 'hero__card hero__card--right', role: 'group',
     'aria-label': '右卡，箭形鸟群',
     style: `transform: rotate(${card.turn}deg)`,
   }, art, h('div', { class: 'hero__lift' }, rewrite, tag));
+  bindCardDrag(root, card.turn);
+
+  const stillBird = () => arrows.find((g) => g._place.id === 'mark');
+  const isFlock = (g) => g._place.id !== 'mark';
+
+  function tagMetrics() {
+    if (tag.offsetWidth > 0) {
+      return {
+        left: tag.offsetLeft,
+        right: tag.offsetLeft + tag.offsetWidth,
+        top: tag.offsetTop,
+        cy: tag.offsetTop + tag.offsetHeight / 2,
+      };
+    }
+    return { left: size.w * 0.07, right: size.w * 0.5, top: size.h * 0.88, cy: size.h * 0.91 };
+  }
+
+  function placeMarkRest() {
+    const mark = stillBird();
+    const ext = birdExtent(mark._place.s * baseK(), 0);
+    const band = tagMetrics();
+    const x = size.w * 0.94 - ext.halfW;
+    const next = clampBird(x, band.cy, ext.halfW, ext.halfH, size.w, size.h);
+    mark._fx = next.x / size.w;
+    mark._fy = next.y / size.h;
+  }
+
+  function placeMarkCorner() {
+    const mark = stillBird();
+    const tEl = tag.querySelector('.hero__tag-t');
+    let tx = size.w * 0.09;
+    let ty = size.h * 0.9;
+    if (tEl && tEl.offsetWidth > 0) {
+      tx = tag.offsetLeft + tEl.offsetLeft + tEl.offsetWidth / 2;
+      ty = tag.offsetTop + tEl.offsetTop + tEl.offsetHeight / 2;
+    }
+    const mirrored = mirrorThroughCenter(tx, ty, size.w, size.h);
+    const ext = birdExtent(mark._place.s * baseK(), 0);
+    const next = clampBird(mirrored.x, mirrored.y, ext.halfW, ext.halfH, size.w, size.h);
+    mark._fx = next.x / size.w;
+    mark._fy = next.y / size.h;
+  }
 
   function placeDockTargets() {
-    const flockBirds = arrows.filter((g) => g._place.drag !== false);
-    const mark = arrows.find((g) => g._place.drag === false);
+    const flockBirds = arrows.filter(isFlock);
     const k = baseK();
-    const bigHalf = birdExtent(flockBirds.at(-1)._place.s * k, DOCK_AIM).halfH;
-    const markHalf = birdExtent(mark._place.s * k, 0).halfH;
-    const markY = (mark._fy ?? mark._place.fy) * size.h;
-    const belowMark = markY + markHalf + bigHalf + 6;
-    const tagBottom = tag.offsetHeight > 0 ? tag.offsetTop + tag.offsetHeight : size.h * 0.94;
-    const belowTag = tagBottom + bigHalf;
-    const rowY = Math.min(size.h - bigHalf - 2, Math.max(belowMark, belowTag));
-    const startX = tag.offsetWidth > 0 ? tag.offsetLeft : size.w * 0.07;
-    const endX = (mark._fx ?? mark._place.fx) * size.w;
+    const gEl = tag.querySelector('.hero__tag-g');
+    const band = tagMetrics();
+    const startX = gEl && gEl.offsetWidth > 0
+      ? tag.offsetLeft + gEl.offsetLeft + gEl.offsetWidth / 2
+      : size.w * 0.14;
+    const extents = flockBirds.map((g) => birdExtent(g._place.s * k, g._place.rot));
+    const maxHalf = extents.reduce((n, ext) => Math.max(n, ext.halfH), 0);
+    const rowY = band.top - ROW_GAP - maxHalf;
+    const last = extents[extents.length - 1];
+    const endX = size.w * 0.94 - (last ? last.halfW : 0);
+    const span = Math.max(0, endX - startX);
     flockBirds.forEach((g, i) => {
       const t = flockBirds.length === 1 ? 0 : i / (flockBirds.length - 1);
-      const ext = birdExtent(g._place.s * k, DOCK_AIM);
-      const next = clampBird(startX + (endX - startX) * t, rowY, ext.halfW, ext.halfH, size.w, size.h);
+      const ext = extents[i];
+      const next = clampBird(startX + span * t, rowY, ext.halfW, ext.halfH, size.w, size.h);
       g._fx = next.x / size.w;
       g._fy = next.y / size.h;
-      g._rotTo = DOCK_AIM;
       g._scTo = g._place.s * k;
     });
+  }
+
+  function syncRewriteBox() {
+    const k = baseK();
+    let maxHalf = 0;
+    for (const g of arrows) {
+      if (!isFlock(g)) continue;
+      maxHalf = Math.max(maxHalf, birdExtent(g._place.s * k, g._place.rot).halfH);
+    }
+    const band = tagMetrics();
+    const rowTop = band.top - ROW_GAP - maxHalf * 2;
+    const top = size.h * 0.08;
+    const bottomEdge = Math.max(top + 24, rowTop - ROW_GAP);
+    const mark = stillBird();
+    const markExt = birdExtent(mark._place.s * k, 0);
+    const markLeft = (mark._fx ?? mark._place.fx) * size.w - markExt.halfW - ROW_GAP;
+    const right = Math.max(size.w * 0.08, size.w - markLeft);
+    rewrite.style.top = `${top}px`;
+    rewrite.style.right = `${right}px`;
+    rewrite.style.left = `${size.w * 0.08}px`;
+    rewrite.style.bottom = `${Math.max(0, size.h - bottomEdge)}px`;
+  }
+
+  function fitRewrite() {
+    rewrite.style.fontSize = '';
+    const maxPx = parseFloat(getComputedStyle(rewrite).fontSize);
+    if (!(maxPx > 0) || rewrite.clientHeight < 8) return;
+    const fits = () => rewrite.scrollHeight <= rewrite.clientHeight + 1;
+    if (fits()) return;
+    let lo = 11;
+    let hi = maxPx;
+    for (let i = 0; i < 12; i++) {
+      const mid = (lo + hi) / 2;
+      rewrite.style.fontSize = `${mid}px`;
+      if (fits()) lo = mid;
+      else hi = mid;
+    }
+    rewrite.style.fontSize = `${lo}px`;
+    while (lo > 8 && !fits()) {
+      lo -= 1;
+      rewrite.style.fontSize = `${lo}px`;
+    }
+  }
+
+  function revealRewrite() {
+    syncRewriteBox();
+    rewrite.hidden = false;
+    fitRewrite();
   }
 
   function showLevel(id) {
@@ -256,44 +464,84 @@ function rightCard(lookup) {
     const first = shown == null;
     shown = id;
     flock.classList.add('is-open');
-    rewrite.hidden = false;
     rewrite.lang = entry.lang;
     rewrite.textContent = entry.text;
     for (const g of arrows) {
       g.setAttribute('aria-pressed', g._place.id === id ? 'true' : 'false');
-      if (!first || g._place.drag === false) continue;
+    }
+    if (!first) {
+      if (!awaitingReveal) revealRewrite();
+      return;
+    }
+    rewrite.hidden = true;
+    for (const g of arrows) {
       g._spin = false;
       g._big = false;
       g._drag = false;
       g._dragArmed = false;
       g.classList.remove('is-dragging');
     }
-    if (!first) return;
+    placeMarkCorner();
     placeDockTargets();
-    kickGlide();
+    const k = baseK();
+    for (const g of arrows) {
+      g._scTo = g._place.s * k;
+      g._rot = g._place.rot;
+      g._rotTo = g._place.rot;
+      if (motion.matches) {
+        g._phase = null;
+        g._x = g._fx * size.w;
+        g._y = g._fy * size.h;
+        g._sc = g._scTo;
+        paintHit(g);
+        paintPos(g);
+      } else {
+        beginArc(g, 'dive');
+        paintHit(g);
+        paintPos(g);
+      }
+    }
+    if (motion.matches) revealRewrite();
+    else {
+      awaitingReveal = true;
+      kickGlide();
+    }
   }
 
   function closeLevel() {
     shown = null;
+    awaitingReveal = false;
     flock.classList.remove('is-open');
     rewrite.hidden = true;
     rewrite.textContent = '';
+    rewrite.style.fontSize = '';
     const k = baseK();
+    placeMarkRest();
     for (const g of arrows) {
       g.setAttribute('aria-pressed', 'false');
-      if (g._place.drag === false) continue;
-      g._fx = g._place.fx;
-      g._fy = g._place.fy;
-      g._rotTo = g._place.rot;
+      if (isFlock(g)) {
+        g._fx = g._place.fx;
+        g._fy = g._place.fy;
+      }
       g._scTo = g._place.s * k;
       g._spin = false;
       g._big = false;
+      if (motion.matches) {
+        g._phase = null;
+        g._rot = g._place.rot;
+        g._rotTo = g._place.rot;
+        g._x = g._fx * size.w;
+        g._y = g._fy * size.h;
+        g._sc = g._scTo;
+        paintHit(g);
+        paintPos(g);
+      } else beginArc(g, 'return');
     }
-    kickGlide();
+    if (!motion.matches) kickGlide();
   }
 
   function activate(g) {
-    if (g._place.drag === false) {
+    if (!isFlock(g)) {
       if (shown) closeLevel();
       return;
     }
@@ -304,7 +552,14 @@ function rightCard(lookup) {
   function layoutFlock(w, h) {
     size = { w, h };
     const k = baseK();
-    if (shown) placeDockTargets();
+    if (shown) {
+      placeMarkCorner();
+      placeDockTargets();
+      if (!rewrite.hidden) {
+        syncRewriteBox();
+        fitRewrite();
+      }
+    } else placeMarkRest();
     for (const g of arrows) {
       if (g._fx == null) {
         g._fx = g._place.fx;
@@ -314,13 +569,19 @@ function rightCard(lookup) {
         g._sc = g._place.s * k;
         g._scTo = g._sc;
       }
-      const docked = shown && g._place.drag !== false;
-      if (docked) {
-        g._rotTo = DOCK_AIM;
+      const flying = g._phase === 'dive' || g._phase === 'return';
+      if (flying) {
+        paintHit(g);
+        paintPos(g);
+        continue;
+      }
+      const docked = shown && isFlock(g);
+      if (docked || !isFlock(g)) {
+        g._rotTo = g._place.rot;
         g._scTo = g._place.s * k;
       } else {
-        g._scTo = g._place.drag === false ? g._place.s * k : g._place.s * k * (g._big ? HOVER_SCALE : 1);
-        if (!g._drag && g._place.drag !== false) g._rotTo = g._place.rot + (g._spin ? HOVER_TURN : 0);
+        g._scTo = g._place.s * k * (g._big ? HOVER_SCALE : 1);
+        if (!g._drag) g._rotTo = g._place.rot + (g._spin ? HOVER_TURN : 0);
       }
       g._x = g._fx * w;
       g._y = g._fy * h;
@@ -333,30 +594,31 @@ function rightCard(lookup) {
 
   const keys = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
   const canDrag = (g) => g._place.drag !== false && shown == null;
+  const canHover = (g) => isFlock(g) && shown == null;
   const press = (g) => { g._pressed = true; paintHit(g); };
   const release = (g) => { if (!g._pressed) return; g._pressed = false; paintHit(g); };
   for (const g of arrows) {
     g.addEventListener('pointerenter', () => {
-      if (!canDrag(g) || g._drag) return;
+      if (!canHover(g) || g._drag) return;
       g._big = true;
       if (!g._suppress) g._spin = true;
       pose(g);
     });
     g.addEventListener('pointerleave', () => {
-      if (!canDrag(g) || g._drag) return;
+      if (!canHover(g) || g._drag) return;
       g._big = false;
       g._spin = false;
       g._suppress = false;
       pose(g);
     });
     g.addEventListener('focus', () => {
-      if (!canDrag(g)) return;
+      if (!canHover(g)) return;
       g._big = true;
       if (!g._suppress) g._spin = true;
       pose(g);
     });
     g.addEventListener('blur', () => {
-      if (!canDrag(g)) return;
+      if (!canHover(g)) return;
       g._big = g.matches(':hover');
       if (!g._big) {
         g._spin = false;

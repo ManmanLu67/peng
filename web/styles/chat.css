@@ -1,13 +1,18 @@
 /* 左栏对话。分区只靠 1px 细线；解读卡、示例、按钮直角细框；输入框只有下划线。 */
 .chat { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: var(--s4) var(--s4) var(--s3); gap: var(--s4); }
-.chat__modes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s4); flex: none; }
+.chat__modes { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--s1) var(--s4); flex: none; }
 .chat__hsk-wrap {
-  position: relative;
   margin-left: auto;
   margin-right: calc(var(--s4) * -1);
   flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 .chat__hsk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   color: var(--ink);
   border: 0;
@@ -18,13 +23,13 @@
   letter-spacing: .06em;
   cursor: pointer;
 }
+.chat__hsk-caret { font-size: 8px; line-height: 1; color: var(--muted); }
+.chat__hsk[aria-expanded="true"] .chat__hsk-caret { transform: rotate(180deg); }
 .chat__hsk:disabled { opacity: .45; cursor: not-allowed; }
 .chat__hsk-list {
-  position: absolute;
-  z-index: 4;
-  top: calc(100% + 6px);
-  right: var(--s4);
+  position: static;
   min-width: 7.5em;
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
   background: var(--paper);

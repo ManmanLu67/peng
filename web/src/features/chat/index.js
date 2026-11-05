@@ -39,7 +39,7 @@ export default {
         e.stopPropagation();
         if (!hskBtn.disabled) setHskOpen(!hskOpen);
       },
-    }, hskLabel);
+    }, hskLabel, h('span', { class: 'chat__hsk-caret', 'aria-hidden': 'true' }, '▼'));
     const hskList = h('div', {
       class: 'chat__hsk-list', role: 'listbox', hidden: true,
       'aria-label': 'HSK 1 到 6',

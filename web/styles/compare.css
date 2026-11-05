@@ -43,22 +43,31 @@
 .cmp__note-none { color: var(--muted); }
 .cmp__note-en { font-family: var(--f-small); font-size: 13px; color: var(--muted); }
 
-/* 阶梯条：右缘纵向，当前档朱砂粗竖条 */
-.lad { list-style: none; margin: 0; padding: var(--s4) var(--s3) 0 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
-.lad__item { display: flex; align-items: center; gap: var(--s2); height: 28px; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; pointer-events: auto; }
+/* 阶梯：右缘纵向，没有刻度线。飞鸟在当前档左边，尖端朝右。上方「译至」是这一句的输出档。 */
+.lad__wrap { display: flex; flex-direction: column; align-items: flex-end; pointer-events: none; }
+.lad__name { margin: var(--s4) var(--s3) 0 0; font-family: var(--f-small); font-size: var(--fs-label); letter-spacing: .12em; color: var(--muted); }
+.lad { list-style: none; margin: 0; padding: var(--s2) var(--s3) 0 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.lad > li { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); height: 28px; }
+.lad__item { display: flex; align-items: center; height: 28px; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; pointer-events: auto; }
 .lad__item:disabled { cursor: default; }
 .lad__label { font-family: var(--f-small); font-size: var(--fs-label); letter-spacing: .08em; color: var(--muted); }
-.lad__bar { width: 3px; height: 100%; background: var(--line); opacity: .45; }
 .lad__item.is-on .lad__label { color: var(--ink); font-weight: 600; }
-.lad__item.is-on .lad__bar { width: 6px; background: var(--cinnabar); opacity: 1; }
+.lad__handle {
+  width: 22px; height: 22px; padding: 0; border: 0; background: none; color: var(--cinnabar);
+  cursor: grab; pointer-events: auto; touch-action: none; display: grid; place-items: center; flex: none;
+}
+.lad__handle[hidden] { display: none; }
+.lad__handle:disabled { cursor: default; opacity: .35; }
+.lad__handle.is-dragging { cursor: grabbing; }
+.lad__bird { display: block; width: 14px; height: 18px; transform: rotate(90deg); }
 
 @media (max-width: 720px) {
   .cmp { padding: var(--s4) var(--edge); }
   .cmp__cols { grid-template-columns: 1fr; gap: var(--s4); }
-  .lad { flex-direction: row; padding: var(--s3) var(--edge); justify-content: flex-start; overflow-x: auto; }
-  .lad__item { flex-direction: column-reverse; height: auto; }
-  .lad__bar { width: 100%; min-width: 28px; height: 3px; }
-  .lad__item.is-on .lad__bar { height: 6px; width: 100%; }
+  .lad__wrap { align-items: stretch; }
+  .lad__name { margin: var(--s3) var(--edge) 0; }
+  .lad { flex-direction: row; padding: var(--s2) var(--edge) var(--s3); justify-content: flex-start; overflow-x: auto; }
+  .lad > li, .lad__item { height: auto; }
 }
 
 /* 反馈按钮：右下，直角细框，朱砂框 + 朱砂字 */

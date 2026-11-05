@@ -4,7 +4,7 @@
 //   输入“日照香炉生紫烟” → 提交 → 没看懂 ×3（HSK 3→2→1→英文）→ 停留后收起
 // 每一步等上一步的结果出来（status 离开 running）再延迟，避免画面与状态错位。
 // 离开 #/app（卸载）时自动退出并重置。
-import { h, bilingual } from '../../ui/index.js';
+import { h } from '../../ui/index.js';
 import { readTimeMs } from '../../core/pacing.js';
 
 // 停留时间按“这一页要读多少字”算（core/pacing.js），而不是固定值。
@@ -21,12 +21,18 @@ export default {
     const sample = (data.demo.samples ?? [])[0];
     if (!sample) throw new Error('demo：data/demo.json 缺少 samples[0]');
 
-    const start = h('button', { type: 'button', class: 'btn demo__start' }, bilingual('演示', 'Demo', { inline: true }));
-    const banner = h('div', { class: 'demo__banner', role: 'status', 'aria-live': 'polite', hidden: true },
-      h('span', null, bilingual('演示中', 'Demo', { inline: true })),
-      h('span', { class: 'demo__hint label' }),
-      h('button', { type: 'button', class: 'btn demo__exit' }, bilingual('退出演示', 'Exit demo', { inline: true })));
-    el.append(h('div', { class: 'demo' }, start, banner));
+    const hint = h('span', { class: 'demo__hint label', hidden: true });
+    const toggle = h('button', {
+      type: 'button',
+      class: 'demo__switch',
+      role: 'switch',
+      'aria-checked': 'false',
+      'aria-label': '演示, Demo',
+    },
+    h('span', { class: 'demo__switch-label' }, '演示'),
+    h('span', { class: 'demo__switch-track', 'aria-hidden': 'true' },
+      h('span', { class: 'demo__switch-knob' })));
+    el.append(h('div', { class: 'demo' }, toggle, hint));
 
     let running = false;
     let cancels = [];             // 当前所有待执行的定时器取消函数
@@ -35,8 +41,7 @@ export default {
     const later = (ms, fn) => { cancels.push(ports.clock.after(ms, fn)); };
     const clearTimers = () => { cancels.forEach((off) => off()); cancels = []; unsub?.(); unsub = null; };
 
-    // 横幅里的倒计时提示：告诉观众“这一页还停留多久”，不会误以为卡住了
-    const hint = banner.querySelector('.demo__hint');
+    // 倒计时提示：告诉观众这一页还停留多久
     function caption(ms) {
       const left = Math.ceil(ms / 1000);
       hint.textContent = `下一步 ${left} 秒后`;
@@ -45,8 +50,9 @@ export default {
 
     function setUi(on) {
       running = on;
-      start.hidden = on;
-      banner.hidden = !on;
+      toggle.setAttribute('aria-checked', String(on));
+      toggle.classList.toggle('is-on', on);
+      hint.hidden = !on;
       commands.setDemo(on);
     }
 
@@ -113,8 +119,7 @@ export default {
       });
     }
 
-    start.addEventListener('click', run);
-    banner.querySelector('.demo__exit').addEventListener('click', exit);
+    toggle.addEventListener('click', () => { if (running) exit(); else run(); });
 
     return () => {
       // 离开页面：自动退出并重置，不留残留定时器

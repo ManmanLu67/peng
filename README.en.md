@@ -32,14 +32,14 @@ To build the package used for publishing, run `npm run build` inside `web/`. The
 
 ## Using the workbench
 
-1. On the right side of the chat column, 我的 HSK is your own level. HSK is the grading used by the Chinese proficiency test: 1 is the easiest, 6 is the hardest. If you are unsure, leave the default at 3.
+1. On the left, 我的 HSK is your own level. HSK is the grading used by the Chinese proficiency test: 1 is the easiest, 6 is the hardest. If you are unsure, leave the default at 3.
 2. At the upper left is 降维翻译. The sentence you send is simplified onto the right side. 聊天 is not on the page for now.
 3. Choose one of the sample sentences above the input, or type a sentence and send it. Words marked in the sentence can be opened for pinyin and meaning.
 4. If you still cannot read it, choose 没看懂. That takes the last explanation down one more level. You can keep going until it becomes English. At English, it cannot go lower.
 
-In 降维翻译, the original text on the right is the sentence you sent. Under it, the whole sentence is given in pinyin, then allusions, words above your current level, and a grammar breakdown. With a model connected, grammar above your level is taken out of any sentence. Without a model, only grammar that matches the word list is shown. Simplification follows the level you chose in the chat column. The first result is always Chinese, never English from the start. The ladder on the right can be clicked: choosing a rung rewrites the same sentence at that level. The original text, context, and pinyin stay as they are. The ladder cannot be clicked before a result exists, or while a request is in progress. Choosing 没看懂 again also leaves the original text, context, and pinyin in place, and only simplifies the wording one more level.
+In 降维翻译, the original text on the right is the sentence you sent. Under it, the whole sentence is given in pinyin, then allusions, words above your current level, and a grammar breakdown. With a model connected, grammar above your level is taken out of any sentence. Without a model, only grammar that matches the word list is shown. Simplification follows the level you chose on the left. The first result is always Chinese, never English from the start. 译至 above the ladder on the right is the level of this sentence, separate from 我的 HSK. Click a level, or drag the bird on its left (the tip points right), to rewrite the same sentence at that level. The ladder has no scale marks. Hovering the bird shows 「拖动飞鸟，调整降维等级」. The original text, context, and pinyin stay as they are. The ladder cannot be clicked or dragged before a result exists, or while a request is in progress. Choosing 没看懂 again also leaves the original text, context, and pinyin in place, and only simplifies the wording one more level.
 
-演示 runs through a built-in sentence on its own: submit, then 没看懂, repeatedly, until English. Do not type while it is playing. When it finishes, the result stays on the page.
+演示, the switch beside the logo, runs through a built-in sentence on its own: submit, then 没看懂, repeatedly, until English. Do not type while it is playing. Turning it off stops and clears the page. When it finishes, the switch turns off by itself and the result stays on the page.
 
 The three sample sentences always use the built-in simplification and are not sent to a model. Under 日照香炉生紫烟 you will see 语境 · 一个人对着水杯说, which is the situation in which the sentence is spoken.
 

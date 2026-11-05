@@ -41,13 +41,17 @@
   font-family: var(--f-disp);
   font-size: 12px;
   letter-spacing: .28em;
-  color: color-mix(in srgb, var(--indigo) 80%, transparent);
   text-decoration: none;
+}
+.nav--brand .nav__link { color: color-mix(in srgb, var(--indigo) 80%, transparent); }
+.nav--brand .nav__label {
+  color: color-mix(in srgb, var(--indigo) 42%, transparent);
+  cursor: default;
 }
 #root[data-page="/"] .logo__word { color: var(--indigo); }
 :root[data-theme="dark"] #root[data-page="/"] .logo__word { color: #C9D4E8; }
-:root[data-theme="dark"] .nav--brand .nav__link,
-:root[data-theme="dark"] .nav--brand .nav__label { color: #A8B6CC; }
+:root[data-theme="dark"] .nav--brand .nav__link { color: #A8B6CC; }
+:root[data-theme="dark"] .nav--brand .nav__label { color: color-mix(in srgb, #A8B6CC 55%, transparent); }
 .nav--brand .nav__link:hover,
 .nav--brand .nav__link:focus-visible {
   color: var(--indigo);
@@ -109,15 +113,25 @@
 #root[data-page="/app"] > .feature--topbar      { grid-area: topbar; }
 #root[data-page="/app"] > .feature--chat        { grid-area: chat; border-right: 1px solid var(--line); }
 #root[data-page="/app"] > .feature--bridge      { grid-area: bridge; border-bottom: 1px solid var(--line); }
-/* 对比区内容常常超过一屏：保留滚轮和触摸滚动，只隐藏滚动条的外观 */
+/* 对比区内容常常超过一屏：保留滚轮和触摸滚动，只隐藏滚动条的外观。
+   还没滚到底时，底部一条淡出，表示下面还有。 */
 #root[data-page="/app"] > .feature--compare     { grid-area: compare; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 #root[data-page="/app"] > .feature--compare::-webkit-scrollbar { display: none; }
+#root[data-page="/app"] > .feature--compare.is-more::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 48px;
+  margin-top: -48px;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--paper));
+}
 #root[data-page="/app"] > .feature--ladder-bar  { grid-area: compare; justify-self: end; align-self: start; pointer-events: none; z-index: 2; }
 #root[data-page="/app"] > .feature--actions     { grid-area: actions; justify-self: end; border-top: 1px solid var(--line); width: 100%; }
 
 /* ---------- 窄屏 ---------- */
 /* 顶栏放不下时的收缩顺序：英文副标 → 倒计时 → API 标记 → Logo 文字。 */
-@media (max-width: 1180px) { .topbar__slot--right .api-badge { display: none; } }
 @media (max-width: 900px)  { .logo__word { display: none; } }
 
 @media (max-width: 720px) {

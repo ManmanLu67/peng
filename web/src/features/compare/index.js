@@ -6,6 +6,11 @@ import { h, bilingual } from '../../ui/index.js';
 import { annotate } from '../../core/annotate.js';
 import { knowledgePoints, sentencePinyin } from '../../core/knowledge.js';
 
+/** 滚动容器底部是否还有没露出的内容。差几个像素不算。 */
+export function moreBelow({ scrollHeight, scrollTop, clientHeight }, slack = 8) {
+  return scrollHeight - scrollTop - clientHeight > slack;
+}
+
 const SAFE = /^[\w-]+$/;
 
 function typeStyles(types) {
@@ -180,8 +185,22 @@ export default {
       }
     }
 
+    function syncMore() {
+      el.classList.toggle('is-more', moreBelow(el));
+    }
     render();
-    const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung }), render);
-    return () => { off(); document.removeEventListener('click', onDocClick); el.replaceChildren(); };
+    syncMore();
+    el.addEventListener('scroll', syncMore, { passive: true });
+    const moreObserver = new ResizeObserver(syncMore);
+    moreObserver.observe(el);
+    moreObserver.observe(body);
+    const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung }), () => { render(); syncMore(); });
+    return () => {
+      off();
+      moreObserver.disconnect();
+      el.removeEventListener('scroll', syncMore);
+      document.removeEventListener('click', onDocClick);
+      el.replaceChildren();
+    };
   },
 };

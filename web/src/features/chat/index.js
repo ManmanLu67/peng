@@ -4,6 +4,14 @@ import { h, svg, bilingual } from '../../ui/index.js';
 
 const MAX_LEN = 200;
 
+/** 聊天模式暂时不放上工作台。改回 true 即恢复切换。 */
+export const chatModeShown = false;
+
+/** 正在看的那张卡说明右边就是这句；其他卡仍可点开。 */
+export function resultCardText(selected, rungZh) {
+  return selected ? `正在看 ${rungZh}` : `点击查看 ${rungZh} 简化结果`;
+}
+
 function sendIcon() {
   return svg('svg', { viewBox: '0 0 24 24', width: 22, height: 22, 'aria-hidden': 'true', focusable: 'false' },
     svg('path', { d: 'M3 11.5 21 3l-6.5 18-3.2-7.3L3 11.5Zm8.3 2.2L21 3', fill: 'none', stroke: 'currentColor', 'stroke-width': 1.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
@@ -61,7 +69,9 @@ export default {
     }
     document.addEventListener('click', onHskDoc);
     document.addEventListener('keydown', onHskKey);
-    for (const [id, zh, en] of [['translate', '降维翻译', 'Simplify'], ['chat', '聊天', 'Chat']]) {
+    const modeList = [['translate', '降维翻译', 'Simplify']];
+    if (chatModeShown) modeList.push(['chat', '聊天', 'Chat']);
+    for (const [id, zh, en] of modeList) {
       const btn = h('button', {
         type: 'button', class: 'chat__mode', 'data-mode': id, 'aria-label': `${zh} · ${en}`,
         onclick: () => commands.setInputMode(id),
@@ -136,6 +146,8 @@ export default {
       for (const m of s.messages) {
         const selected = m.id === s.activeId;
         const done = m.mode === 'explain' && !!m.resp;
+        const rungZh = ladder.get(m.rung)?.label.zh ?? '';
+        const cardText = resultCardText(selected, rungZh);
         messages.append(h('article', { class: 'chat__msg', 'data-id': m.id },
           h('p', { class: 'label', 'aria-label': '用户, User' }, '用户'),
           h('p', { class: 'chat__text', lang: 'zh' }, m.text),
@@ -145,15 +157,14 @@ export default {
           done ? h('hr', { class: 'rule chat__rule' }) : null,
           done ? h('button', {
             type: 'button', class: ['chat__card', selected && 'is-active'], 'aria-pressed': String(selected),
-            'aria-label': `等级 ${levelLabel(m)}，已完成。点击查看 ${ladder.get(m.rung)?.label.zh ?? ''} 简化结果, Level ${levelLabel(m)}, Analysis Done. Click to view`,
+            'aria-label': `等级 ${levelLabel(m)}，已完成。${cardText}, Level ${levelLabel(m)}, Analysis Done. ${selected ? 'Viewing' : 'Click to view'} ${ladder.get(m.rung)?.label.en ?? ''}`,
             disabled: s.status === 'running' || s.demo,
             onclick: () => commands.select(m.id),
           },
           h('span', { class: 'chat__card-meta' },
             h('span', null, `等级 ${levelLabel(m)}`),
             h('span', null, '已完成')),
-          h('span', { class: 'chat__card-body' },
-            `点击查看 ${ladder.get(m.rung)?.label.zh ?? ''} 简化结果`)) : null));
+          h('span', { class: 'chat__card-body' }, cardText)) : null));
       }
       const last = messages.lastElementChild;
       if (last?.scrollIntoView) last.scrollIntoView({ block: 'nearest' });

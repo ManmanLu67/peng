@@ -33,7 +33,7 @@ To build the package used for publishing, run `npm run build` inside `web/`. The
 ## Using the workbench
 
 1. On the right side of the chat column, 我的 HSK is your own level. HSK is the grading used by the Chinese proficiency test: 1 is the easiest, 6 is the hardest. If you are unsure, leave the default at 3.
-2. At the upper left, switch between 降维翻译 and 聊天. 降维翻译 simplifies the sentence you send onto the right side. 聊天 replies only on the left and does not change the right side.
+2. At the upper left is 降维翻译. The sentence you send is simplified onto the right side. 聊天 is not on the page for now.
 3. Choose one of the sample sentences above the input, or type a sentence and send it. Words marked in the sentence can be opened for pinyin and meaning.
 4. If you still cannot read it, choose 没看懂. That takes the last explanation down one more level. You can keep going until it becomes English. At English, it cannot go lower.
 
@@ -45,11 +45,11 @@ The three sample sentences always use the built-in simplification and are not se
 
 ## Without a model
 
-The two addresses above, and a local copy with no model filled in, work like this: in 降维翻译, sample sentences are simplified to the level you chose, and any other sentence appears on the right unchanged. After you switch to 聊天, the left side replies 接上模型后才能对话. The right side stays empty, or keeps the previous explanation. What you type stays in the browser.
+The two addresses above, and a local copy with no model filled in, work like this: in 降维翻译, sample sentences are simplified to the level you chose, and any other sentence appears on the right unchanged. What you type stays in the browser.
 
 ## Connect your own model
 
-The two addresses above do not include a personal model. To connect one, open the page on your own computer as above, then do these three steps. After that, 降维翻译 rewrites to the right at the chosen level, and 聊天 can hold a conversation. If a sentence starts with a scene written before a colon, such as 一个人对着水杯说：这水太烫了, the line under it becomes 语境 · 一个人对着水杯说. Without a scene, that line is empty. The three samples and 演示 still use built-in results.
+The two addresses above do not include a personal model. To connect one, open the page on your own computer as above, then do these three steps. After that, 降维翻译 rewrites to the right at the chosen level. 聊天 is not on the page for now. If a sentence starts with a scene written before a colon, such as 一个人对着水杯说：这水太烫了, the line under it becomes 语境 · 一个人对着水杯说. Without a scene, that line is empty. The three samples and 演示 still use built-in results.
 
 Steps:
 

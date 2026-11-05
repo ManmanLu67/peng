@@ -208,6 +208,27 @@ test('SELECT_MESSAGE：切换解读卡恢复该条的档位', () => {
   assert.equal(back.state.status, 'result');
 });
 
+test('聊天进行中、成功或失败，都不改鹊桥上已完成的课文节点', () => {
+  let s = resolved(4);
+  ({ state: s } = flow.reduce(s, { type: 'NODE', id: 'rewrite', status: 'done' }));
+  s = flow.reduce(s, { type: 'SET_INPUT_MODE', mode: 'chat' }).state;
+  const started = flow.reduce(s, { type: 'SUBMIT', text: '这句诗是什么意思' });
+  assert.equal(started.state.status, 'running');
+  assert.equal(started.state.nodes.rewrite, 'done');
+  assert.equal(started.state.rung, 4);
+  const failed = flow.reduce(started.state, { type: 'FAIL', reqId: started.effects[0].reqId, code: 'network' });
+  assert.equal(failed.state.status, 'error');
+  assert.equal(failed.state.nodes.rewrite, 'done');
+  assert.equal(failed.state.rung, 4);
+  const ok = flow.reduce(started.state, {
+    type: 'RESPONSE', reqId: started.effects[0].reqId,
+    resp: { ok: true, intent: 'chat', rung: 4, output: { lang: 'zh', text: '你好' }, reply_text: '你好', error: null },
+  });
+  assert.equal(ok.state.nodes.rewrite, 'done');
+  assert.equal(ok.state.rung, 4);
+  assert.equal(ok.state.activeId, s.activeId);
+});
+
 test('普通回复不改变档位，也不换掉右侧那条解释', () => {
   const explained = flow.reduce(resolved(4), { type: 'SET_INPUT_MODE', mode: 'chat' }).state;
   assert.equal(explained.rung, 4);

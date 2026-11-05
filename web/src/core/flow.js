@@ -55,9 +55,10 @@ export function createFlow({ ladder, nodes }) {
     return items.slice(-8);
   }
 
-  /** 发起一次请求：reqId 自增，节点全部复位，状态转 running。 */
+  /** 发起一次请求：reqId 自增，状态转 running。简化会清空节点；聊天留着上一句课文的节点。 */
   function startCall(s, action, req, messages = s.messages, extra = {}) {
     const reqId = s.reqSeq + 1;
+    const chatting = action === 'chat';
     // client 告诉 live 适配器：演示走 mock，用户提交才打模型
     const stamped = { ...req, client: s.demo ? 'demo' : 'user' };
     const lastCall = { action, req: stamped };
@@ -71,9 +72,9 @@ export function createFlow({ ladder, nodes }) {
         reqId,
         lastCall,
         error: null,
-        nodes: idleNodes(),
+        nodes: chatting ? s.nodes : idleNodes(),
         // 请求在途时还没有真实 trace，节点是按固定节奏模拟点亮的；响应回来后再按 trace 是否存在改写
-        traceSimulated: true,
+        traceSimulated: chatting ? s.traceSimulated : true,
       },
       effects: [{
         type: 'CALL_CHAT',
@@ -160,10 +161,8 @@ export function createFlow({ ladder, nodes }) {
               messages,
               status,
               pendingId: null,
-              traceSimulated: false,
               reqId: null,
               error: null,
-              nodes: idleNodes(),
             },
             effects: [],
           };
@@ -206,7 +205,8 @@ export function createFlow({ ladder, nodes }) {
 
       case 'FAIL': {
         if (e.reqId !== s.reqId || s.status !== STATUS.RUNNING) return noop(s);
-        // 节点停在出错处：正在执行的节点画叉；没有就让第一个节点画叉
+        // 简化失败：正在执行的节点画叉；没有就让第一个节点画叉。聊天失败不改课文节点。
+        const chatting = s.lastCall?.action === 'chat';
         const runningId = nodeIds.find((id) => s.nodes[id] === NODE_STATUS.RUNNING) ?? nodeIds[0];
         return {
           state: {
@@ -214,7 +214,7 @@ export function createFlow({ ladder, nodes }) {
             status: STATUS.ERROR,
             reqId: null,
             error: { code: e.code, action: s.lastCall?.action ?? null },
-            nodes: { ...s.nodes, [runningId]: NODE_STATUS.ERROR },
+            nodes: chatting ? s.nodes : { ...s.nodes, [runningId]: NODE_STATUS.ERROR },
           },
           effects: [],
         };

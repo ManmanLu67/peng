@@ -57,4 +57,4 @@ Steps:
 2. Fill in the API address, key, and model name. Stop the address at `/v1`, for example `https://api.example.com/v1`. For DeepSeek, use `https://api.deepseek.com`, not the console address `platform.deepseek.com`.
 3. Save, then refresh the page.
 
-The API must accept requests in the OpenAI chat format, and must allow this page to call it directly from the browser. The key stays only in this file on your computer. 演示 still uses the built-in sentence and does not send the demo to the model.
+The API must accept requests in the OpenAI chat format, and must allow this page to call it directly from the browser. The key stays only in this file on your computer.

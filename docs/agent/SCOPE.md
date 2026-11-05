@@ -1,6 +1,6 @@
 # 范围
 
-以仓库里的代码和根目录 `README.md` 为准。`docs/brainstorm/` 是早期草案，不在版本库里，不作为需求。
+以仓库里的代码和根目录 `README.md` 为准。不进版本库的目录见 `docs/开发.md`。`docs/brainstorm/` 是早期草案，不作为需求。
 
 ## 现在有的
 
@@ -30,3 +30,4 @@
 4. 接口返回的文字用 `textContent`，不用 `innerHTML` 拼接。
 5. 不提交密钥。`web/config/config.local.js` 保持在 `.gitignore`。
 6. 首页纸张滤镜在实测卡顿之前不改成预渲染图。
+7. Avoid unnecessary secondary labels and descriptions. Let the layout do the explaining. 版面上的字只补布局还没说清的那一句。左右栏、选中、档位、谁在说话，靠位置和字形区分，不再配英文副标、角标或同义说明。读屏用的名字放在 `aria-label`，不占版面。出错、空白、还在处理，这些布局表达不了，留一句中文。

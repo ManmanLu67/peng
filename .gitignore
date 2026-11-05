@@ -5,8 +5,15 @@ node_modules/
 web/dist/
 *.log
 .DS_Store
+# 早期草案，不作为需求
 docs/brainstorm/
+# 旧首页副本。历史在 tag home-v1（72037d6）
+docs/archive/
+# 主视觉等参考，留在本机
 reference/
+# 本机设计工具：检测配置和钩子缓存，含本机路径
+.impeccable/
 .claude/settings.local.json
+# 部署配置留在本机
 vercel.json
 cloudbaserc.json

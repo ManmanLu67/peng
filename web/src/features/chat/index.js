@@ -20,13 +20,13 @@ export default {
     const modeButtons = new Map();
     const levels = ladder.list.filter((r) => r.hsk != null).sort((a, b) => a.hsk - b.hsk);
     let hskOpen = false;
-    const hskLabel = h('span', { class: 'chat__hsk-label' }, 'HSK 3');
+    const hskLabel = h('span', { class: 'chat__hsk-label' }, '我的 HSK 3');
     const hskBtn = h('button', {
       type: 'button',
       class: 'chat__hsk',
       'aria-haspopup': 'listbox',
       'aria-expanded': 'false',
-      'aria-label': '起点档位，HSK 1 到 6 · Starting level, HSK 1 to 6',
+      'aria-label': '我的水平，HSK 1 到 6, My level, HSK 1 to 6',
       onclick: (e) => {
         e.stopPropagation();
         if (!hskBtn.disabled) setHskOpen(!hskOpen);
@@ -70,14 +70,13 @@ export default {
       modes.append(btn);
     }
     modes.append(hskWrap);
-    const hintZh = h('span', { class: 'bi__zh' }, '');
-    const hintEn = h('span', { class: 'bi__en', lang: 'en' }, '');
+    const hint = h('p', { class: 'chat__hint label' });
     const status = h('p', { class: 'chat__status', role: 'status', 'aria-live': 'polite' });
     const examples = h('div', { class: 'chat__examples', role: 'group', 'aria-label': '示例 · Examples' });
     const input = h('input', {
       class: 'chat__input', type: 'text', maxlength: MAX_LEN, autocomplete: 'off', spellcheck: 'false',
-      placeholder: '输入想简化的中文 · Type Chinese to simplify',
-      'aria-label': '输入文字 · Input text',
+      placeholder: '输入想简化的中文',
+      'aria-label': '输入文字, Input text',
     });
     const send = h('button', { class: 'chat__send', type: 'submit', 'aria-label': '发送 · Send' }, sendIcon());
     const form = h('form', { class: 'chat__form', autocomplete: 'off' }, input, send);
@@ -127,7 +126,7 @@ export default {
     function levelLabel(m) {
       if (!m.resp) return '—';
       const r = m.inputRung;
-      if (r != null && ladder.isOriginal(r)) return '古典 · Classical';
+      if (r != null && ladder.isOriginal(r)) return '古典';
       const hsk = ladder.rungToHsk(r);
       return hsk ? `HSK ${hsk}` : '—';
     }
@@ -138,34 +137,38 @@ export default {
         const selected = m.id === s.activeId;
         const done = m.mode === 'explain' && !!m.resp;
         messages.append(h('article', { class: 'chat__msg', 'data-id': m.id },
-          h('p', { class: 'label' }, 'USER · 用户'),
+          h('p', { class: 'label', 'aria-label': '用户, User' }, '用户'),
           h('p', { class: 'chat__text', lang: 'zh' }, m.text),
           m.context ? h('p', { class: 'chat__ctx' }, `语境 · ${m.context}`) : null,
-          m.mode === 'chat' && m.reply ? h('p', { class: 'label' }, 'REPLY · 回复') : null,
+          m.mode === 'chat' && m.reply ? h('p', { class: 'label', 'aria-label': '回复, Reply' }, '回复') : null,
           m.mode === 'chat' && m.reply ? h('p', { class: 'chat__reply' }, m.reply) : null,
           done ? h('hr', { class: 'rule chat__rule' }) : null,
           done ? h('button', {
             type: 'button', class: ['chat__card', selected && 'is-active'], 'aria-pressed': String(selected),
+            'aria-label': `等级 ${levelLabel(m)}，已完成。点击查看 ${ladder.get(m.rung)?.label.zh ?? ''} 简化结果, Level ${levelLabel(m)}, Analysis Done. Click to view`,
             disabled: s.status === 'running' || s.demo,
             onclick: () => commands.select(m.id),
           },
           h('span', { class: 'chat__card-meta' },
-            h('span', null, `Level: ${levelLabel(m)}`),
-            h('span', null, 'Analysis Done')),
+            h('span', null, `等级 ${levelLabel(m)}`),
+            h('span', null, '已完成')),
           h('span', { class: 'chat__card-body' },
-            `点击查看 ${ladder.get(m.rung)?.label.en ?? ''} 简化结果 · Click to view`)) : null));
+            `点击查看 ${ladder.get(m.rung)?.label.zh ?? ''} 简化结果`)) : null));
       }
       const last = messages.lastElementChild;
       if (last?.scrollIntoView) last.scrollIntoView({ block: 'nearest' });
 
-      status.textContent = s.status === 'running' ? '处理中… · Working…'
-        : s.status === 'error' ? '出错了，输入已保留，可重新发送 · Something went wrong. Your input is kept.'
+      status.textContent = s.status === 'running' ? '处理中…'
+        : s.status === 'error' ? '出错了，输入已保留，可重新发送'
           : '';
+      status.setAttribute('aria-label', s.status === 'running' ? '处理中…, Working'
+        : s.status === 'error' ? '出错了，输入已保留，可重新发送, Something went wrong. Your input is kept.'
+          : '');
       status.classList.toggle('is-error', s.status === 'error');
       const translating = s.inputMode !== 'chat';
       const locked = s.status === 'running' || s.demo;
       const current = levels.find((r) => r.n === s.hskStart);
-      hskLabel.textContent = current ? `HSK ${current.hsk}` : 'HSK';
+      hskLabel.textContent = current ? `我的 HSK ${current.hsk}` : '我的 HSK';
       hskBtn.disabled = locked;
       if (locked && hskOpen) setHskOpen(false);
       for (const [n, opt] of hskOptions) {
@@ -182,24 +185,24 @@ export default {
       }
       examples.hidden = !translating;
       input.placeholder = translating
-        ? '输入想简化的中文 · Type Chinese to simplify'
-        : '说一句话 · Say something';
+        ? '输入想简化的中文'
+        : '说一句话';
       const live = ctx.ports.chat?.kind === 'live';
-      hintZh.textContent = translating
+      const hintZhText = translating
         ? (live ? '这句话会按你的等级简化，出现在右边' : '示例句会按等级简化。其他句子保持原文')
         : (live ? '只在左边聊天，不会改右边' : '接上模型后才能聊天');
-      hintEn.textContent = translating
+      const hintEnText = translating
         ? (live ? 'This line is simplified to your level on the right' : 'Sample lines are simplified by level. Anything else stays as written')
         : (live ? 'Chat stays on the left and does not change the right side' : 'Chat needs a connected model');
+      hint.textContent = hintZhText;
+      hint.setAttribute('aria-label', `${hintZhText}, ${hintEnText}`);
       syncControls();
     }
 
     el.append(h('section', { class: 'chat', 'aria-label': '对话 · Chat' },
       modes,
       messages,
-      h('div', { class: 'chat__bottom' }, status, examples, form,
-        h('p', { class: 'chat__hint label' }, h('span', { class: 'bi bi--inline' },
-          hintZh, h('span', { class: 'bi__sep', 'aria-hidden': 'true' }, ' · '), hintEn)))));
+      h('div', { class: 'chat__bottom' }, status, examples, form, hint)));
 
     render(store.get());
     const off = store.subscribe((s) => ({ m: s.messages, a: s.activeId, st: s.status, r: s.rung, d: s.demo, mode: s.inputMode, h: s.hskStart }), () => render(store.get()));

@@ -1,6 +1,6 @@
 // 首页主视觉：手工纸底、两张一样大的近正方形色纸、中央深藏青小人、「进入」。
 // 左卡逆时针约 3°，右卡顺时针约 3°。两张卡可以在舞台里拖动，卡上的内容一起走。
-// 对角线上 7 只鸟不可拖，只可点。静止鸟尖端朝上，没点开时在右下并留出右缘，点开后沿弧线飞到 A 的对称点。
+// 对角线上 7 只鸟不可拖，只可点。静止鸟尖端朝上，没点开时在右下并留出右缘，点开后沿弧线飞到「改」的对称点。
 // 七只鸟不转圈，沿弧线落到角标上方。字等鸟落定后再出现。双击小人和「进入」去工作台。
 import { h, svg } from '../../ui/index.js';
 import {
@@ -142,7 +142,7 @@ function leftCard() {
       ...POEM.columns.map((col) => poemColumn(col)),
       h('div', { class: 'poem__note' },
         ...POEM.note.map((line) => h('span', { class: 'poem__phrase' }, line)))),
-    h('p', { class: 'hero__tag' }, COPY.tag.left)));
+    h('p', { class: 'hero__tag', 'aria-label': `${COPY.tag.left}, ${COPY.tag.leftEn}` }, COPY.tag.left)));
   bindCardDrag(root, CARDS[0].turn);
   return { root, resize };
 }
@@ -332,8 +332,8 @@ function rightCard(lookup) {
 
   const rewrite = h('p', { class: 'hero__rewrite', hidden: true, 'aria-live': 'polite' });
   const tagWord = COPY.tag.right;
-  const rowAt = tagWord.indexOf('p');
-  const tag = h('p', { class: 'hero__tag' },
+  const rowAt = tagWord.length - 1;
+  const tag = h('p', { class: 'hero__tag', 'aria-label': `${COPY.tag.right}, ${COPY.tag.rightEn}` },
     h('span', { class: 'hero__tag-first' }, tagWord[0]),
     tagWord.slice(1, rowAt),
     h('span', { class: 'hero__tag-row' }, tagWord[rowAt]),

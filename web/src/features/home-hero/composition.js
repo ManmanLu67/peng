@@ -91,7 +91,7 @@ export const POEM = {
 };
 
 export const COPY = {
-  tag: { left: 'Original Text', right: 'Adapted Text' },
+  tag: { left: '原文', right: '改写', leftEn: 'Original Text', rightEn: 'Adapted Text' },
   enter: '进入',
   footer: {
     left: 'Meet the language halfway.',

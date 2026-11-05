@@ -27,7 +27,8 @@ export function mountRouter(pages, loadRegistry, ctx, { root, live = null }) {
     const box = document.createElement('div');
     box.className = 'feature-error';
     box.setAttribute('role', 'alert');
-    box.textContent = '页面没能打开，请刷新再试 · The page could not load. Please refresh.';
+    box.textContent = '页面没能打开，请刷新再试';
+    box.setAttribute('aria-label', '页面没能打开，请刷新再试, The page could not load. Please refresh.');
     root.append(box);
   }
 

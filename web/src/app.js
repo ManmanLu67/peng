@@ -33,30 +33,32 @@ function showFatal(err) {
   const box = document.createElement('div');
   box.className = 'feature-error';
   box.setAttribute('role', 'alert');
-  box.textContent = '页面没能打开，请刷新再试 · The page could not load. Please refresh.';
+  box.textContent = '页面没能打开，请刷新再试';
+  box.setAttribute('aria-label', '页面没能打开，请刷新再试, The page could not load. Please refresh.');
   root.append(box);
 }
 
 /** 运行期意外异常：只弹一行提示，不拆页面（SCOPE：不白屏，不做详情与重试 UI）。 */
 function installGuards(bus) {
   let timer = null;
-  const toast = (message) => {
+  const toast = (zh, en) => {
     document.querySelector('.toast')?.remove();
     const el = document.createElement('div');
     el.className = 'toast';
     el.setAttribute('role', 'alert');
-    el.textContent = message;
+    el.textContent = zh;
+    if (en) el.setAttribute('aria-label', `${zh}, ${en}`);
     document.body.append(el);
     clearTimeout(timer);
     timer = setTimeout(() => el.remove(), 5000);
   };
   window.addEventListener('error', (e) => {
     console.error(e.error ?? e.message);
-    toast('出了点问题，页面仍可使用 · Something went wrong');
+    toast('出了点问题，页面仍可使用', 'Something went wrong');
   });
   window.addEventListener('unhandledrejection', (e) => {
     console.error(e.reason);
-    toast('出了点问题，页面仍可使用 · Something went wrong');
+    toast('出了点问题，页面仍可使用', 'Something went wrong');
   });
   const REASON = {
     timeout: ['等了太久，没有收到回复，请再试一次', 'No reply in time. Please try again'],
@@ -66,7 +68,7 @@ function installGuards(bus) {
   };
   bus.on('error:shown', ({ code }) => {
     const [zh, en] = REASON[code] ?? REASON.network;
-    toast(`${zh} · ${en}`);
+    toast(zh, en);
   });
 }
 

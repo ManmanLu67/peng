@@ -1,12 +1,15 @@
 import { h } from './h.js';
 
 /**
- * 双语标签：中文主、英文副（小一号、灰色）。
- * 默认上下两行；inline 时写成“更简单 · Simpler”。
+ * 版面只显示中文。英文放在 aria-label。
+ * showEn 时中英都显示（团队页暂不改）。
  */
-export function bilingual(zh, en, { inline = false, tag = 'span' } = {}) {
-  return h(tag, { class: inline ? 'bi bi--inline' : 'bi' },
-    h('span', { class: 'bi__zh' }, zh),
-    inline ? h('span', { class: 'bi__sep', 'aria-hidden': 'true' }, ' · ') : null,
-    h('span', { class: 'bi__en', lang: 'en' }, en));
+export function bilingual(zh, en, { showEn = false, tag = 'span' } = {}) {
+  if (showEn) {
+    return h(tag, { class: 'bi bi--inline' },
+      h('span', { class: 'bi__zh' }, zh),
+      h('span', { class: 'bi__sep', 'aria-hidden': 'true' }, ' · '),
+      h('span', { class: 'bi__en', lang: 'en' }, en));
+  }
+  return h(tag, { class: 'bi', lang: 'zh', 'aria-label': `${zh}, ${en}` }, zh);
 }

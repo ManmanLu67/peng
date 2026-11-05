@@ -19,7 +19,7 @@ export default {
           h('span', { class: 'team__no', 'aria-hidden': 'true' }, d.no),
           h('span', { class: 'team__stamp', 'aria-hidden': 'true' }, d.stamp)),
         h('span', { class: 'team__tick', 'aria-hidden': 'true' }),
-        d.name ? h('h2', { class: 'team__name' }, d.name) : h('h2', { class: 'team__name team__name--tbd' }, bilingual('姓名待填', 'Name TBD', { inline: true })),
+        d.name ? h('h2', { class: 'team__name' }, d.name) : h('h2', { class: 'team__name team__name--tbd' }, bilingual('姓名待填', 'Name TBD', { showEn: true })),
         d.roleZh ? h('p', { class: 'team__role' }, d.roleZh, d.roleEn ? h('span', { class: 'team__role-en', lang: 'en' }, d.roleEn) : null) : null,
         d.bio ? h('p', { class: 'team__bio' }, d.bio) : null,
         d.link ? h('p', { class: 'team__contact' },

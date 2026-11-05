@@ -65,7 +65,10 @@ export function mountEntries(parent, entries, ctx, registry) {
       if (typeof off === 'function') offs.push(off);
     } catch (err) {
       console.error(`[feature:${id}] 挂载失败`, err);
-      el.replaceChildren(h('div', { class: 'feature-error', role: 'alert' }, '这一部分没能显示，请刷新再试 · This part could not load. Please refresh.'));
+      el.replaceChildren(h('div', {
+        class: 'feature-error', role: 'alert',
+        'aria-label': '这一部分没能显示，请刷新再试, This part could not load. Please refresh.',
+      }, '这一部分没能显示，请刷新再试'));
     }
   }
   return () => {

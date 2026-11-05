@@ -73,8 +73,10 @@ test('左卡一行两句，角标和页脚按说明正文', () => {
   assert.ok(POEM.columns.every((col) => col.length === 2 && col.every((line) => line.length === 5)));
   const flat = POEM.columns.flat().join('');
   assert.equal(flat.length, 80);
-  assert.equal(COPY.tag.left, 'Original Text');
-  assert.equal(COPY.tag.right, 'Adapted Text');
+  assert.equal(COPY.tag.left, '原文');
+  assert.equal(COPY.tag.right, '改写');
+  assert.equal(COPY.tag.leftEn, 'Original Text');
+  assert.equal(COPY.tag.rightEn, 'Adapted Text');
   assert.equal(COPY.footer.left, 'Meet the language halfway.');
   assert.equal(COPY.footer.left.includes('*'), false);
   assert.equal(COPY.footer.left.includes('\n'), false);

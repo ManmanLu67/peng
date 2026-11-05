@@ -32,7 +32,7 @@ To build the package used for publishing, run `npm run build` inside `web/`. The
 
 ## Using the workbench
 
-1. On the right side of the chat column, choose your HSK level. HSK is the grading used by the Chinese proficiency test: 1 is the easiest, 6 is the hardest. If you are unsure, leave the default at 3.
+1. On the right side of the chat column, 我的 HSK is your own level. HSK is the grading used by the Chinese proficiency test: 1 is the easiest, 6 is the hardest. If you are unsure, leave the default at 3.
 2. At the upper left, switch between 降维翻译 and 聊天. 降维翻译 simplifies the sentence you send onto the right side. 聊天 replies only on the left and does not change the right side.
 3. Choose one of the sample sentences above the input, or type a sentence and send it. Words marked in the sentence can be opened for pinyin and meaning.
 4. If you still cannot read it, choose 没看懂. That takes the last explanation down one more level. You can keep going until it becomes English. At English, it cannot go lower.

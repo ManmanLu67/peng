@@ -1,4 +1,4 @@
-// 本机静态文件服务。只监听 127.0.0.1，不暴露到局域网；只读 web/ 目录。
+// 本机静态文件服务。只监听 127.0.0.1 和 ::1，不暴露到局域网；只读 web/ 目录。
 // 用法：node scripts/serve.mjs [端口]    默认 5173
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
@@ -8,7 +8,7 @@ import { cacheControl, encodingFor } from './static.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PORT = Number(process.argv[2] ?? process.env.PORT ?? 5173);
-const HOST = '127.0.0.1';
+const HOSTS = ['127.0.0.1', '::1'];
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -40,7 +40,7 @@ function resolvePath(urlPath) {
   return full;
 }
 
-const server = createServer(async (req, res) => {
+async function handle(req, res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.writeHead(405, { Allow: 'GET, HEAD' }).end();
     return;
@@ -80,14 +80,18 @@ const server = createServer(async (req, res) => {
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found');
   }
-});
+}
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') console.error(`端口 ${PORT} 已被占用。换一个：node scripts/serve.mjs 5174`);
-  else console.error(err);
-  process.exit(1);
-});
-
-server.listen(PORT, HOST, () => {
-  console.log(`朋 peng 本机预览：http://${HOST}:${PORT}/   （Ctrl+C 退出）`);
-});
+for (const host of HOSTS) {
+  const server = createServer(handle);
+  server.on('error', (err) => {
+    if (host === '::1' && (err.code === 'EADDRNOTAVAIL' || err.code === 'EAFNOSUPPORT')) return;
+    if (err.code === 'EADDRINUSE') console.error(`端口 ${PORT} 已被占用。换一个：node scripts/serve.mjs 5174`);
+    else console.error(err);
+    process.exit(1);
+  });
+  server.listen(PORT, host, () => {
+    const shown = host.includes(':') ? `[${host}]` : host;
+    console.log(`朋 peng 本机预览：http://${shown}:${PORT}/   （Ctrl+C 退出）`);
+  });
+}

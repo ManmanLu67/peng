@@ -66,8 +66,7 @@ export default {
         }, svg('g', last ? { transform: 'translate(48 0) scale(-1 1) rotate(-14 24 14)' } : null,
           svg('use', { href: '#magpie' }))),
         svg('text', { class: 'brg__no', y: ly.toFixed(1), 'text-anchor': 'middle' }, node.no),
-        svg('text', { class: 'brg__label', y: (ly + 16).toFixed(1), 'text-anchor': 'middle' }, node.label.en),
-        svg('text', { class: 'brg__zh', y: (ly + 32).toFixed(1), 'text-anchor': 'middle' }, node.label.zh),
+        svg('text', { class: 'brg__zh', y: (ly + 16).toFixed(1), 'text-anchor': 'middle' }, node.label.zh),
       );
       g.append(grp);
       lis.push({ node, grp });

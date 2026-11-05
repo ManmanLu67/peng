@@ -7,7 +7,7 @@ const BUTTONS = [
   { id: 'notUnderstood', zh: '没看懂', en: "Didn't understand", run: (c) => c.notUnderstood(), flag: 'notUnderstood', accent: true },
 ];
 
-const WHY_DISABLED = '现在不能用：还在处理，或已经到头了 · Not available right now';
+const WHY_DISABLED = '现在不能用：还在处理，或已经到头了';
 
 export default {
   id: 'actions',

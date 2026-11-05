@@ -103,7 +103,7 @@ export default {
       return h('div', { class: 'cmp__points' }, ...items.map((item) => {
         const [zh, en] = kindLabel[item.kind] ?? kindLabel.word;
         return h('article', { class: 'cmp__point' },
-          h('p', { class: 'cmp__point-kicker' }, `${zh} · ${en}`),
+          h('p', { class: 'cmp__point-kicker', 'aria-label': `${zh}, ${en}` }, zh),
           h('p', { class: 'cmp__point-title' }, item.title, item.py ? h('span', { class: 'cmp__point-py' }, ` ${item.py}`) : null),
           h('p', { class: 'cmp__point-zh' }, item.zh),
           item.en ? h('p', { class: 'cmp__point-en', lang: 'en' }, item.en) : null);
@@ -111,7 +111,7 @@ export default {
     }
 
     function heading(zh, en) {
-      return h('div', { class: 'cmp__head' }, h('h2', { class: 'cmp__h' }, `${en} · `, h('span', { lang: 'zh' }, zh)), h('span', { class: 'cmp__rule', 'aria-hidden': 'true' }));
+      return h('div', { class: 'cmp__head' }, h('h2', { class: 'cmp__h', 'aria-label': `${zh}, ${en}` }, zh), h('span', { class: 'cmp__rule', 'aria-hidden': 'true' }));
     }
 
     function renderEmpty(textZh, textEn) {
@@ -163,10 +163,13 @@ export default {
         const right = renderSpans(resp.output.text, minLevel);
         colR.append(heading('简化', `${label.en} Rewrite`), right.p);
         if (resp.english) {
-          const btn = h('button', { type: 'button', class: 'cmp__more', 'aria-expanded': String(showEnglish), onclick: () => { showEnglish = !showEnglish; render(); } },
-            showEnglish ? 'Hide English ↑' : 'View in English →');
+          const btn = h('button', {
+            type: 'button', class: 'cmp__more', 'aria-expanded': String(showEnglish),
+            'aria-label': showEnglish ? '收起英文, Hide English' : '看英文, View in English',
+            onclick: () => { showEnglish = !showEnglish; render(); },
+          }, showEnglish ? '收起英文' : '看英文');
           colR.append(h('div', { class: 'cmp__en' },
-            h('p', { class: 'label' }, 'English interpretation'),
+            h('p', { class: 'label', 'aria-label': '英文, English interpretation' }, '英文'),
             showEnglish ? h('p', { class: 'cmp__text cmp__text--en', lang: 'en' }, resp.english) : null,
             btn));
         }

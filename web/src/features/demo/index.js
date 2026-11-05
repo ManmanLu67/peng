@@ -39,7 +39,8 @@ export default {
     const hint = banner.querySelector('.demo__hint');
     function caption(ms) {
       const left = Math.ceil(ms / 1000);
-      hint.textContent = `下一步 ${left} 秒后 · Next in ${left}s`;
+      hint.textContent = `下一步 ${left} 秒后`;
+      hint.setAttribute('aria-label', `下一步 ${left} 秒后, Next in ${left}s`);
     }
 
     function setUi(on) {

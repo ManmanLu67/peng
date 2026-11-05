@@ -7,12 +7,12 @@ const LABELS = {
   '/team': ['团队', 'Team'],
 };
 
-/** 四页名。Library 与 Archive 还没有页面，只作文字。 */
+/** 四页名。文库与档案还没有页面，只作文字。 */
 const BRAND = [
-  { href: '#/app', label: 'Workbench' },
-  { label: 'Library' },
-  { label: 'Archive' },
-  { href: '#/team', label: 'Team' },
+  { href: '#/app', zh: '工作台', en: 'Workbench' },
+  { zh: '文库', en: 'Library' },
+  { zh: '档案', en: 'Archive' },
+  { href: '#/team', zh: '团队', en: 'Team' },
 ];
 
 export default {
@@ -23,9 +23,10 @@ export default {
       const items = BRAND.map((item) => (item.href
         ? h('a', {
           class: 'nav__link', href: item.href,
+          'aria-label': `${item.zh}, ${item.en}`,
           'aria-current': item.href.replace(/^#/, '') === here ? 'page' : null,
-        }, item.label)
-        : h('span', { class: 'nav__label' }, item.label)));
+        }, item.zh)
+        : h('span', { class: 'nav__label', 'aria-label': `${item.zh}, ${item.en}` }, item.zh)));
       el.append(h('nav', { class: 'nav nav--brand', 'aria-label': '站点导航 · Site' }, ...items));
       return () => el.replaceChildren();
     }

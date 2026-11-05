@@ -15,11 +15,11 @@ export default {
         type: 'button',
         class: 'lad__item',
         'data-rung': r.n,
+        'aria-label': `${r.label.zh}, ${r.label.en}`,
         onclick: () => commands.setRung(r.n),
       },
-        h('span', { class: 'lad__label' }, r.short),
-        h('span', { class: 'lad__bar', 'aria-hidden': 'true' }),
-        h('span', { class: 'sr-only' }, `${r.label.zh} ${r.label.en}`));
+      h('span', { class: 'lad__label' }, r.short),
+      h('span', { class: 'lad__bar', 'aria-hidden': 'true' }));
       lis.set(r.n, btn);
       list.append(h('li', null, btn));
     }
